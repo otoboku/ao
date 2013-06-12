@@ -3,6 +3,7 @@
 
 #include "MyLibrary.h"
 
+#pragma warning (disable: 4201)
 ML_OVERLOAD_NEW
 
 class EDAO;
@@ -179,8 +180,10 @@ typedef struct
 {
     ULONG               ConditionFlags;
     PVOID               Effect;
-    BYTE                Unknown2[2];
-    USHORT              ConditionRate;
+    //BYTE                Unknown2[2];
+    BYTE                Type; // 1 回合; 2 次数; 3 AT条动多少次; 4 永久
+    BYTE                Flag;
+    SHORT               ConditionRate;
     ULONG               ATLeft;
     ULONG               Unknown4;
 
@@ -201,6 +204,11 @@ typedef union MONSTER_STATUS
     BOOL IsChrEnemy()
     {
         return AiType != 0xFF && !FLAG_ON(State, CHR_FLAG_NPC | CHR_FLAG_PLAYER | CHR_FLAG_EMPTY);
+    }
+
+    BOOL IsChrEnemyOnly()
+    {
+        return !FLAG_ON(State, CHR_FLAG_NPC | CHR_FLAG_PLAYER | CHR_FLAG_EMPTY);
     }
 
     BOOL IsChrCanThinkSCraft(BOOL CheckAiType = FALSE)
@@ -236,8 +244,12 @@ typedef union MONSTER_STATUS
         DUMMY_STRUCT(4);                                    // 0x0C
         ULONG                   SymbolIndex;                // 0x10
         ULONG                   MSFileIndex;                // 0x14
-
-        DUMMY_STRUCT(0x16C - 0x18);
+        ULONG                   ASFileIndex;                // 0x18
+        DUMMY_STRUCT(1);                                    // 0x1C
+        BYTE                    TeamRushAddition;           // 0x1D
+        USHORT                  MasterQuartzUsedFlag;       // 0x1E
+        
+        DUMMY_STRUCT(0x16C - 0x20);
 
         USHORT                  CurrentActionType;          // 0x16C
 
@@ -298,13 +310,20 @@ typedef union MONSTER_STATUS
 
         } SelectedCraft;
 
-        DUMMY_STRUCT(4);                                    // 0xF28
+        BYTE                    Runaway[4];                 // 0xF28
 
         CRAFT_INFO                  CraftInfo[16];          // 0xF2C
-        CRAFT_DESCRIPTION           CraftDescription[10];   // 0x10EC
+        CRAFT_DESCRIPTION           CraftDescription[16];   // 0x10EC
 
-        DUMMY_STRUCT(0x2408 - 0x10EC - sizeof(CRAFT_DESCRIPTION) * 10);
+        BYTE                    Sepith[7];                  // 0x22EC
+        DUMMY_STRUCT(3);
+        USHORT  				AttributeRate[7];           // 0x22F6
+        ULONG       			Resistance;					// 0x2304
+        DUMMY_STRUCT(0x78);
+        char				    CharacterIntro[0x80];		// 0x2380
 
+        //DUMMY_STRUCT(0x2408 - 0x10EC - sizeof(CRAFT_DESCRIPTION) * 10);
+        DUMMY_STRUCT(0x2408 - 0x2380 - 0x80);
         ULONG                       SummonCount;            // 0x2408
 
     };
@@ -340,6 +359,12 @@ public:
     PUSHORT GetChrMagicList()
     {
         return (PUSHORT)PtrAdd(this, 0x5D4);
+    }
+
+    // mark
+    VOID THISCALL SetChrPositionAuto(ULONG ChrId, PUSHORT pPartyList, ULONG ChrCount)
+    {
+        DETOUR_METHOD(CActor, SetChrPositionAuto, 0x676628, ChrId, pPartyList, ChrCount);
     }
 };
 
@@ -588,14 +613,13 @@ public:
         return (this->*ShowConditionText)(MSData, Text, Color, Unknown);
     }
 
-    PMS_EFFECT_INFO THISCALL FindEffectInfoByCondition(PMONSTER_STATUS MSData, ULONG_PTR Condition, ULONG_PTR TimeLeft = 0)
+    // mark
+    PMS_EFFECT_INFO THISCALL FindEffectInfoByCondition(PMONSTER_STATUS MSData, ULONG_PTR Condition, INT ConditionRateType = 0)
     {
-        TYPE_OF(&CBattle::FindEffectInfoByCondition) FindEffectInfoByCondition;
-
-        *(PULONG_PTR)&FindEffectInfoByCondition = 0x9E34A0;
-
-        return (this->*FindEffectInfoByCondition)(MSData, Condition, TimeLeft);
+        DETOUR_METHOD(CBattle, FindEffectInfoByCondition, 0x673CC5, MSData, Condition, ConditionRateType);
     }
+
+    PMS_EFFECT_INFO THISCALL FindEffectInfoByConditionEx(PMONSTER_STATUS MSData, ULONG_PTR Condition, INT ConditionRateType = 0, BOOL IsCheckSum = TRUE);
 
     VOID THISCALL ShowSkipAnimeButton()
     {
@@ -717,25 +741,43 @@ public:
     VOID NakedAS_8D_5F();
 	VOID THISCALL AS_8D_5F(PMONSTER_STATUS);
 
+    // mark
+    // 不处理部分人物模型特效，取消vanish也不会回来
     VOID THISCALL UnsetCondition(PMONSTER_STATUS MSData, ULONG condition)
     {
-        TYPE_OF(&CBattle::UnsetCondition) f;
-        *(PVOID *)&f = (PVOID)0x672AE1;
-        return (this->*f)(MSData, condition);
+        DETOUR_METHOD(CBattle, UnsetCondition, 0x672AE1, MSData, condition);
     }
 
-    VOID THISCALL SetCondition(PMONSTER_STATUS MSData, ULONG par2, ULONG condition, ULONG par4, ULONG par5)
+    VOID THISCALL RemoveCondition(PMONSTER_STATUS MSData, ULONG condition, INT type) // >0 Rate>0; <0 Rate <0; 0 all
     {
-        TYPE_OF(&CBattle::SetCondition) f;
-        *(PVOID *)&f = (PVOID)0x676EA2;
-        return (this->*f)(MSData, par2, condition, par4, par5);
+        DETOUR_METHOD(CBattle, RemoveCondition, 0x67B0BA, MSData, condition, type);
+    }
+
+    // 不经过抗性检测
+    VOID THISCALL SetCondition(PMONSTER_STATUS dst, PMONSTER_STATUS src, ULONG condition, ULONG at, ULONG conditionRate)
+    {
+        DETOUR_METHOD(CBattle, SetCondition, 0x676EA2, dst, src, condition, at, conditionRate);
 	}
+
+    VOID THISCALL AddCondition(PMONSTER_STATUS dst, PMONSTER_STATUS src, ULONG condition, ULONG at, ULONG conditionRate)
+    {
+        DETOUR_METHOD(CBattle, AddCondition, 0x677D11, dst, src, condition, at, conditionRate);
+    }
 
     BOOL CheckCondition(PMONSTER_STATUS MSData, ULONG condition, ULONG par3=0)
     {
         return FindEffectInfoByCondition(MSData, condition, par3) != NULL;
     }
 
+    VOID THISCALL SubHPWhenAttack(PMONSTER_STATUS dst, INT HP)
+    {
+        DETOUR_METHOD(CBattle, SubHPWhenAttack, 0x679869, dst, HP);
+    }
+    
+    VOID THISCALL SubHPEveryAct(PMONSTER_STATUS dst, INT HP)
+    {
+        DETOUR_METHOD(CBattle, SubHPEveryAct, 0x674157, dst, HP);
+    }
 
     DECL_STATIC_METHOD_POINTER(CBattle, LoadMSFile);
 
@@ -743,6 +785,13 @@ public:
       acgn end
     ************************************************************************/
 
+    // mark
+    VOID NakedCheckAliveBeforeHeal();
+    VOID FASTCALL CheckAliveBeforeHeal(ULONG CharPosition);
+    VOID THISCALL SubHPEveryAct2WhenAttack(PMONSTER_STATUS dst, PCHAR_STATUS pChrStatusFinal, INT HP);
+    VOID NakedHandleConditionBeforeMasterQuartzKipaTakeEffect();
+    VOID FASTCALL HandleConditionBeforeMasterQuartzKipaTakeEffect(PMONSTER_STATUS MSData);
+    BOOL THISCALL IsNeedBattleEvaluationSuperKill(ULONG ChrPosition);
 
     DECL_STATIC_METHOD_POINTER(CBattle, SetCurrentActionChrInfo);
     DECL_STATIC_METHOD_POINTER(CBattle, ThinkRunaway);
@@ -802,16 +851,23 @@ public:
 
 
     BOOL THISCALL ScpSaveRestoreParty(PSCENA_ENV_BLOCK Block);
+    // mark
+    BOOL THISCALL ScpLeaveParty(PSCENA_ENV_BLOCK Block);
+    ULONG THISCALL ScpGetFunctionAddress(ULONG_PTR pScena, ULONG function);
 
     VOID FASTCALL InheritSaveData(PBYTE ScenarioFlags);
     VOID NakedInheritSaveData();
 
     DECL_STATIC_METHOD_POINTER(CScript, InheritSaveData);
+    DECL_STATIC_METHOD_POINTER(CScript, ScpLeaveParty);
+    DECL_STATIC_METHOD_POINTER(CScript, ScpGetFunctionAddress);
     DECL_STATIC_METHOD_POINTER(CScript, ScpSaveRestoreParty);
 };
 
 INIT_STATIC_MEMBER(CScript::StubInheritSaveData);
 INIT_STATIC_MEMBER(CScript::StubScpSaveRestoreParty);
+INIT_STATIC_MEMBER(CScript::StubScpLeaveParty);
+INIT_STATIC_MEMBER(CScript::StubScpGetFunctionAddress);
 
 class EDAO
 {
