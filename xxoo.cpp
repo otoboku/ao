@@ -5,6 +5,11 @@ namespace NFLAG
     static const ULONG_PTR IsSubHPEveryAct  = 0x00000001;
 }
 
+class CClass
+{
+public:
+    SHORT THISCALL RollerCoasterFastExit(int vKey);
+};
 
 //acgn
 VOID THISCALL CBattle::LoadMSFile(PMONSTER_STATUS MSData, ULONG MSFileIndex)
@@ -96,8 +101,6 @@ MedalReturn01:
         ret;
     }
 }
-
-
 
 BOOL THISCALL CScript::ScpLeaveParty(PSCENA_ENV_BLOCK Block)
 {
@@ -251,4 +254,25 @@ BOOL THISCALL CBattle::IsNeedBattleEvaluationSuperKill(ULONG ChrPosition)
         return TRUE;
     else
         return FALSE;
+}
+
+
+SHORT THISCALL CClass::RollerCoasterFastExit(int vKey)
+{
+    UNREFERENCED_PARAMETER(vKey);
+    TYPE_OF(&GetAsyncKeyState) StubGetAsyncKeyState;
+    *(PULONG_PTR)&StubGetAsyncKeyState = *(PULONG_PTR)0xDD5A18;
+
+    PULONG  pVar1 = (PULONG)PtrAdd(this, 0x40);
+    //PULONG  pVar2 = (PULONG)PtrAdd(this, 0x54);
+    if (*pVar1 == 0)
+    {
+        //*(PVOID *)_AddressOfReturnAddress() = (PVOID)0x00AA42AC; 
+        return 0;
+    }
+
+    if (StubGetAsyncKeyState('Q') & 0x1 && StubGetAsyncKeyState(VK_CONTROL) & 0xF000)
+        return 1;
+
+    return 0;
 }

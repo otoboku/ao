@@ -4,6 +4,7 @@
 #include "MyLibrary.h"
 
 #pragma warning (disable: 4201)
+#pragma warning (disable: 4996)
 ML_OVERLOAD_NEW
 
 class EDAO;
@@ -1088,9 +1089,111 @@ DECL_SELECTANY TYPE_OF(CGlobal::StubGetMagicQueryTable)     CGlobal::StubGetMagi
 
 class CSSaveData
 {
+#pragma pack(push, 1)
+    typedef union
+    {
+        DUMMY_STRUCT(0x4C4);
+        struct
+        {
+            DUMMY_STRUCT(0x4);
+            INT     Adapter;
+            INT     Device;
+            INT     Mode;
+            INT     WindowWidth;    // 0x10
+            INT     WindowHeight;   // 0x14
+            DUMMY_STRUCT(0x46C); 
+            BYTE    BgmVolumeIni;   // 0x484    ini
+            BYTE    SeVolumeIni;    // 0x485
+            BYTE    BgmOff;         // 0x486    ini invalid
+            BYTE    SeOff;          // 0x487    ini invalid
+            DUMMY_STRUCT(0x34);
+            BYTE    BgmVolume;      // 0x4BC    81C68
+            BYTE    SeVolume;       // 0x4BD    81C69
+            DUMMY_STRUCT(0x2);
+            ULONG   Option;         // 0x4C0
+            
+        } ;
+        
+    } SystemConfigData;
+    
+    typedef struct 
+    {
+        DUMMY_STRUCT(0x817AC);
+        SystemConfigData Config;    // 0x817AC                             
+        DUMMY_STRUCT(0xC);
+        UINT64  Record;             // 0x81C7C
+        ULONG   Tokuten;            // 0x81C84
+        ULONG   Medal;              // 0x81C88
+        DUMMY_STRUCT(0x8);
+        ULONG   GameAccount;        // 0x81C94 invalid bug?
+        DUMMY_STRUCT(0x25434 - 0xC);
+        ULONG   TitleVisualCount;   // 0xA70C0
+        ULONG   ExtraMode;          // 0xA70C4
+        DUMMY_STRUCT(0x4);
+        ULONG   Unknown_4D4;        // 0xA70CC
+        
+    } MemorySystemData;
+    
+    
+    typedef union  // 0x504
+    {
+        DUMMY_STRUCT(0x504);
+        struct
+        {
+            SystemConfigData Config;
+            UINT64  Record;             // 0x4C4
+            ULONG   ExtraMode;          // 0x4CC
+            ULONG   Tokuten;            // 0x4D0
+            ULONG   Unknown_4D4;        // 0x4D4
+            ULONG   Medal;              // 0x4D8
+            ULONG   TitleVisualCount;   // 0x4DC
+            ULONG   GameAccount;        // 0x4E0
+        };
+        
+    } LocalSystemData;
+#pragma pack(pop)
+
 public:
     VOID SaveData2SystemData();
     VOID SystemData2SaveData();
+
+    static MemorySystemData* GetMemorySystemData()
+    {
+        return *(MemorySystemData **)0xC29988;
+    }
+
+    // SaveData2SystemData()
+    VOID THISCALL SaveSystemData(LocalSystemData* pLocal)
+    {
+        MemorySystemData* pMemory = GetMemorySystemData();
+        ZeroMemory(pLocal, sizeof(*pLocal));
+
+        pLocal->Config = pMemory->Config;
+        pLocal->Record = pMemory->Record;
+        pLocal->ExtraMode = pMemory->ExtraMode;
+        pLocal->Tokuten = pMemory->Tokuten;
+        pLocal->Unknown_4D4 = pMemory->Unknown_4D4;
+        pLocal->Medal = pMemory->Medal;
+        pLocal->TitleVisualCount = pMemory->TitleVisualCount;
+        pLocal->GameAccount = pMemory->GameAccount;
+
+    }
+
+    // SystemData2SaveData()
+    VOID THISCALL LoadSystemData(LocalSystemData* pLocal)
+    {
+        MemorySystemData* pMemory = GetMemorySystemData();
+
+        //pMemory->Config = pLocal->Config;
+        pMemory->Config.Option = pLocal->Config.Option;
+        pMemory->Record = pLocal->Record;
+        pMemory->ExtraMode = pLocal->ExtraMode;
+        pMemory->Tokuten = pLocal->Tokuten;
+        pMemory->Unknown_4D4 = pLocal->Unknown_4D4;
+        pMemory->Medal = pLocal->Medal;
+        pMemory->TitleVisualCount = pLocal->TitleVisualCount;
+        pMemory->GameAccount = pLocal->GameAccount;       
+    }
 };
 
 class EDAOFileStream

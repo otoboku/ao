@@ -33,9 +33,9 @@ BOOL Initialize(PVOID BaseAddress)
 
     MEMORY_PATCH p[] =
     {
-/*
-        PATCH_MEMORY(0xEB,      1, 0x2C15B7),    // bypass CGlobal::SetStatusDataForChecking
-        PATCH_MEMORY(0x06,      1, 0x410731),    // win
+
+        //PATCH_MEMORY(0xEB,      1, 0x2C15B7),    // bypass CGlobal::SetStatusDataForChecking
+/*        PATCH_MEMORY(0x06,      1, 0x410731),    // win
         PATCH_MEMORY(0x06,      1, 0x410AD1),    // win
         PATCH_MEMORY(0x01,      1, 0x40991D),    // cpu
         PATCH_MEMORY(0x91,      1, 0x2F9EE3),    // one hit
@@ -190,6 +190,12 @@ BOOL Initialize(PVOID BaseAddress)
         INLINE_HOOK_CALL_RVA_NULL(0x5E3ED6, METHOD_PTR(&CBattle::SubHPEveryAct2WhenAttack)),
         INLINE_HOOK_CALL_RVA_NULL(0x5837EE, METHOD_PTR(&CBattle::NakedHandleConditionBeforeMasterQuartzKipaTakeEffect)),
         INLINE_HOOK_CALL_RVA_NULL(0x5838EA, METHOD_PTR(&CBattle::IsNeedBattleEvaluationSuperKill)),
+
+        INLINE_HOOK_CALL_RVA_NULL(0x6A4244, METHOD_PTR(&CClass::RollerCoasterFastExit)),
+
+
+        INLINE_HOOK_JUMP_RVA_NULL(0x279986, METHOD_PTR(&CSSaveData::SaveSystemData)),
+        INLINE_HOOK_JUMP_RVA_NULL(0x279FA8, METHOD_PTR(&CSSaveData::LoadSystemData)),
 
 #if CONSOLE_DEBUG
         // log
