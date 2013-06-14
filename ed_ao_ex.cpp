@@ -23,6 +23,14 @@ BOOL UnInitialize(PVOID BaseAddress)
 
 #include "xxoo.cpp"
 
+
+BOOL bArianrhodLimitKaijo;
+VOID ConfigInit()
+{
+    static WCHAR szConfigExPath[] = L".\\config_ex.ini";
+    bArianrhodLimitKaijo = NINI::GetPrivateProfileBoolW(L"Ex", L"ArianrhodLimitKaijo", FALSE, szConfigExPath);
+}
+
 BOOL Initialize(PVOID BaseAddress)
 {
     ml::MlInitialize();
@@ -30,6 +38,8 @@ BOOL Initialize(PVOID BaseAddress)
     LdrDisableThreadCalloutsForDll(BaseAddress);
 
     SetExeDirectoryAsCurrent();
+
+    HMODULE hModule = GetExeModuleHandle();
 
     MEMORY_PATCH p[] =
     {
@@ -180,6 +190,7 @@ BOOL Initialize(PVOID BaseAddress)
 */
         // bug fix
         INLINE_HOOK_CALL_RVA_NULL(0x2A2E2C, FurnitureCompletionRate),
+        INLINE_HOOK_JUMP_RVA_NULL(0x498F50, (PVOID)0x898DD1),   // 装卸主回路无法出成就 七耀之贤士
         INLINE_HOOK_CALL_RVA_NULL(0x3616A6, MedalReturn),
 
         INLINE_HOOK_JUMP_RVA     (0x277280, METHOD_PTR(&CScript::ScpLeaveParty), CScript::StubScpLeaveParty),
@@ -203,18 +214,6 @@ BOOL Initialize(PVOID BaseAddress)
 #endif
     };
 
-#if 0
-    RtlSetUnhandledExceptionFilter(
-        [] (PEXCEPTION_POINTERS ExceptionPointers) -> LONG
-    {
-        ExceptionBox(L"crashed");
-        CreateMiniDump(ExceptionPointers);
-        return ExceptionContinueSearch;
-    }
-        );
-
-#endif
-
 #if CONSOLE_DEBUG
     AllocConsole();
     PrintConsoleW(L"%x\r\n", FIELD_OFFSET(MONSTER_STATUS, AT));
@@ -222,7 +221,17 @@ BOOL Initialize(PVOID BaseAddress)
     PrintConsoleW(L"%x\r\n", FIELD_OFFSET(MONSTER_STATUS, SummonCount));
 #endif
 
-    Nt_PatchMemory(p, countof(p), f, countof(f), GetExeModuleHandle());
+    Nt_PatchMemory(p, countof(p), f, countof(f), hModule);
+
+    ConfigInit();
+    if (bArianrhodLimitKaijo)
+    {
+        MEMORY_PATCH p[] =
+        {
+            PATCH_MEMORY(0xEB, 1, 0x5A3E40),
+        };
+        Nt_PatchMemory(p, countof(p), 0, NULL, hModule);
+    }
 
     return TRUE;
 }

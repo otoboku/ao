@@ -1096,12 +1096,14 @@ class CSSaveData
         struct
         {
             DUMMY_STRUCT(0x4);
-            INT     Adapter;
+            INT     Adapter;        // 0x4
             INT     Device;
             INT     Mode;
             INT     WindowWidth;    // 0x10
             INT     WindowHeight;   // 0x14
-            DUMMY_STRUCT(0x46C); 
+            DUMMY_STRUCT(0x475-0x18); 
+            BYTE    WindowMode;     // 0x475
+            DUMMY_STRUCT(0x484-0x476); 
             BYTE    BgmVolumeIni;   // 0x484    ini
             BYTE    SeVolumeIni;    // 0x485
             BYTE    BgmOff;         // 0x486    ini invalid
@@ -1118,7 +1120,10 @@ class CSSaveData
     
     typedef struct 
     {
-        DUMMY_STRUCT(0x817AC);
+        DUMMY_STRUCT(0x7EDD6);
+        USHORT  TitleVisualCount1;  // 0x7EDD6
+        DUMMY_STRUCT(0x817AC - 0x7EDD6 - 2);   
+        //DUMMY_STRUCT(0x817AC);
         SystemConfigData Config;    // 0x817AC                             
         DUMMY_STRUCT(0xC);
         UINT64  Record;             // 0x81C7C
@@ -1174,7 +1179,7 @@ public:
         pLocal->Tokuten = pMemory->Tokuten;
         pLocal->Unknown_4D4 = pMemory->Unknown_4D4;
         pLocal->Medal = pMemory->Medal;
-        pLocal->TitleVisualCount = pMemory->TitleVisualCount;
+        pLocal->TitleVisualCount = MY_MAX(pMemory->TitleVisualCount, pMemory->TitleVisualCount1);
         pLocal->GameAccount = pMemory->GameAccount;
 
     }
@@ -1185,7 +1190,9 @@ public:
         MemorySystemData* pMemory = GetMemorySystemData();
 
         //pMemory->Config = pLocal->Config;
-        pMemory->Config.Option = pLocal->Config.Option;
+        if (pLocal->Config.WindowMode == 0 && pLocal->Config.WindowWidth == 0){}
+        else
+            pMemory->Config.Option = pLocal->Config.Option;
         pMemory->Record = pLocal->Record;
         pMemory->ExtraMode = pLocal->ExtraMode;
         pMemory->Tokuten = pLocal->Tokuten;
