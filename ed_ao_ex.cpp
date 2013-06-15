@@ -12,7 +12,7 @@
 //#pragma comment(lib,"D:\\svn\\lib\\msvcrt.lib")
 //#pragma comment(lib,"D:\\svn\\lib\\msvcrt_lib.lib")
 
-#define CONSOLE_DEBUG   0
+#define CONSOLE_DEBUG   1
 
 BOOL UnInitialize(PVOID BaseAddress)
 {
@@ -23,12 +23,64 @@ BOOL UnInitialize(PVOID BaseAddress)
 
 #include "xxoo.cpp"
 
-
-BOOL bArianrhodLimitKaijo;
 VOID ConfigInit()
 {
     static WCHAR szConfigExPath[] = L".\\config_ex.ini";
-    bArianrhodLimitKaijo = NINI::GetPrivateProfileBoolW(L"Ex", L"ArianrhodLimitKaijo", FALSE, szConfigExPath);
+
+    bArianrhodLimitKaijo = NINI::GetPrivateProfileBoolW(L"Ex", L"ArianrhodLimitKaijo", TRUE, szConfigExPath);
+    bEnemySBreak = NINI::GetPrivateProfileBoolW(L"Ex", L"EnemySBreak", TRUE, szConfigExPath);
+    bShowAT = NINI::GetPrivateProfileBoolW(L"Ex", L"ShowAT", TRUE, szConfigExPath);
+    bForceKillEnemyAtScene = NINI::GetPrivateProfileBoolW(L"Ex", L"ForceKillEnemyAtScene", TRUE, szConfigExPath);
+    bForceShowBurstMode = NINI::GetPrivateProfileBoolW(L"Ex", L"ForceShowBurstMode", TRUE, szConfigExPath);
+    bForceShowInfOnMiniMap = NINI::GetPrivateProfileBoolW(L"Ex", L"ForceShowInfOnMiniMap", TRUE, szConfigExPath);
+    bEnableSkipCraftAnime = NINI::GetPrivateProfileBoolW(L"Ex", L"EnableSkipCraftAnime", TRUE, szConfigExPath);
+
+    nDifficulty = NINI::GetPrivateProfileIntW(L"Battle", L"Difficulty", 0, szConfigExPath);
+    if (nDifficulty)
+    {
+        statusRateUserDefined.HP = NINI::GetPrivateProfileIntW(L"Battle", L"HP", 100, szConfigExPath);
+        statusRateUserDefined.STR = NINI::GetPrivateProfileIntW(L"Battle", L"STR", 100, szConfigExPath);
+        statusRateUserDefined.DEF = NINI::GetPrivateProfileIntW(L"Battle", L"DEF", 100, szConfigExPath);
+        statusRateUserDefined.ATS = NINI::GetPrivateProfileIntW(L"Battle", L"ATS", 100, szConfigExPath);
+        statusRateUserDefined.ADF = NINI::GetPrivateProfileIntW(L"Battle", L"ADF", 100, szConfigExPath);
+        statusRateUserDefined.SPD = NINI::GetPrivateProfileIntW(L"Battle", L"SPD", 100, szConfigExPath);
+        statusRateUserDefined.DEX = NINI::GetPrivateProfileIntW(L"Battle", L"DEX", 100, szConfigExPath);
+        statusRateUserDefined.AGL = NINI::GetPrivateProfileIntW(L"Battle", L"AGL", 100, szConfigExPath);
+        statusRateUserDefined.MOV = NINI::GetPrivateProfileIntW(L"Battle", L"MOV", 100, szConfigExPath);
+        statusRateUserDefined.DEXRate = NINI::GetPrivateProfileIntW(L"Battle", L"DEXRate", 0, szConfigExPath);
+        statusRateUserDefined.AGLRate = NINI::GetPrivateProfileIntW(L"Battle", L"AGLRate", 0, szConfigExPath);
+        statusRateUserDefined.ResistAbnormalCondition = NINI::GetPrivateProfileBoolW(L"Battle", L"ResistAbnormalCondition", FALSE, szConfigExPath);
+        statusRateUserDefined.ResistAbilityDown = NINI::GetPrivateProfileBoolW(L"Battle", L"ResistAbilityDown", FALSE, szConfigExPath);
+        statusRateUserDefined.ResistATDelay = NINI::GetPrivateProfileBoolW(L"Battle", L"ResistATDelay", FALSE, szConfigExPath);
+    }
+
+
+
+#if CONSOLE_DEBUG
+PrintConsoleW(L"bArianrhodLimitKaijo:%d\r\n", bArianrhodLimitKaijo);
+PrintConsoleW(L"bEnemySBreak:%d\r\n", bEnemySBreak);
+PrintConsoleW(L"bShowAT:%d\r\n", bShowAT);
+PrintConsoleW(L"bForceKillEnemyAtScene:%d\r\n", bForceKillEnemyAtScene);
+PrintConsoleW(L"bForceShowBurstMode:%d\r\n", bForceShowBurstMode);
+PrintConsoleW(L"bForceShowInfOnMiniMap:%d\r\n", bForceShowInfOnMiniMap);
+PrintConsoleW(L"bEnableSkipCraftAnime:%d\r\n", bEnableSkipCraftAnime);
+
+PrintConsoleW(L"nDifficulty:%d\r\n", nDifficulty);
+PrintConsoleW(L"HP:%d\r\n", statusRateUserDefined.HP);
+PrintConsoleW(L"STR:%d\r\n", statusRateUserDefined.STR);
+PrintConsoleW(L"DEF:%d\r\n", statusRateUserDefined.DEF);
+PrintConsoleW(L"ATS:%d\r\n", statusRateUserDefined.ATS);
+PrintConsoleW(L"ADF:%d\r\n", statusRateUserDefined.ADF);
+PrintConsoleW(L"SPD:%d\r\n", statusRateUserDefined.SPD);
+PrintConsoleW(L"DEX:%d\r\n", statusRateUserDefined.DEX);
+PrintConsoleW(L"AGL:%d\r\n", statusRateUserDefined.AGL);
+PrintConsoleW(L"MOV:%d\r\n", statusRateUserDefined.MOV);
+PrintConsoleW(L"DEXRate:%d\r\n", statusRateUserDefined.DEXRate);
+PrintConsoleW(L"AGLRate:%d\r\n", statusRateUserDefined.AGLRate);
+PrintConsoleW(L"ResistAbnormalCondition:%d\r\n", statusRateUserDefined.ResistAbnormalCondition);
+PrintConsoleW(L"ResistAbilityDown:%d\r\n", statusRateUserDefined.ResistAbilityDown);
+PrintConsoleW(L"ResistATDelay:%d\r\n", statusRateUserDefined.ResistATDelay);
+#endif
 }
 
 BOOL Initialize(PVOID BaseAddress)
@@ -43,151 +95,27 @@ BOOL Initialize(PVOID BaseAddress)
 
     MEMORY_PATCH p[] =
     {
-
-        //PATCH_MEMORY(0xEB,      1, 0x2C15B7),    // bypass CGlobal::SetStatusDataForChecking
-/*        PATCH_MEMORY(0x06,      1, 0x410731),    // win
-        PATCH_MEMORY(0x06,      1, 0x410AD1),    // win
-        PATCH_MEMORY(0x01,      1, 0x40991D),    // cpu
-        PATCH_MEMORY(0x91,      1, 0x2F9EE3),    // one hit
-        PATCH_MEMORY(VK_SHIFT,  4, 0x4098BA),    // GetKeyState(VK_SHIFT)
-        PATCH_MEMORY(0x3FEB,    2, 0x452FD1),    // bypass savedata checksum
-        PATCH_MEMORY(0x20000,   4, 0x4E71B2),    // chrimg max buffer size
-
-        // debug AT
-
-        PATCH_MEMORY(0x49EB,    2, 0x5F668D),    // disable orig at
-        PATCH_MEMORY(0x81,      1, 0x5F66D9),    // disable orig at
-        PATCH_MEMORY(0x80,      1, 0x5F68A4),    // force show debug at
-        PATCH_MEMORY(0x2C,      1, 0x5F693D),    // debug at pos.X advance
-
-        PATCH_MEMORY(0x00, 1, 0x653972),   // box height
-        PATCH_MEMORY(0x00, 1, 0x653C31),   // monster height
-        PATCH_MEMORY(0x00, 1, 0x655E64),   // actor height (mini map)
-
-        PATCH_MEMORY(0xEB,  1,  0x2CAA98),      // enable shimmer when width > 1024
-        PATCH_MEMORY(0xEB,  1,  0x2C33BE),      // enable blur when width > 1024
-        PATCH_MEMORY(0xEB,  1,  0x2EFBB8),      // capture ?
-
-        PATCH_MEMORY(0x00,  1,  0x55F6E1),        // 爆灵
-
-        // monster info
-        PATCH_MEMORY(0xEB,  1,  0x626AC8),      // bypass check is enemy
-*/
-
         // bug fix
         PATCH_MEMORY(0xEB,  1,  0x60CC8F),      // burst energy
-
-        //PATCH_MEMORY(0x00,  1,  0x5304C9),      // skip op Sleep
     };
 
     MEMORY_FUNCTION_PATCH f[] =
     {
 /*
-        // crack
-
-#if !D3D9_VER
-
-        INLINE_HOOK_JUMP_RVA_NULL(0x27969D, METHOD_PTR(&CBattle::SetSelectedAttack)),
-        INLINE_HOOK_JUMP_RVA_NULL(0x275DF4, METHOD_PTR(&CBattle::SetSelectedCraft)),
-        INLINE_HOOK_JUMP_RVA_NULL(0x272AB9, METHOD_PTR(&CBattle::SetSelectedSCraft)),
-
-        INLINE_HOOK_JUMP_RVA_NULL(0x279986, METHOD_PTR(&CSSaveData::SaveData2SystemData)),
-        INLINE_HOOK_JUMP_RVA_NULL(0x279FA8, METHOD_PTR(&CSSaveData::SystemData2SaveData)),
-
-#endif // D3D9_VER
-
-        INLINE_HOOK_JUMP_RVA_NULL(0x279553, METHOD_PTR(&CBattle::SetSelectedMagic)),
-        //INLINE_HOOK_CALL_RVA_NULL(0x51E1C7, xxx),
-
-        // tweak
-
-        //INLINE_HOOK_CALL_RVA_NULL(0x40492A, ShowExitMessageBox),
-        INLINE_HOOK_CALL_RVA_NULL(0x3640A1, InitWarningItpTimeStamp),   // bypass show warning.itp
-        INLINE_HOOK_CALL_RVA_NULL(0x3E2B42, EDAO::NakedLoadSaveDataThumb),
-        INLINE_HOOK_CALL_RVA_NULL(0x465F08, EDAO::NakedSetSaveDataScrollStep),
-
-        INLINE_HOOK_JUMP_RVA     (0x279AA3, METHOD_PTR(&EDAO::CheckItemEquipped), EDAO::StubCheckItemEquipped),
         INLINE_HOOK_CALL_RVA_NULL(0x5DE1D9, METHOD_PTR(&CBattle::NakedNoResistConditionUp)),
-
-        INLINE_HOOK_CALL_RVA_NULL(0x5F690B, CBattle::FormatBattleChrAT),
-        INLINE_HOOK_CALL_RVA_NULL(0x5B05C6, CBattle::ShowSkipCraftAnimeButton),
-
-
-        INLINE_HOOK_JUMP_RVA_NULL(0x46B6A0, METHOD_PTR(&CSoundPlayer::GetSoundControlWindow)),
-        INLINE_HOOK_JUMP         (EATLookupRoutineByHashPNoFix(FindLdrModuleByName(&WCS2US(L"USER32.dll"))->DllBase, USER32_SendMessageA), CSoundPlayer::StaticDispatchCtrlCode, CSoundPlayer::StubStaticDispatchCtrlCode),
-
         // bug fix
 
         INLINE_HOOK_CALL_RVA_NULL(0x5B1BE6, METHOD_PTR(&CBattleATBar::LookupReplaceAtBarEntry)),
         INLINE_HOOK_JUMP_RVA     (0x275DAE, METHOD_PTR(&CBattle::ExecuteActionScript), CBattle::StubExecuteActionScript),
 
         INLINE_HOOK_JUMP_RVA     (0x550C90, METHOD_PTR(&CScript::ScpSaveRestoreParty), CScript::StubScpSaveRestoreParty),
-
-        // file redirection
-
-        INLINE_HOOK_CALL_RVA_NULL(0x48C1EA, AoFindFirstFileA),
-        INLINE_HOOK_CALL_RVA_NULL(0x48C206, ZwClose),
-        INLINE_HOOK_CALL_RVA_NULL(0x4E6A0B, GetCampImage),
-        INLINE_HOOK_CALL_RVA_NULL(0x5A05B4, GetBattleFace),
-        INLINE_HOOK_CALL_RVA_NULL(0x2F9101, GetFieldAttackChr),
-
-#if D3D9_VER
-
-        INLINE_HOOK_JUMP_NULL(EATLookupRoutineByHashPNoFix(GetKernel32Handle(), KERNEL32_CreateFileA), AoCreateFileA),
-
-#endif
-
-        // custom format itp / itc
-
-        //INLINE_HOOK_JUMP_RVA(0x273D24, METHOD_PTR(&EDAOFileStream::Uncompress), EDAOFileStream::StubUncompress),
-
-        // hack for boss
-
-        INLINE_HOOK_CALL_RVA_NULL(0x5D1ED5, METHOD_PTR(&CBattle::NakedAS8DDispatcher)),
-        INLINE_HOOK_CALL_RVA_NULL(0x56F7C7, METHOD_PTR(&CBattle::NakedGetChrIdForSCraft)),
-        INLINE_HOOK_CALL_RVA_NULL(0x5E027B, METHOD_PTR(&CBattle::NakedGetTurnVoiceChrId)),
-        INLINE_HOOK_CALL_RVA_NULL(0x5E1015, METHOD_PTR(&CBattle::NakedGetRunawayVoiceChrId)),
-        INLINE_HOOK_CALL_RVA_NULL(0x5E0CA3, METHOD_PTR(&CBattle::NakedGetReplySupportVoiceChrId)),
-        INLINE_HOOK_CALL_RVA_NULL(0x5E09E0, METHOD_PTR(&CBattle::NakedGetTeamRushVoiceChrId)),
-        INLINE_HOOK_CALL_RVA_NULL(0x5DFA21, METHOD_PTR(&CBattle::NakedGetUnderAttackVoiceChrId)),
-        INLINE_HOOK_CALL_RVA_NULL(0x5E081E, METHOD_PTR(&CBattle::NakedGetUnderAttackVoiceChrId2)),
-        INLINE_HOOK_CALL_RVA_NULL(0x5E062B, METHOD_PTR(&CBattle::NakedGetSBreakVoiceChrId)),
-        INLINE_HOOK_CALL_RVA_NULL(0x5A3644, METHOD_PTR(&CBattle::NakedCopyMagicAndCraftData)),
-        INLINE_HOOK_CALL_RVA_NULL(0x5A3814, METHOD_PTR(&CBattle::NakedOverWriteBattleStatusWithChrStatus)),
-        INLINE_HOOK_CALL_RVA_NULL(0x578368, METHOD_PTR(&CBattle::NakedIsChrStatusNeedRefresh)),
-        INLINE_HOOK_CALL_RVA_NULL(0x622C83, METHOD_PTR(&EDAO::NakedGetChrSBreak)),
-        INLINE_HOOK_JUMP_RVA     (0x277776, METHOD_PTR(&CGlobal::GetMagicData), CGlobal::StubGetMagicData),
-        INLINE_HOOK_JUMP_RVA     (0x274E18, METHOD_PTR(&CGlobal::GetMagicQueryTable), CGlobal::StubGetMagicQueryTable),
-        INLINE_HOOK_JUMP_RVA     (0x2767E0, METHOD_PTR(&CGlobal::GetMagicDescription), CGlobal::StubGetMagicDescription),
-
-
-        // inherit custom flags
-
-        INLINE_HOOK_CALL_RVA_NULL(0x358457, METHOD_PTR(&CScript::NakedInheritSaveData)),
-
-
-        // enemy sbreak
-
-        INLINE_HOOK_CALL_RVA_NULL(0x56526F, METHOD_PTR(&CBattle::NakedGetBattleState)),
-        INLINE_HOOK_JUMP_RVA     (0x599100, METHOD_PTR(&CBattle::SetCurrentActionChrInfo), CBattle::StubSetCurrentActionChrInfo),
-        INLINE_HOOK_CALL_RVA_NULL(0x591C3A, METHOD_PTR(&CBattle::NakedEnemyThinkAction)),
-
-
-        // monster info box
-
-        INLINE_HOOK_CALL_RVA_NULL(0x626AEA, METHOD_PTR(&CBattleInfoBox::SetMonsterInfoBoxSize)),
-        INLINE_HOOK_JUMP_RVA     (0x27AC8C, METHOD_PTR(&CBattleInfoBox::DrawMonsterStatus), CBattleInfoBox::StubDrawMonsterStatus),
-
-
-        // acgn
-
-        INLINE_HOOK_JUMP_RVA     (0x275EFD, METHOD_PTR(&CBattle::LoadMSFile), CBattle::StubLoadMSFile),	//it3
-        INLINE_HOOK_JUMP_RVA_NULL(0x5D3545, METHOD_PTR(&CBattle::NakedAS_8D_5F)), //时空大崩坏
-
-
-        //INLINE_HOOK_JUMP_RVA(0x275755, METHOD_PTR(&EDAO::Fade), EDAO::StubFade),
-        //INLINE_HOOK_CALL_RVA_NULL(0x601122, FadeInRate),
 */
+        // monster info box
+        
+        //INLINE_HOOK_CALL_RVA_NULL(0x626AEA, METHOD_PTR(&CBattleInfoBox::SetMonsterInfoBoxSize)),
+        INLINE_HOOK_JUMP_RVA_NULL(0x27AC8C, (PVOID)0xA26D50),
+        INLINE_HOOK_JUMP_RVA     (0x27AC8C, METHOD_PTR(&CBattleInfoBox::DrawMonsterStatus), CBattleInfoBox::StubDrawMonsterStatus), // USHORT->SHORT
+
         // bug fix
         INLINE_HOOK_CALL_RVA_NULL(0x2A2E2C, FurnitureCompletionRate),
         INLINE_HOOK_JUMP_RVA_NULL(0x498F50, (PVOID)0x898DD1),   // 装卸主回路无法出成就 七耀之贤士
@@ -208,9 +136,12 @@ BOOL Initialize(PVOID BaseAddress)
         INLINE_HOOK_JUMP_RVA_NULL(0x279986, METHOD_PTR(&CSSaveData::SaveSystemData)),
         INLINE_HOOK_JUMP_RVA_NULL(0x279FA8, METHOD_PTR(&CSSaveData::LoadSystemData)),
 
+        // 
+        INLINE_HOOK_JUMP_RVA     (0x2756E7, METHOD_PTR(&CBattle::SetBattleStatusFinal), CBattle::StubSetBattleStatusFinal),
+
 #if CONSOLE_DEBUG
         // log
-        INLINE_HOOK_JUMP_RVA     (0x51EB50, METHOD_PTR(&CScript::ScpGetFunctionAddress), CScript::StubScpGetFunctionAddress),
+        //INLINE_HOOK_JUMP_RVA     (0x51EB50, METHOD_PTR(&CScript::ScpGetFunctionAddress), CScript::StubScpGetFunctionAddress),
 #endif
     };
 
@@ -224,6 +155,7 @@ BOOL Initialize(PVOID BaseAddress)
     Nt_PatchMemory(p, countof(p), f, countof(f), hModule);
 
     ConfigInit();
+
     if (bArianrhodLimitKaijo)
     {
         MEMORY_PATCH p[] =
@@ -231,6 +163,69 @@ BOOL Initialize(PVOID BaseAddress)
             PATCH_MEMORY(0xEB, 1, 0x5A3E40),
         };
         Nt_PatchMemory(p, countof(p), 0, NULL, hModule);
+    }
+
+    if (!bEnemySBreak)
+    {
+        static unsigned char p0096526F[6] = {0x89, 0x8D, 0x6C, 0xFD, 0xFF, 0xFF};
+        MEMORY_PATCH p[] =
+        {
+            PATCH_MEMORY(p0096526F, 6, 0x56526F),
+        };
+        Nt_PatchMemory(p, countof(p), 0, NULL, hModule);
+    }
+
+    if (!bShowAT)
+    {
+        MEMORY_PATCH p[] =
+        {
+            PATCH_MEMORY(0x4F74,    2, 0x5F668D),    // disable orig at
+            PATCH_MEMORY(0x85,      1, 0x5F66D9),    // disable orig at
+            PATCH_MEMORY(0x84,      1, 0x5F68A4),    // force show debug at
+            PATCH_MEMORY(0x1A,      1, 0x5F693D),    // debug at pos.X advance
+        };
+
+        MEMORY_FUNCTION_PATCH f[] =
+        {             
+            INLINE_HOOK_CALL_RVA_NULL(0x5F690B, (PVOID)0x6748DC),
+        };
+        Nt_PatchMemory(p, countof(p), f, countof(f), hModule);
+    }
+
+    if (!bForceKillEnemyAtScene)
+    {
+        MEMORY_PATCH p[] =
+        {
+            PATCH_MEMORY(0x9D,      1, 0x2F9EE3),    // one hit
+        };
+        Nt_PatchMemory(p, countof(p), 0, NULL, hModule);
+    }
+
+    if (!bForceShowBurstMode)
+    {
+        MEMORY_PATCH p[] =
+        {
+            PATCH_MEMORY(0x0D,  1,  0x55F6E1),        // 爆灵
+        };
+        Nt_PatchMemory(p, countof(p), 0, NULL, hModule);
+    }
+
+    if (!bForceShowInfOnMiniMap)
+    {      
+        MEMORY_FUNCTION_PATCH f[] =
+        {             
+            INLINE_HOOK_JUMP_RVA_NULL(0x279AA3, (PVOID)0x740F50),
+        };
+        Nt_PatchMemory(0, NULL, f, countof(f), hModule);
+    }
+
+    if (!bEnableSkipCraftAnime)
+    {      
+        MEMORY_FUNCTION_PATCH f[] =
+        {             
+            INLINE_HOOK_CALL_RVA_NULL(0x5B05C6, (PVOID)0x678AF4),
+        };
+        Nt_PatchMemory(0, NULL, f, countof(f), hModule);
     }
 
     return TRUE;

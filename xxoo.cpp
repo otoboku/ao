@@ -5,6 +5,37 @@ namespace NFLAG
     static const ULONG_PTR IsSubHPEveryAct  = 0x00000001;
 }
 
+
+bool bArianrhodLimitKaijo;
+bool bEnemySBreak;
+bool bShowAT;
+bool bForceKillEnemyAtScene;
+bool bForceShowBurstMode;
+bool bForceShowInfOnMiniMap;
+bool bEnableSkipCraftAnime;
+int nDifficulty;
+
+typedef struct _SStatusRate
+{
+    INT HP;
+    INT STR;
+    INT DEF;
+    INT ATS;
+    INT ADF;
+    INT SPD;
+    INT DEX;
+    INT AGL;
+    INT MOV;
+    INT DEXRate;
+    INT AGLRate;
+    bool    ResistAbnormalCondition;
+    bool    ResistAbilityDown;
+    bool    ResistATDelay;
+} SStatusRate;
+
+SStatusRate statusRateUserDefined;
+
+
 class CClass
 {
 public:
@@ -275,4 +306,41 @@ SHORT THISCALL CClass::RollerCoasterFastExit(int vKey)
         return 1;
 
     return 0;
+}
+
+VOID THISCALL CBattle::SetBattleStatusFinal(PMONSTER_STATUS MSData)
+{
+    if(!nDifficulty || !MSData->IsChrEnemyOnly())
+    {
+        return (this->*StubSetBattleStatusFinal)(MSData);
+    }
+    SaturateConvert(&MSData->ChrStatus[1].MaximumHP, (INT64)MSData->ChrStatus[1].MaximumHP * statusRateUserDefined.HP / 100);
+    SaturateConvert(&MSData->ChrStatus[1].InitialHP, (INT64)MSData->ChrStatus[1].InitialHP * statusRateUserDefined.HP / 100);
+    SaturateConvert(&MSData->ChrStatus[1].STR, (INT64)MSData->ChrStatus[1].STR * statusRateUserDefined.STR / 100);
+    SaturateConvert(&MSData->ChrStatus[1].DEF, (INT64)MSData->ChrStatus[1].DEF * statusRateUserDefined.DEF / 100);
+    SaturateConvert(&MSData->ChrStatus[1].ATS, (INT64)MSData->ChrStatus[1].ATS * statusRateUserDefined.ATS / 100);
+    SaturateConvert(&MSData->ChrStatus[1].ADF, (INT64)MSData->ChrStatus[1].ADF * statusRateUserDefined.ADF / 100);
+    SaturateConvert(&MSData->ChrStatus[1].SPD, (INT64)MSData->ChrStatus[1].SPD * statusRateUserDefined.SPD / 100);
+    SaturateConvertEx(&MSData->ChrStatus[1].DEX, (INT64)MSData->ChrStatus[1].DEX * statusRateUserDefined.DEX / 100, (SHORT)0xCCC);
+    SaturateConvertEx(&MSData->ChrStatus[1].AGL, (INT64)MSData->ChrStatus[1].AGL * statusRateUserDefined.AGL / 100, (SHORT)0xCCC);
+    SaturateConvert(&MSData->ChrStatus[1].MOV, (INT64)MSData->ChrStatus[1].MOV * statusRateUserDefined.MOV / 100);
+
+    SaturateConvertEx(&MSData->ChrStatus[1].DEXRate, (INT64)MSData->ChrStatus[1].DEXRate + statusRateUserDefined.DEXRate, (SHORT)100, (SHORT)-100);
+    SaturateConvertEx(&MSData->ChrStatus[1].AGLRate, (INT64)MSData->ChrStatus[1].AGLRate + statusRateUserDefined.AGLRate, (SHORT)100, (SHORT)-100);
+
+    ULONG   conditionAbnormal = 0x40008FFF;
+    ULONG   conditionDown = 0x00FF0000;
+
+    if (statusRateUserDefined.ResistAbnormalCondition)
+    {
+        MSData->Resistance |= conditionAbnormal;
+    }
+    if (statusRateUserDefined.ResistAbilityDown)
+    {
+        MSData->Resistance |= conditionDown;
+    }
+    if (statusRateUserDefined.ResistATDelay)
+    {
+        MSData->State2 |= 0x0800;
+    }
 }

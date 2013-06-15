@@ -101,6 +101,19 @@ SOURCE=.\ed_ao_ex.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\edao.cpp
+
+!IF  "$(CFG)" == "EDAO - Win32 Release"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "EDAO - Win32 d3d9"
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
 SOURCE=.\edao.h
 # End Source File
 # Begin Source File
