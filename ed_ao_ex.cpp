@@ -169,6 +169,96 @@ BOOL Initialize(PVOID BaseAddress)
         Nt_PatchMemory(0, NULL, f, countof(f), hModule);
     }
 
+    // 遇敌方式，开场状况
+    if (nBattleEncount != 3)
+    {
+        if (FLAG_ON(nBattleEncount, 0x10))
+        {
+            MEMORY_PATCH p[] =
+            {
+                PATCH_MEMORY(0x00,		1,	0x006FBCAD-0x400000),	// 阳炎
+                PATCH_MEMORY(0xEB,		1,	0x00750B34-0x400000),	// 宝箱靠近怪 无法开启
+            };
+            Nt_PatchMemory(p, countof(p), 0, NULL, hModule);
+        }
+
+        if (FLAG_ON(nBattleEncount, 0x20))
+        {
+            MEMORY_PATCH p[] =
+            {
+                PATCH_MEMORY(0x00,		1,	0x006F5781-0x400000),	// 叶隐
+            };
+            Nt_PatchMemory(p, countof(p), 0, NULL, hModule);
+        }
+
+        CLEAR_FLAG(nBattleEncount, 0xFFFFFFF8);
+        if (nBattleEncount <= 4 && nBattleEncount != 3)
+        {
+            MEMORY_FUNCTION_PATCH f[] =
+            {             
+                INLINE_HOOK_CALL_RVA_NULL(0x2F66EE, SetBattleEncountCondition),
+            };
+            Nt_PatchMemory(0, NULL, f, countof(f), hModule);
+        }
+    }
+
+    // 支援战技AT
+    if (nSupportCraftInterval != 0)
+    {
+        MEMORY_PATCH p[] =
+        {
+            PATCH_MEMORY(nSupportCraftInterval,		    4,	0x00725AF6-0x400000),
+            PATCH_MEMORY(nSupportCraftInterval,		    4,	0x0099EFE7-0x400000),
+            PATCH_MEMORY(nSupportCraftInterval/7*3,		4,	0x0099FB75-0x400000),
+            PATCH_MEMORY(nSupportCraftInterval/7*4 + 1, 4,	0x0099FB7B-0x400000),
+        };
+        Nt_PatchMemory(p, countof(p), 0, NULL, hModule);
+    }
+
+    // 伤害计算去随机补正
+    if (bDisableDamageRandom)
+    {
+        MEMORY_PATCH p[] =
+        {
+            PATCH_MEMORY(0x81,  1,	0x00976162-0x400000),
+            PATCH_MEMORY(0xEB,  1,	0x009763AE-0x400000),
+        };
+        Nt_PatchMemory(p, countof(p), 0, NULL, hModule);
+    }
+
+    // ATBonus设置
+    if (nATBonus != 0)
+    {
+        if (nATBonus == 16)
+            nATBonus = 0;
+        
+        MEMORY_FUNCTION_PATCH f[] =
+        {             
+            INLINE_HOOK_CALL_RVA_NULL(0x5F9546, SetBattleATBonus),
+        };
+        Nt_PatchMemory(0, NULL, f, countof(f), hModule);
+    }
+
+    // 晶片上限
+    if (nSepithUpLimit != 0)
+    {      
+        MEMORY_PATCH p[] =
+        {
+            PATCH_MEMORY(nSepithUpLimit,		    4,	0x00981262 -0x400000),
+            PATCH_MEMORY(nSepithUpLimit,		    4,	0x0098127E -0x400000),
+        };
+
+        MEMORY_FUNCTION_PATCH f[] =
+        {             
+            //INLINE_HOOK_CALL_RVA_NULL(0x61F452, SepithUpLimitDisplay),
+            //INLINE_HOOK_CALL_RVA_NULL(0x61F474, SepithUpLimitDisplay),
+            //INLINE_HOOK_CALL_RVA_NULL(0x620981, SepithUpLimitDisplay),
+            //INLINE_HOOK_CALL_RVA_NULL(0x62099A, SepithUpLimitDisplay),
+            INLINE_HOOK_CALL_RVA_NULL(0x620E27, SepithUpLimitDisplay1),
+            INLINE_HOOK_CALL_RVA_NULL(0x620E8C, SepithUpLimitDisplay2),
+        };
+        Nt_PatchMemory(p, countof(p), f, sizeof(f), hModule);
+    }
     return TRUE;
 }
 

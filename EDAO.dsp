@@ -143,16 +143,7 @@ SOURCE=.\SoundArc.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\xxoo.cpp
-
-!IF  "$(CFG)" == "EDAO - Win32 Release"
-
-# PROP Exclude_From_Build 1
-
-!ELSEIF  "$(CFG)" == "EDAO - Win32 d3d9"
-
-!ENDIF 
-
+SOURCE=.\xxoo.h
 # End Source File
 # End Target
 # End Project

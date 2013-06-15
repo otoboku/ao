@@ -16,6 +16,10 @@ BOOL bForceShowInfOnMiniMap;
 BOOL bEnableSkipCraftAnime;
 INT nDifficulty;
 INT nBattleEncount;
+INT nSupportCraftInterval;
+BOOL bDisableDamageRandom;
+INT nATBonus;
+INT nSepithUpLimit;
 
 typedef struct _SStatusRate
 {
@@ -145,11 +149,16 @@ VOID ConfigInit()
         { (INT*)&statusRateUserDefined.MOV, 'i', L"Battle", L"MOV", 100, },
         { (INT*)&statusRateUserDefined.DEXRate, 'i', L"Battle", L"DEXRate", 0, },
         { (INT*)&statusRateUserDefined.AGLRate, 'i', L"Battle", L"AGLRate", 0, },
-        { (BOOL*)&statusRateUserDefined.ResistAbnormalCondition, 'i', L"Battle", L"ResistAbnormalCondition", FALSE, },
-        { (BOOL*)&statusRateUserDefined.ResistAbilityDown, 'i', L"Battle", L"ResistAbilityDown", FALSE, },
-        { (BOOL*)&statusRateUserDefined.ResistATDelay, 'i', L"Battle", L"ResistATDelay", FALSE, },
+        { (BOOL*)&statusRateUserDefined.ResistAbnormalCondition, 'b', L"Battle", L"ResistAbnormalCondition", FALSE, },
+        { (BOOL*)&statusRateUserDefined.ResistAbilityDown, 'b', L"Battle", L"ResistAbilityDown", FALSE, },
+        { (BOOL*)&statusRateUserDefined.ResistATDelay, 'b', L"Battle", L"ResistATDelay", FALSE, },
 
-        { (INT*)&nBattleEncount, 'i', L"Battle", L"BattleEncount", -1, },
+        { (INT*)&nBattleEncount, 'i', L"Battle", L"BattleEncount", 3, },
+        { (INT*)&nSupportCraftInterval, 'i', L"Battle", L"SupportCraftInterval", 0, },
+        { (BOOL*)&bDisableDamageRandom, 'b', L"Battle", L"DisableDamageRandom", FALSE, },
+        { (INT*)&nATBonus, 'i', L"Battle", L"ATBonus", 0, },
+        { (INT*)&nSepithUpLimit, 'i', L"Battle", L"SepithUpLimit", 0, },
+
     };
  
     CONFIG_ENTRY *Entry;
@@ -168,17 +177,25 @@ VOID ConfigInit()
         }
     }
     
+
+    if (nSupportCraftInterval < 0 || nSupportCraftInterval == 350)
+        nSupportCraftInterval = 0;
+
+    if (nATBonus < 0 || nATBonus > 16)
+        nATBonus = 0;
+
+    SaturateConvertEx(&nSepithUpLimit, nSepithUpLimit, 9999, 0);
+
 #if CONSOLE_DEBUG
     FOR_EACH(Entry, Config, countof(Config))
     {
-        PrintConsoleW(L"%s", Entry->lpKeyName);
         switch (Entry->Type)
         {
         case 'b':
-            PrintConsoleW(L":%d\r\n", *(BOOL*)Entry->Var);
+            PrintConsoleW(L"b:%s:%d\r\n", Entry->lpKeyName, *(BOOL*)Entry->Var);
             break;
         case 'i':
-            PrintConsoleW(L":%d\r\n", *(INT*)Entry->Var);
+            PrintConsoleW(L"i:%s:%d\r\n", Entry->lpKeyName, *(INT*)Entry->Var);
             break;
         default:
             ;
@@ -488,5 +505,69 @@ VOID THISCALL CBattle::SetBattleStatusFinal(PMONSTER_STATUS MSData)
     if (statusRateUserDefined.ResistATDelay)
     {
         MSData->State2 |= 0x0800;
+    }
+}
+
+NAKED VOID SetBattleEncountCondition()
+{
+    INLINE_ASM
+    {
+        mov eax, nBattleEncount;
+        mov dword ptr [esp+0x4], eax;
+        mov eax, 0x00675D13;
+        jmp eax;
+    }
+}
+
+NAKED VOID SetBattleATBonus()
+{
+    INLINE_ASM
+    {
+        mov eax, nATBonus;
+        mov dword ptr [esp+0x4], eax;
+        mov eax, 0x00675D13;
+        jmp eax;
+    }
+}
+
+NAKED VOID SepithUpLimitDisplay()
+{
+    INLINE_ASM
+    {
+        MOVZX EAX,WORD PTR DS:[ECX+EAX*2];
+        cmp eax, 0x3E7;
+        jle SepithUpLimitDisplay01;
+        mov eax, 0x3E7;
+SepithUpLimitDisplay01:
+        cdq;
+        ret;
+    }
+}
+
+NAKED VOID SepithUpLimitDisplay1()
+{
+    INLINE_ASM
+    {       
+        MOVZX EAX,WORD PTR DS:[ECX+EAX*2];
+        CMP EAX,0x3E7;
+        jle SHORT L00000001;
+        MOV EAX,0x3E7;        
+L00000001:
+        SHL EAX,1;
+        RETN;
+    }
+}
+
+NAKED VOID SepithUpLimitDisplay2()
+{
+    INLINE_ASM
+    {       
+        MOVZX EDX,WORD PTR DS:[ECX+EAX*2]
+        CMP EDX,0x3E7;
+        jle SHORT L00000002;
+        MOV EDX,0x3E7;  
+L00000002:
+        SHL EDX,1;
+        RETN;
     }
 }
