@@ -197,9 +197,10 @@ enum
     CHR_FLAG_EMPTY  = 0x8000,
 };
 
-typedef union MONSTER_STATUS
+//typedef union _MONSTER_STATUS
+typedef struct _MONSTER_STATUS
 {
-    DUMMY_STRUCT(0x2424);
+    //DUMMY_STRUCT(0x2424);
 
     BOOL IsChrEnemy()
     {
@@ -233,8 +234,8 @@ typedef union MONSTER_STATUS
         return FALSE;
     }
 
-    struct
-    {
+    //struct
+    //{
 
         USHORT                  CharPosition;               // 0x00
         USHORT                  State;                      // 0x02
@@ -325,8 +326,9 @@ typedef union MONSTER_STATUS
         //DUMMY_STRUCT(0x2408 - 0x10EC - sizeof(CRAFT_DESCRIPTION) * 10);
         DUMMY_STRUCT(0x2408 - 0x2380 - 0x80);
         ULONG                       SummonCount;            // 0x2408
+        DUMMY_STRUCT(0x2424 - 0x2408 - 0x4);
 
-    };
+    //};
 
 } MONSTER_STATUS, *PMONSTER_STATUS;
 

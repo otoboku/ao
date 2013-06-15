@@ -1,3 +1,5 @@
+//#include "edao.h"
+
 // mark
 ULONG   g_flag = 0;
 namespace NFLAG
@@ -5,15 +7,15 @@ namespace NFLAG
     static const ULONG_PTR IsSubHPEveryAct  = 0x00000001;
 }
 
-
-bool bArianrhodLimitKaijo;
-bool bEnemySBreak;
-bool bShowAT;
-bool bForceKillEnemyAtScene;
-bool bForceShowBurstMode;
-bool bForceShowInfOnMiniMap;
-bool bEnableSkipCraftAnime;
-int nDifficulty;
+BOOL bArianrhodLimitKaijo;
+BOOL bEnemySBreak;
+BOOL bShowAT;
+BOOL bForceKillEnemyAtScene;
+BOOL bForceShowBurstMode;
+BOOL bForceShowInfOnMiniMap;
+BOOL bEnableSkipCraftAnime;
+INT nDifficulty;
+INT nBattleEncount;
 
 typedef struct _SStatusRate
 {
@@ -28,19 +30,163 @@ typedef struct _SStatusRate
     INT MOV;
     INT DEXRate;
     INT AGLRate;
-    bool    ResistAbnormalCondition;
-    bool    ResistAbilityDown;
-    bool    ResistATDelay;
+    BOOL    ResistAbnormalCondition;
+    BOOL    ResistAbilityDown;
+    BOOL    ResistATDelay;
 } SStatusRate;
 
 SStatusRate statusRateUserDefined;
-
 
 class CClass
 {
 public:
     SHORT THISCALL RollerCoasterFastExit(int vKey);
 };
+
+#if 0
+VOID ConfigInit()
+{
+    static WCHAR szConfigExPath[] = L".\\config_ex.ini";
+
+    bArianrhodLimitKaijo = NINI::GetPrivateProfileBoolW(L"Ex", L"ArianrhodLimitKaijo", TRUE, szConfigExPath);
+    bEnemySBreak = NINI::GetPrivateProfileBoolW(L"Ex", L"EnemySBreak", TRUE, szConfigExPath);
+    bShowAT = NINI::GetPrivateProfileBoolW(L"Ex", L"ShowAT", TRUE, szConfigExPath);
+    bForceKillEnemyAtScene = NINI::GetPrivateProfileBoolW(L"Ex", L"ForceKillEnemyAtScene", TRUE, szConfigExPath);
+    bForceShowBurstMode = NINI::GetPrivateProfileBoolW(L"Ex", L"ForceShowBurstMode", TRUE, szConfigExPath);
+    bForceShowInfOnMiniMap = NINI::GetPrivateProfileBoolW(L"Ex", L"ForceShowInfOnMiniMap", TRUE, szConfigExPath);
+    bEnableSkipCraftAnime = NINI::GetPrivateProfileBoolW(L"Ex", L"EnableSkipCraftAnime", TRUE, szConfigExPath);
+
+    nDifficulty = NINI::GetPrivateProfileIntW(L"Battle", L"Difficulty", 0, szConfigExPath);
+    if (nDifficulty)
+    {
+        statusRateUserDefined.HP = NINI::GetPrivateProfileIntW(L"Battle", L"HP", 100, szConfigExPath);
+        statusRateUserDefined.STR = NINI::GetPrivateProfileIntW(L"Battle", L"STR", 100, szConfigExPath);
+        statusRateUserDefined.DEF = NINI::GetPrivateProfileIntW(L"Battle", L"DEF", 100, szConfigExPath);
+        statusRateUserDefined.ATS = NINI::GetPrivateProfileIntW(L"Battle", L"ATS", 100, szConfigExPath);
+        statusRateUserDefined.ADF = NINI::GetPrivateProfileIntW(L"Battle", L"ADF", 100, szConfigExPath);
+        statusRateUserDefined.SPD = NINI::GetPrivateProfileIntW(L"Battle", L"SPD", 100, szConfigExPath);
+        statusRateUserDefined.DEX = NINI::GetPrivateProfileIntW(L"Battle", L"DEX", 100, szConfigExPath);
+        statusRateUserDefined.AGL = NINI::GetPrivateProfileIntW(L"Battle", L"AGL", 100, szConfigExPath);
+        statusRateUserDefined.MOV = NINI::GetPrivateProfileIntW(L"Battle", L"MOV", 100, szConfigExPath);
+        statusRateUserDefined.DEXRate = NINI::GetPrivateProfileIntW(L"Battle", L"DEXRate", 0, szConfigExPath);
+        statusRateUserDefined.AGLRate = NINI::GetPrivateProfileIntW(L"Battle", L"AGLRate", 0, szConfigExPath);
+        statusRateUserDefined.ResistAbnormalCondition = NINI::GetPrivateProfileBoolW(L"Battle", L"ResistAbnormalCondition", FALSE, szConfigExPath);
+        statusRateUserDefined.ResistAbilityDown = NINI::GetPrivateProfileBoolW(L"Battle", L"ResistAbilityDown", FALSE, szConfigExPath);
+        statusRateUserDefined.ResistATDelay = NINI::GetPrivateProfileBoolW(L"Battle", L"ResistATDelay", FALSE, szConfigExPath);
+    }
+
+
+
+#if CONSOLE_DEBUG
+PrintConsoleW(L"bArianrhodLimitKaijo:%d\r\n", bArianrhodLimitKaijo);
+PrintConsoleW(L"bEnemySBreak:%d\r\n", bEnemySBreak);
+PrintConsoleW(L"bShowAT:%d\r\n", bShowAT);
+PrintConsoleW(L"bForceKillEnemyAtScene:%d\r\n", bForceKillEnemyAtScene);
+PrintConsoleW(L"bForceShowBurstMode:%d\r\n", bForceShowBurstMode);
+PrintConsoleW(L"bForceShowInfOnMiniMap:%d\r\n", bForceShowInfOnMiniMap);
+PrintConsoleW(L"bEnableSkipCraftAnime:%d\r\n", bEnableSkipCraftAnime);
+
+PrintConsoleW(L"nDifficulty:%d\r\n", nDifficulty);
+PrintConsoleW(L"HP:%d\r\n", statusRateUserDefined.HP);
+PrintConsoleW(L"STR:%d\r\n", statusRateUserDefined.STR);
+PrintConsoleW(L"DEF:%d\r\n", statusRateUserDefined.DEF);
+PrintConsoleW(L"ATS:%d\r\n", statusRateUserDefined.ATS);
+PrintConsoleW(L"ADF:%d\r\n", statusRateUserDefined.ADF);
+PrintConsoleW(L"SPD:%d\r\n", statusRateUserDefined.SPD);
+PrintConsoleW(L"DEX:%d\r\n", statusRateUserDefined.DEX);
+PrintConsoleW(L"AGL:%d\r\n", statusRateUserDefined.AGL);
+PrintConsoleW(L"MOV:%d\r\n", statusRateUserDefined.MOV);
+PrintConsoleW(L"DEXRate:%d\r\n", statusRateUserDefined.DEXRate);
+PrintConsoleW(L"AGLRate:%d\r\n", statusRateUserDefined.AGLRate);
+PrintConsoleW(L"ResistAbnormalCondition:%d\r\n", statusRateUserDefined.ResistAbnormalCondition);
+PrintConsoleW(L"ResistAbilityDown:%d\r\n", statusRateUserDefined.ResistAbilityDown);
+PrintConsoleW(L"ResistATDelay:%d\r\n", statusRateUserDefined.ResistATDelay);
+#endif
+}
+#endif
+
+VOID ConfigInit()
+{
+    static WCHAR szConfigExPath[] = L".\\config_ex.ini";
+    typedef struct
+    {
+        PVOID       Var;
+        CHAR        Type;
+        LPCWSTR     lpAppName;
+        LPCWSTR     lpKeyName;
+        union
+        {
+            BOOL    bDefault;
+            INT     nDefault;
+            LPCWSTR lpDefault;
+        };
+        LPCWSTR     lpFileName;
+    } CONFIG_ENTRY;
+
+    static CONFIG_ENTRY Config[] = 
+    {
+        { (BOOL*)&bArianrhodLimitKaijo, 'b', L"Arianrhod", L"ArianrhodLimitKaijo", TRUE, },
+        { (BOOL*)&bEnemySBreak, 'b', L"Arianrhod", L"EnemySBreak", TRUE, },
+        { (BOOL*)&bShowAT, 'b', L"Arianrhod", L"ShowAT", TRUE, },
+        { (BOOL*)&bForceKillEnemyAtScene, 'b', L"Arianrhod", L"ForceKillEnemyAtScene", TRUE, },
+        { (BOOL*)&bForceShowBurstMode, 'b', L"Arianrhod", L"ForceShowBurstMode", TRUE, },
+        { (BOOL*)&bForceShowInfOnMiniMap, 'b', L"Arianrhod", L"ForceShowInfOnMiniMap", TRUE, },
+        { (BOOL*)&bEnableSkipCraftAnime, 'b', L"Arianrhod", L"EnableSkipCraftAnime", TRUE, },
+
+        { (INT*)&nDifficulty, 'i', L"Battle", L"Difficulty", 0, },
+        { (INT*)&statusRateUserDefined.HP, 'i', L"Battle", L"HP", 100, },
+        { (INT*)&statusRateUserDefined.STR, 'i', L"Battle", L"STR", 100, },
+        { (INT*)&statusRateUserDefined.DEF, 'i', L"Battle", L"DEF", 100, },
+        { (INT*)&statusRateUserDefined.ATS, 'i', L"Battle", L"ATS", 100, },
+        { (INT*)&statusRateUserDefined.ADF, 'i', L"Battle", L"ADF", 100, },
+        { (INT*)&statusRateUserDefined.SPD, 'i', L"Battle", L"SPD", 100, },
+        { (INT*)&statusRateUserDefined.DEX, 'i', L"Battle", L"DEX", 100, },
+        { (INT*)&statusRateUserDefined.AGL, 'i', L"Battle", L"AGL", 100, },
+        { (INT*)&statusRateUserDefined.MOV, 'i', L"Battle", L"MOV", 100, },
+        { (INT*)&statusRateUserDefined.DEXRate, 'i', L"Battle", L"DEXRate", 0, },
+        { (INT*)&statusRateUserDefined.AGLRate, 'i', L"Battle", L"AGLRate", 0, },
+        { (BOOL*)&statusRateUserDefined.ResistAbnormalCondition, 'i', L"Battle", L"ResistAbnormalCondition", FALSE, },
+        { (BOOL*)&statusRateUserDefined.ResistAbilityDown, 'i', L"Battle", L"ResistAbilityDown", FALSE, },
+        { (BOOL*)&statusRateUserDefined.ResistATDelay, 'i', L"Battle", L"ResistATDelay", FALSE, },
+
+        { (INT*)&nBattleEncount, 'i', L"Battle", L"BattleEncount", -1, },
+    };
+ 
+    CONFIG_ENTRY *Entry;
+    FOR_EACH(Entry, Config, countof(Config))
+    {
+        switch (Entry->Type)
+        {
+        case 'b':
+            *(BOOL*)Entry->Var = NINI::GetPrivateProfileBoolW(Entry->lpAppName, Entry->lpKeyName, Entry->bDefault, szConfigExPath);
+            break;
+        case 'i':
+            *(INT*)Entry->Var = NINI::GetPrivateProfileIntW(Entry->lpAppName, Entry->lpKeyName, Entry->nDefault, szConfigExPath);
+            break;
+        default:
+            ;
+        }
+    }
+    
+#if CONSOLE_DEBUG
+    FOR_EACH(Entry, Config, countof(Config))
+    {
+        PrintConsoleW(L"%s", Entry->lpKeyName);
+        switch (Entry->Type)
+        {
+        case 'b':
+            PrintConsoleW(L":%d\r\n", *(BOOL*)Entry->Var);
+            break;
+        case 'i':
+            PrintConsoleW(L":%d\r\n", *(INT*)Entry->Var);
+            break;
+        default:
+            ;
+        }
+    }
+#endif
+}
+
 
 //acgn
 VOID THISCALL CBattle::LoadMSFile(PMONSTER_STATUS MSData, ULONG MSFileIndex)
