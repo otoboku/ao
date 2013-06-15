@@ -20,6 +20,7 @@ INT nSupportCraftInterval;
 BOOL bDisableDamageRandom;
 INT nATBonus;
 INT nSepithUpLimit;
+BOOL bAutoAnalyzeMonsInf;
 
 typedef struct _SStatusRate
 {
@@ -158,7 +159,7 @@ VOID ConfigInit()
         { (BOOL*)&bDisableDamageRandom, 'b', L"Battle", L"DisableDamageRandom", FALSE, },
         { (INT*)&nATBonus, 'i', L"Battle", L"ATBonus", 0, },
         { (INT*)&nSepithUpLimit, 'i', L"Battle", L"SepithUpLimit", 0, },
-
+        { (BOOL*)&bAutoAnalyzeMonsInf, 'b', L"Battle", L"AutoAnalyzeMonsInf", FALSE, },
     };
  
     CONFIG_ENTRY *Entry;
@@ -506,6 +507,28 @@ VOID THISCALL CBattle::SetBattleStatusFinal(PMONSTER_STATUS MSData)
     {
         MSData->State2 |= 0x0800;
     }
+}
+
+BOOL THISCALL CBattle::CheckQuartz(ULONG ChrPosition, ULONG ItemId, PULONG EquippedIndex /* = NULL */)
+{
+    switch (ItemId)
+    {
+    case 0xBA:  // Çé±¨
+        {
+            LONG_PTR TargetIndex = GetCurrentTargetIndex();
+            if (TargetIndex >=0 && TargetIndex < MAXIMUM_CHR_NUMBER_IN_BATTLE)
+            {
+                AnalyzeMonsInf(GetMonsterStatus()+TargetIndex);
+            }
+        }
+    case 0xB8:  // ÌìÑÛ
+    case 0xB1:  // ÁúÑÛ
+        if (EquippedIndex)
+            *EquippedIndex = 1;
+        return TRUE;
+    }
+
+    return (this->*StubCheckQuartz)(ChrPosition, ItemId, EquippedIndex);
 }
 
 NAKED VOID SetBattleEncountCondition()

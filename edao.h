@@ -781,6 +781,11 @@ public:
         DETOUR_METHOD(CBattle, SubHPEveryAct, 0x674157, dst, HP);
     }
 
+    VOID THISCALL AnalyzeMonsInf(PMONSTER_STATUS MSData, BOOL IsSkipBattleEvaluation = FALSE)
+    {
+        DETOUR_METHOD(CBattle, AnalyzeMonsInf, 0x6747D3, MSData, IsSkipBattleEvaluation);
+    }
+    
     DECL_STATIC_METHOD_POINTER(CBattle, LoadMSFile);
 
     /************************************************************************
@@ -798,6 +803,9 @@ public:
     VOID THISCALL SetBattleStatusFinal(PMONSTER_STATUS MSData);
     DECL_STATIC_METHOD_POINTER(CBattle, SetBattleStatusFinal);
 
+    BOOL THISCALL CheckQuartz(ULONG ChrPosition, ULONG ItemId, PULONG EquippedIndex = NULL);
+    DECL_STATIC_METHOD_POINTER(CBattle, CheckQuartz);
+
     DECL_STATIC_METHOD_POINTER(CBattle, SetCurrentActionChrInfo);
     DECL_STATIC_METHOD_POINTER(CBattle, ThinkRunaway);
     DECL_STATIC_METHOD_POINTER(CBattle, ThinkSCraft);
@@ -810,6 +818,7 @@ INIT_STATIC_MEMBER(CBattle::StubThinkSCraft);
 INIT_STATIC_MEMBER(CBattle::StubLoadMSFile);
 INIT_STATIC_MEMBER(CBattle::StubExecuteActionScript);
 INIT_STATIC_MEMBER(CBattle::StubSetBattleStatusFinal);
+INIT_STATIC_MEMBER(CBattle::StubCheckQuartz);
 
 class CSound
 {
@@ -909,6 +918,7 @@ public:
     CActor* GetActor()
     {
         return GetScript()->GetActor();
+        //return (CActor *)PtrAdd(this, 0x78CB8);
     }
 
     BOOL IsCustomChar(ULONG_PTR ChrId)
@@ -1135,7 +1145,7 @@ class CSSaveData
         ULONG   Tokuten;            // 0x81C84
         ULONG   Medal;              // 0x81C88
         DUMMY_STRUCT(0x8);
-        ULONG   GameAccount;        // 0x81C94 invalid bug?
+        ULONG   GameAccount;        // 0x81C94 invalid bug? PomttoAccount
         DUMMY_STRUCT(0x25434 - 0xC);
         ULONG   TitleVisualCount;   // 0xA70C0
         ULONG   ExtraMode;          // 0xA70C4

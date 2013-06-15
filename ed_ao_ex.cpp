@@ -12,7 +12,7 @@
 //#pragma comment(lib,"D:\\svn\\lib\\msvcrt.lib")
 //#pragma comment(lib,"D:\\svn\\lib\\msvcrt_lib.lib")
 
-#define CONSOLE_DEBUG   1
+#define CONSOLE_DEBUG   0
 
 BOOL UnInitialize(PVOID BaseAddress)
 {
@@ -258,6 +258,15 @@ BOOL Initialize(PVOID BaseAddress)
             INLINE_HOOK_CALL_RVA_NULL(0x620E8C, SepithUpLimitDisplay2),
         };
         Nt_PatchMemory(p, countof(p), f, sizeof(f), hModule);
+    }
+
+    if (bAutoAnalyzeMonsInf)
+    {
+        MEMORY_FUNCTION_PATCH f[] =
+        {             
+            INLINE_HOOK_JUMP_RVA    (0x274238, METHOD_PTR(&CBattle::CheckQuartz), CBattle::StubCheckQuartz),
+        };
+        Nt_PatchMemory(0, NULL, f, countof(f), hModule);
     }
     return TRUE;
 }
