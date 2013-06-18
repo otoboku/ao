@@ -8,9 +8,6 @@
 #include "MyLibrary.cpp"
 #include "edao_vm.h"
 
-//#pragma comment(lib,"ntdllp.lib")
-//#pragma comment(lib,"D:\\svn\\lib\\msvcrt.lib")
-//#pragma comment(lib,"D:\\svn\\lib\\msvcrt_lib.lib")
 
 #define CONSOLE_DEBUG   0
 
@@ -33,10 +30,29 @@ BOOL Initialize(PVOID BaseAddress)
 
     HMODULE hModule = GetExeModuleHandle();
 
+/*
+    {
+        HMODULE hModuleUser32 = Nt_GetModuleHandle(L"user32.dll");
+        ULONG_PTR procSendMessageA = (ULONG_PTR)Nt_GetProcAddress(hModuleUser32, "SendMessageA");
+        static unsigned char pSendMessageAData[5] = {0x8B, 0xFF, 0x55, 0x8B, 0xEC};
+        MEMORY_PATCH p[] =
+        {
+            PATCH_MEMORY(pSendMessageAData, 5, procSendMessageA-(ULONG_PTR)hModuleUser32),
+        };
+        Nt_PatchMemory(p, countof(p), 0, NULL, hModuleUser32);        
+    }
+
+    static unsigned char p0086B6A0[9] = {0x55, 0x8B, 0xEC, 0x81, 0xEC, 0x54, 0x01, 0x00, 0x00};
+*/
+
     MEMORY_PATCH p[] =
     {
         // bug fix
         PATCH_MEMORY(0xEB,  1,  0x60CC8F),      // burst energy
+
+        // restore
+        //PATCH_MEMORY(p0086B6A0, 9, 0x0086B6A0-0x400000),
+
     };
 
     MEMORY_FUNCTION_PATCH f[] =
@@ -50,6 +66,12 @@ BOOL Initialize(PVOID BaseAddress)
 
         INLINE_HOOK_JUMP_RVA     (0x550C90, METHOD_PTR(&CScript::ScpSaveRestoreParty), CScript::StubScpSaveRestoreParty),
 */
+        // hack for boss
+ 
+        INLINE_HOOK_CALL_RVA_NULL(0x5DFA21, NakedGetUnderAttackVoiceChrIdRestore),      
+        INLINE_HOOK_CALL_RVA_NULL(0x5DFA1B, METHOD_PTR(&CBattle::NakedGetUnderAttackVoiceChrId)),  // boss挨打语音修复
+
+        //INLINE_HOOK_CALL_RVA_NULL(0x5F690B, CBattle::FormatBattleChrAT),
         // monster info box
         
         //INLINE_HOOK_CALL_RVA_NULL(0x626AEA, METHOD_PTR(&CBattleInfoBox::SetMonsterInfoBoxSize)),
@@ -129,6 +151,21 @@ BOOL Initialize(PVOID BaseAddress)
         MEMORY_FUNCTION_PATCH f[] =
         {             
             INLINE_HOOK_CALL_RVA_NULL(0x5F690B, (PVOID)0x6748DC),
+        };
+        Nt_PatchMemory(p, countof(p), f, countof(f), hModule);
+    }
+    else
+    {
+        MEMORY_PATCH p[] =
+        {
+            PATCH_MEMORY(0x4F74,    2, 0x5F668D),    // disable orig at
+            PATCH_MEMORY(0x85,      1, 0x5F66D9),    // disable orig at
+        };
+        
+        MEMORY_FUNCTION_PATCH f[] =
+        {             
+            INLINE_HOOK_CALL_RVA_NULL(0x5F690B, CBattle::FormatBattleChrAT),
+            INLINE_HOOK_JUMP_RVA_NULL(0x5F66DE, NakedConditionalShowOrigAT),
         };
         Nt_PatchMemory(p, countof(p), f, countof(f), hModule);
     }
@@ -260,6 +297,7 @@ BOOL Initialize(PVOID BaseAddress)
         Nt_PatchMemory(p, countof(p), f, sizeof(f), hModule);
     }
 
+    // 自动解析魔兽信息
     if (bAutoAnalyzeMonsInf)
     {
         MEMORY_FUNCTION_PATCH f[] =
@@ -268,6 +306,18 @@ BOOL Initialize(PVOID BaseAddress)
         };
         Nt_PatchMemory(0, NULL, f, countof(f), hModule);
     }
+
+    // 特效关闭
+    {
+        MEMORY_PATCH p[] =
+        {
+            PATCH_MEMORY(0x7E,  1,  0x2CAA98),      // enable shimmer when width > 1024
+            PATCH_MEMORY(0x7E,  1,  0x2C33BE),      // enable blur when width > 1024
+            PATCH_MEMORY(0x7E,  1,  0x2EFBB8),      // capture ?
+        };
+        Nt_PatchMemory(p, countof(p), 0, NULL, hModule);
+    }
+
     return TRUE;
 }
 

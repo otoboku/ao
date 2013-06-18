@@ -451,7 +451,7 @@ BOOL THISCALL CBattle::IsNeedBattleEvaluationSuperKill(ULONG ChrPosition)
         return FALSE;
 }
 
-
+// ¹íÎÝ°´¼ü
 SHORT THISCALL CClass::RollerCoasterFastExit(int vKey)
 {
     UNREFERENCED_PARAMETER(vKey);
@@ -594,3 +594,37 @@ L00000002:
         RETN;
     }
 }
+
+/************************************************************************
+    Restore
+************************************************************************/
+
+NAKED VOID NakedGetUnderAttackVoiceChrIdRestore()
+{
+    INLINE_ASM
+    {
+        CMP DWORD PTR SS:[EBP-0xF8],0x0;
+        ret;
+    }
+}
+
+NAKED VOID NakedConditionalShowOrigAT()
+{
+    INLINE_ASM
+    {
+        MOV EAX,DWORD PTR SS:[EBP-0xC];
+        cmp byte PTR DS:[EAX+0x73], 6;
+        JG L00000001;
+        push 0x9F67EB;
+        retn;
+L00000001:
+        push ECX;
+        FLDZ;
+        FSTP DWORD PTR SS:[ESP];
+        push 0x009F66E4;
+	    retn;
+    }
+}
+/************************************************************************
+    Restore End
+************************************************************************/

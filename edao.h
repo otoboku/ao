@@ -546,7 +546,29 @@ public:
 
         return NULL;
     }
+/*
+    NoInline PAT_BAR_ENTRY FindATBarEntry0NoSecond()
+    {
+        PAT_BAR_ENTRY *Entry;
+        static PAT_BAR_ENTRY PreEntry;
 
+        if (PreEntry == EntryPointer[0])
+            return PreEntry;
+        
+        FOR_EACH(Entry, &EntryPointer[1], countof(EntryPointer))
+        {
+            //if (Entry[0]->MSData == NULL) //有不连续的情况
+                //break;
+            if (Entry[0]->MSData == EntryPointer[0]->MSData)
+            {
+                PreEntry = Entry[0];
+                return Entry[0];
+            }
+        }
+        
+        return NULL;
+    }
+*/
     PAT_BAR_ENTRY THISCALL LookupReplaceAtBarEntry(PMONSTER_STATUS MSData, BOOL IsFirst);
 };
 
@@ -1185,6 +1207,9 @@ public:
     // SaveData2SystemData()
     VOID THISCALL SaveSystemData(LocalSystemData* pLocal)
     {
+        if (pLocal == NULL)
+            return;
+
         MemorySystemData* pMemory = GetMemorySystemData();
         ZeroMemory(pLocal, sizeof(*pLocal));
 
@@ -1202,6 +1227,9 @@ public:
     // SystemData2SaveData()
     VOID THISCALL LoadSystemData(LocalSystemData* pLocal)
     {
+        if (pLocal == NULL)
+            return;
+
         MemorySystemData* pMemory = GetMemorySystemData();
 
         //pMemory->Config = pLocal->Config;

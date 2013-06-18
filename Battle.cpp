@@ -192,11 +192,11 @@ NAKED VOID CBattle::NakedGetUnderAttackVoiceChrId()
     INLINE_ASM
     {
         call    CBattle::NakedGetTurnVoiceChrId
-        cmp     ecx, MINIMUM_CUSTOM_CHAR_ID
-        mov     eax, dword ptr [ebp-0xF8];
-        cmovae  eax, ecx;
-        mov     dword ptr [ebp-0xF8], eax;
-        test    eax, eax;
+        //cmp     ecx, MINIMUM_CUSTOM_CHAR_ID
+        //mov     eax, dword ptr [ebp-0xF8];
+        //cmovae  eax, ecx;
+        mov     dword ptr [ebp-0xF8], ecx;
+        test    ecx, ecx;
         ret;
     }
 }
@@ -794,6 +794,35 @@ VOID THISCALL CBattleInfoBox::DrawMonsterStatus()
 
 LONG CDECL CBattle::FormatBattleChrAT(PSTR Buffer, PCSTR Format, LONG Index, LONG No, LONG IcoAT, LONG ObjAT, LONG Pri)
 {
+    //CBattle* Battle = EDAO::GlobalGetEDAO()->GetBattle();
+    //CBattleATBar* BattleATBar = Battle->GetBattleATBar();
+    //PMONSTER_STATUS MSData = Battle->GetMonsterStatus() + Index;
+    /*
+    if (BattleATBar->EntryPointer[0] != NULL && BattleATBar->EntryPointer[0]->MSData != NULL)
+    {
+        PAT_BAR_ENTRY SecondEntry = BattleATBar->FindATBarEntry0NoSecond();
+        if (!FLAG_ON(BattleATBar->EntryPointer[0]->Flags, 0x40) || SecondEntry->sequence <= 7)
+        {
+            if (Pri > 7)
+                return Buffer[0] = NULL;
+        }
+        else if (Pri > 6 && BattleATBar->EntryPointer[Pri] != SecondEntry)
+        {
+            //CHAR dummy[] = "     ";
+            //sprintf(Buffer, "%s", dummy);
+            //Buffer += CONST_STRLEN(dummy);
+            return Buffer[0] = NULL;
+        }
+    }*/
+    
+    if (Pri > 7)
+    {/*
+        if (FLAG_ON(BattleATBar->EntryPointer[Pri]->Flags, 0x04))
+            return sprintf(Buffer, "     %d", IcoAT);
+        else
+        */
+            return Buffer[0] = NULL;
+    }
     return sprintf(Buffer, "%d", IcoAT);
 }
 
