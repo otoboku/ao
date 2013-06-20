@@ -14,7 +14,7 @@ class CBattle;
 #define INIT_STATIC_MEMBER(x) DECL_SELECTANY TYPE_OF(x) x = NULL
 #define DECL_STATIC_METHOD_POINTER(cls, method) static TYPE_OF(&cls::method) Stub##method
 #define DETOUR_METHOD(cls, method, addr, ...) TYPE_OF(&cls::method) (method); *(PULONG_PTR)&(method) = addr; return (this->*method)(__VA_ARGS__)
-
+#define DETOUR_METHOD_NO_RET(cls, method, addr) TYPE_OF(&cls::method) Stub##method; *(PULONG_PTR)&(Stub##method) = addr
 
 #define UCL_COMPRESS_MAGIC TAG4('UCL4')
 

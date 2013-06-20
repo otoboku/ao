@@ -7,6 +7,8 @@ namespace NFLAG
     static const ULONG_PTR IsSubHPEveryAct  = 0x00000001;
 }
 
+ULONG_PTR StubCheckStackBalance = 0x006790C6;
+
 BOOL bArianrhodLimitKaijo;
 BOOL bEnemySBreak;
 BOOL bShowAT;
@@ -21,6 +23,10 @@ BOOL bDisableDamageRandom;
 INT nATBonus;
 INT nSepithUpLimit;
 BOOL bAutoAnalyzeMonsInf;
+
+BOOL bSelectTeamMemberFreely;
+INT nAutoFish;
+INT nFastFish;
 
 typedef struct _SStatusRate
 {
@@ -160,6 +166,10 @@ VOID ConfigInit()
         { (INT*)&nATBonus, 'i', L"Battle", L"ATBonus", 0, },
         { (INT*)&nSepithUpLimit, 'i', L"Battle", L"SepithUpLimit", 0, },
         { (BOOL*)&bAutoAnalyzeMonsInf, 'b', L"Battle", L"AutoAnalyzeMonsInf", FALSE, },
+
+        { (BOOL*)&bSelectTeamMemberFreely, 'b', L"DT", L"SelectTeamMemberFreely", FALSE, },
+        { (INT*)&nAutoFish, 'i', L"DT", L"AutoFish", 0, },
+        { (INT*)&nFastFish, 'i', L"DT", L"FastFish", 0, },
     };
  
     CONFIG_ENTRY *Entry;
@@ -186,6 +196,8 @@ VOID ConfigInit()
         nATBonus = 0;
 
     SaturateConvertEx(&nSepithUpLimit, nSepithUpLimit, 9999, 0);
+    nAutoFish = SaturateConvert(USHORT(0), nAutoFish);
+    nFastFish = SaturateConvert(USHORT(0), nFastFish);
 
 #if CONSOLE_DEBUG
     FOR_EACH(Entry, Config, countof(Config))
@@ -293,6 +305,15 @@ MedalReturn01:
         MOV DWORD PTR DS:[EAX+0x45D0],EDX;
         xor ecx,ecx;
         MOV DWORD PTR DS:[EAX+0x45D4],ecx;
+        ret;
+    }
+}
+
+NAKED VOID TitleVisualCountSaveFix()
+{
+    INLINE_ASM
+    {
+        MOV WORD PTR DS:[ECX+0x7EDD6],DX;
         ret;
     }
 }
@@ -536,9 +557,7 @@ NAKED VOID SetBattleEncountCondition()
     INLINE_ASM
     {
         mov eax, nBattleEncount;
-        mov dword ptr [esp+0x4], eax;
-        mov eax, 0x00675D13;
-        jmp eax;
+        jmp StubCheckStackBalance;
     }
 }
 
@@ -547,9 +566,7 @@ NAKED VOID SetBattleATBonus()
     INLINE_ASM
     {
         mov eax, nATBonus;
-        mov dword ptr [esp+0x4], eax;
-        mov eax, 0x00675D13;
-        jmp eax;
+        jmp StubCheckStackBalance;
     }
 }
 
@@ -627,4 +644,56 @@ L00000001:
 }
 /************************************************************************
     Restore End
+************************************************************************/
+
+
+/************************************************************************
+    Fish Start
+************************************************************************/
+
+class CFish
+{
+public:
+    BOOL THISCALL IsRodPulled();
+    ULONG_PTR THISCALL GetRodEntry(ULONG RodNo);
+    VOID ChangeFishingWaitTime();
+
+    //DECL_STATIC_METHOD_POINTER(CFish, IsRodPulled);
+    //DECL_STATIC_METHOD_POINTER(CFish, GetRodEntry);
+};
+
+//INIT_STATIC_MEMBER(CFish::StubIsRodPulled);
+//INIT_STATIC_MEMBER(CFish::StubGetRodEntry);
+
+BOOL THISCALL CFish::IsRodPulled()
+{
+    DETOUR_METHOD_NO_RET(CFish, IsRodPulled, 0x6739C8);
+
+    if (nAutoFish == 1)
+        return TRUE;
+    return (this->*StubIsRodPulled)();
+}
+
+ULONG_PTR THISCALL CFish::GetRodEntry(ULONG RodNo)
+{
+    DETOUR_METHOD_NO_RET(CFish, GetRodEntry, 0x67A697);
+
+    ULONG_PTR pEntry = (this->*StubGetRodEntry)(RodNo);
+    if (nAutoFish > 1 && RodNo < 5)
+        *((PUSHORT)pEntry+1) = (USHORT)nAutoFish;
+    return pEntry;
+}
+
+NAKED VOID CFish::ChangeFishingWaitTime()
+{
+    INLINE_ASM
+    {
+        mov edx, nFastFish;
+        LEA ECX,DWORD PTR DS:[EAX+EDX];
+        ret;
+    }
+}
+
+/************************************************************************
+    Fish End
 ************************************************************************/

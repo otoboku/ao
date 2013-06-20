@@ -9,7 +9,7 @@
 #include "edao_vm.h"
 
 
-#define CONSOLE_DEBUG   0
+#define CONSOLE_DEBUG   1
 
 BOOL UnInitialize(PVOID BaseAddress)
 {
@@ -82,6 +82,8 @@ BOOL Initialize(PVOID BaseAddress)
         INLINE_HOOK_CALL_RVA_NULL(0x2A2E2C, FurnitureCompletionRate),
         INLINE_HOOK_JUMP_RVA_NULL(0x498F50, (PVOID)0x898DD1),   // 装卸主回路无法出成就 七耀之贤士
         INLINE_HOOK_CALL_RVA_NULL(0x3616A6, MedalReturn),
+        INLINE_HOOK_CALL_RVA_NULL(0x520F63, TitleVisualCountSaveFix),
+
 
         INLINE_HOOK_JUMP_RVA     (0x277280, METHOD_PTR(&CScript::ScpLeaveParty), CScript::StubScpLeaveParty),
         INLINE_HOOK_CALL_RVA_NULL(0x599489, DecBurstEnergyWhenStandby),
@@ -100,6 +102,10 @@ BOOL Initialize(PVOID BaseAddress)
 
         // 
         INLINE_HOOK_JUMP_RVA     (0x2756E7, METHOD_PTR(&CBattle::SetBattleStatusFinal), CBattle::StubSetBattleStatusFinal),
+
+        // fish
+        INLINE_HOOK_CALL_RVA_NULL(0x675BC2, METHOD_PTR(&CFish::IsRodPulled)),
+        INLINE_HOOK_CALL_RVA_NULL(0x67973B, METHOD_PTR(&CFish::GetRodEntry)),
 
 #if CONSOLE_DEBUG
         // log
@@ -233,7 +239,7 @@ BOOL Initialize(PVOID BaseAddress)
         {
             MEMORY_FUNCTION_PATCH f[] =
             {             
-                INLINE_HOOK_CALL_RVA_NULL(0x2F66EE, SetBattleEncountCondition),
+                INLINE_HOOK_CALL_RVA_NULL(0x2F6700, SetBattleEncountCondition),
             };
             Nt_PatchMemory(0, NULL, f, countof(f), hModule);
         }
@@ -271,7 +277,7 @@ BOOL Initialize(PVOID BaseAddress)
         
         MEMORY_FUNCTION_PATCH f[] =
         {             
-            INLINE_HOOK_CALL_RVA_NULL(0x5F9546, SetBattleATBonus),
+            INLINE_HOOK_CALL_RVA_NULL(0x5F9562, SetBattleATBonus),
         };
         Nt_PatchMemory(0, NULL, f, countof(f), hModule);
     }
@@ -316,6 +322,30 @@ BOOL Initialize(PVOID BaseAddress)
             PATCH_MEMORY(0x7E,  1,  0x2EFBB8),      // capture ?
         };
         Nt_PatchMemory(p, countof(p), 0, NULL, hModule);
+    }
+
+    // 可以让主角四人组离队
+    if (bSelectTeamMemberFreely)
+    {
+        MEMORY_PATCH p[] =
+        {
+            PATCH_MEMORY(0xEB,  1,  0x50079D),
+            PATCH_MEMORY(0x00,  1,  0x5007D8),
+        };
+        Nt_PatchMemory(p, countof(p), 0, NULL, hModule);
+    }
+
+    // Fish
+    {
+        if (nFastFish)
+        {
+            MEMORY_FUNCTION_PATCH f[] =
+            {
+                INLINE_HOOK_CALL_RVA_NULL(0x675883, METHOD_PTR(&CFish::ChangeFishingWaitTime)),
+                INLINE_HOOK_CALL_RVA_NULL(0x6758A5, METHOD_PTR(&CFish::ChangeFishingWaitTime)),
+            };
+            Nt_PatchMemory(p, countof(p), f, sizeof(f), hModule);
+        }
     }
 
     return TRUE;
