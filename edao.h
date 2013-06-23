@@ -10,6 +10,7 @@ ML_OVERLOAD_NEW
 class EDAO;
 class CGlobal;
 class CBattle;
+class CDebug;
 
 #define INIT_STATIC_MEMBER(x) DECL_SELECTANY TYPE_OF(x) x = NULL
 #define DECL_STATIC_METHOD_POINTER(cls, method) static TYPE_OF(&cls::method) Stub##method
@@ -488,17 +489,18 @@ typedef union
 
         PMONSTER_STATUS MSData;     // 0x60
 
-        DUMMY_STRUCT(4);
+        CBattle* Battle;
 
-        ULONG   IconAT;             // 0x68 不含20 空; 含10 AT条移动; 含04 行动、delay后的([20A]0销毁); 含40 当前行动的(1销毁)
-        USHORT  Flags;                // 0x6C
+        ULONG   IconAT;             // 0x68
+        USHORT  Flags;              // 0x6C 不含20 空; 含10 AT条移动; 含04 行动、delay后的([20A]0销毁); 含40 当前行动的(1销毁)
+        BYTE    Sequence;           // 0x6E
 
-        DUMMY_STRUCT(3);
+        DUMMY_STRUCT(2);
         BYTE    RNo;		        // 0x71
 
         DUMMY_STRUCT(1);
 
-        BYTE    sequence;	        // 0x73
+        BYTE    Pri;	            // 0x73
         BOOLEAN IsSBreaking;
 
         DUMMY_STRUCT(3);
@@ -943,6 +945,11 @@ public:
         //return (CActor *)PtrAdd(this, 0x78CB8);
     }
 
+    CDebug* GetDebug()
+    {
+        return (CDebug *)PtrAdd(this, 0xB80D8);
+    }
+
     BOOL IsCustomChar(ULONG_PTR ChrId)
     {
         return GetActor()->IsCustomChar(ChrId);
@@ -1076,10 +1083,15 @@ public:
     VOID THISCALL Fade(ULONG Param1, ULONG Param2, ULONG Param3, ULONG Param4, ULONG Param5, ULONG Param6);
     BOOL THISCALL CheckItemEquipped(ULONG ItemId, PULONG EquippedIndex);
 
+    //mark
+    ULONG THISCALL GetDifficulty();
+    DECL_STATIC_METHOD_POINTER(EDAO, GetDifficulty);
+
     DECL_STATIC_METHOD_POINTER(EDAO, CheckItemEquipped);
 };
 
 DECL_SELECTANY TYPE_OF(EDAO::StubCheckItemEquipped) EDAO::StubCheckItemEquipped = NULL;
+INIT_STATIC_MEMBER(EDAO::StubGetDifficulty);
 
 
 class CGlobal
@@ -1316,6 +1328,34 @@ public:
 
 DECL_SELECTANY TYPE_OF(EDAOFileStream::StubUncompress) EDAOFileStream::StubUncompress = NULL;
 
+//mark
+class CDebug
+{
+public:
+    VOID THISCALL SelectPartyChr()
+    {
+        DETOUR_METHOD(CDebug, SelectPartyChr, 0x672F82);
+    }
 
+    VOID THISCALL MainControl()
+    {
+        TYPE_OF(&GetAsyncKeyState) StubGetAsyncKeyState;
+        *(PULONG_PTR)&StubGetAsyncKeyState = *(PULONG_PTR)0xDD5A18;
+
+        if (StubGetAsyncKeyState(VK_CONTROL) & 0xF000)
+        {
+            if (StubGetAsyncKeyState('P') & 0x1)
+            {
+                SelectPartyChr();
+            }
+        }
+
+        return (this->*StubMainControl)();
+    }
+
+    DECL_STATIC_METHOD_POINTER(CDebug, MainControl);
+};
+
+INIT_STATIC_MEMBER(CDebug::StubMainControl);
 
 #endif // _EDAO_H_5c8a3013_4334_4138_9413_3d0209da878e_

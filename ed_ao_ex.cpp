@@ -39,7 +39,7 @@ BOOL Initialize(PVOID BaseAddress)
         {
             PATCH_MEMORY(pSendMessageAData, 5, procSendMessageA-(ULONG_PTR)hModuleUser32),
         };
-        Nt_PatchMemory(p, countof(p), 0, NULL, hModuleUser32);        
+        Nt_PatchMemory(p, countof(p), NULL, 0, hModuleUser32);        
     }
 
     static unsigned char p0086B6A0[9] = {0x55, 0x8B, 0xEC, 0x81, 0xEC, 0x54, 0x01, 0x00, 0x00};
@@ -102,6 +102,7 @@ BOOL Initialize(PVOID BaseAddress)
 
         // 
         INLINE_HOOK_JUMP_RVA     (0x2756E7, METHOD_PTR(&CBattle::SetBattleStatusFinal), CBattle::StubSetBattleStatusFinal),
+        INLINE_HOOK_JUMP_RVA     (0x274E40, METHOD_PTR(&EDAO::GetDifficulty), EDAO::StubGetDifficulty),
 
         // fish
         INLINE_HOOK_CALL_RVA_NULL(0x675BC2, METHOD_PTR(&CFish::IsRodPulled)),
@@ -118,7 +119,9 @@ BOOL Initialize(PVOID BaseAddress)
     PrintConsoleW(L"%x\r\n", sizeof(MONSTER_STATUS));
     PrintConsoleW(L"%x\r\n", FIELD_OFFSET(MONSTER_STATUS, AT));
     PrintConsoleW(L"%x\r\n", FIELD_OFFSET(MONSTER_STATUS, Resistance));
-    PrintConsoleW(L"%x\r\n", FIELD_OFFSET(MONSTER_STATUS, SummonCount));
+    //PrintConsoleW(L"%x\r\n", FIELD_OFFSET(MONSTER_STATUS, SummonCount));
+    PrintConsoleW(L"%x\r\n", FIELD_OFFSET(AT_BAR_ENTRY, IconAT));
+    PrintConsoleW(L"%x\r\n", FIELD_OFFSET(AT_BAR_ENTRY, Pri));
 #endif
 
     Nt_PatchMemory(p, countof(p), f, countof(f), hModule);
@@ -131,7 +134,7 @@ BOOL Initialize(PVOID BaseAddress)
         {
             PATCH_MEMORY(0xEB, 1, 0x5A3E40),
         };
-        Nt_PatchMemory(p, countof(p), 0, NULL, hModule);
+        Nt_PatchMemory(p, countof(p), NULL, 0, hModule);
     }
 
     if (!bEnemySBreak)
@@ -141,7 +144,7 @@ BOOL Initialize(PVOID BaseAddress)
         {
             PATCH_MEMORY(p0096526F, 6, 0x56526F),
         };
-        Nt_PatchMemory(p, countof(p), 0, NULL, hModule);
+        Nt_PatchMemory(p, countof(p), NULL, 0, hModule);
     }
 
     if (!bShowAT)
@@ -164,8 +167,9 @@ BOOL Initialize(PVOID BaseAddress)
     {
         MEMORY_PATCH p[] =
         {
-            PATCH_MEMORY(0x4F74,    2, 0x5F668D),    // disable orig at
-            PATCH_MEMORY(0x85,      1, 0x5F66D9),    // disable orig at
+            PATCH_MEMORY(0x4F74,    2, 0x5F668D),   // disable orig at
+            PATCH_MEMORY(0x85,      1, 0x5F66D9),   // disable orig at
+            PATCH_MEMORY(0x6E,      1, 0x5F68D7),   // Pri->Sequence 
         };
         
         MEMORY_FUNCTION_PATCH f[] =
@@ -182,7 +186,7 @@ BOOL Initialize(PVOID BaseAddress)
         {
             PATCH_MEMORY(0x9D,      1, 0x2F9EE3),    // one hit
         };
-        Nt_PatchMemory(p, countof(p), 0, NULL, hModule);
+        Nt_PatchMemory(p, countof(p), NULL, 0, hModule);
     }
 
     if (!bForceShowBurstMode)
@@ -191,7 +195,7 @@ BOOL Initialize(PVOID BaseAddress)
         {
             PATCH_MEMORY(0x0D,  1,  0x55F6E1),        // 爆灵
         };
-        Nt_PatchMemory(p, countof(p), 0, NULL, hModule);
+        Nt_PatchMemory(p, countof(p), NULL, 0, hModule);
     }
 
     if (!bForceShowInfOnMiniMap)
@@ -200,7 +204,7 @@ BOOL Initialize(PVOID BaseAddress)
         {             
             INLINE_HOOK_JUMP_RVA_NULL(0x279AA3, (PVOID)0x740F50),
         };
-        Nt_PatchMemory(0, NULL, f, countof(f), hModule);
+        Nt_PatchMemory(NULL, 0, f, countof(f), hModule);
     }
 
     if (!bEnableSkipCraftAnime)
@@ -209,7 +213,7 @@ BOOL Initialize(PVOID BaseAddress)
         {             
             INLINE_HOOK_CALL_RVA_NULL(0x5B05C6, (PVOID)0x678AF4),
         };
-        Nt_PatchMemory(0, NULL, f, countof(f), hModule);
+        Nt_PatchMemory(NULL, 0, f, countof(f), hModule);
     }
 
     // 遇敌方式，开场状况
@@ -222,7 +226,7 @@ BOOL Initialize(PVOID BaseAddress)
                 PATCH_MEMORY(0x00,		1,	0x006FBCAD-0x400000),	// 阳炎
                 PATCH_MEMORY(0xEB,		1,	0x00750B34-0x400000),	// 宝箱靠近怪 无法开启
             };
-            Nt_PatchMemory(p, countof(p), 0, NULL, hModule);
+            Nt_PatchMemory(p, countof(p), NULL, 0, hModule);
         }
 
         if (FLAG_ON(nBattleEncount, 0x20))
@@ -231,7 +235,7 @@ BOOL Initialize(PVOID BaseAddress)
             {
                 PATCH_MEMORY(0x00,		1,	0x006F5781-0x400000),	// 叶隐
             };
-            Nt_PatchMemory(p, countof(p), 0, NULL, hModule);
+            Nt_PatchMemory(p, countof(p), NULL, 0, hModule);
         }
 
         CLEAR_FLAG(nBattleEncount, 0xFFFFFFF8);
@@ -241,7 +245,7 @@ BOOL Initialize(PVOID BaseAddress)
             {             
                 INLINE_HOOK_CALL_RVA_NULL(0x2F6700, SetBattleEncountCondition),
             };
-            Nt_PatchMemory(0, NULL, f, countof(f), hModule);
+            Nt_PatchMemory(NULL, 0, f, countof(f), hModule);
         }
     }
 
@@ -255,7 +259,7 @@ BOOL Initialize(PVOID BaseAddress)
             PATCH_MEMORY(nSupportCraftInterval/7*3,		4,	0x0099FB75-0x400000),
             PATCH_MEMORY(nSupportCraftInterval/7*4 + 1, 4,	0x0099FB7B-0x400000),
         };
-        Nt_PatchMemory(p, countof(p), 0, NULL, hModule);
+        Nt_PatchMemory(p, countof(p), NULL, 0, hModule);
     }
 
     // 伤害计算去随机补正
@@ -264,9 +268,18 @@ BOOL Initialize(PVOID BaseAddress)
         MEMORY_PATCH p[] =
         {
             PATCH_MEMORY(0x81,  1,	0x00976162-0x400000),
+        };
+        Nt_PatchMemory(p, countof(p), NULL, 0, hModule);
+    }
+
+    // 伤害上限解除
+    if (bDisableDamageUpLimit)
+    {
+        MEMORY_PATCH p[] =
+        {
             PATCH_MEMORY(0xEB,  1,	0x009763AE-0x400000),
         };
-        Nt_PatchMemory(p, countof(p), 0, NULL, hModule);
+        Nt_PatchMemory(p, countof(p), NULL, 0, hModule);
     }
 
     // ATBonus设置
@@ -279,7 +292,7 @@ BOOL Initialize(PVOID BaseAddress)
         {             
             INLINE_HOOK_CALL_RVA_NULL(0x5F9562, SetBattleATBonus),
         };
-        Nt_PatchMemory(0, NULL, f, countof(f), hModule);
+        Nt_PatchMemory(NULL, 0, f, countof(f), hModule);
     }
 
     // 晶片上限
@@ -310,7 +323,7 @@ BOOL Initialize(PVOID BaseAddress)
         {             
             INLINE_HOOK_JUMP_RVA    (0x274238, METHOD_PTR(&CBattle::CheckQuartz), CBattle::StubCheckQuartz),
         };
-        Nt_PatchMemory(0, NULL, f, countof(f), hModule);
+        Nt_PatchMemory(NULL, 0, f, countof(f), hModule);
     }
 
     // 特效关闭
@@ -321,7 +334,7 @@ BOOL Initialize(PVOID BaseAddress)
             PATCH_MEMORY(0x7E,  1,  0x2C33BE),      // enable blur when width > 1024
             PATCH_MEMORY(0x7E,  1,  0x2EFBB8),      // capture ?
         };
-        Nt_PatchMemory(p, countof(p), 0, NULL, hModule);
+        Nt_PatchMemory(p, countof(p), NULL, 0, hModule);
     }
 
     // 可以让主角四人组离队
@@ -332,7 +345,7 @@ BOOL Initialize(PVOID BaseAddress)
             PATCH_MEMORY(0xEB,  1,  0x50079D),
             PATCH_MEMORY(0x00,  1,  0x5007D8),
         };
-        Nt_PatchMemory(p, countof(p), 0, NULL, hModule);
+        Nt_PatchMemory(p, countof(p), NULL, 0, hModule);
     }
 
     // Fish
@@ -344,10 +357,36 @@ BOOL Initialize(PVOID BaseAddress)
                 INLINE_HOOK_CALL_RVA_NULL(0x675883, METHOD_PTR(&CFish::ChangeFishingWaitTime)),
                 INLINE_HOOK_CALL_RVA_NULL(0x6758A5, METHOD_PTR(&CFish::ChangeFishingWaitTime)),
             };
-            Nt_PatchMemory(p, countof(p), f, sizeof(f), hModule);
+            Nt_PatchMemory(NULL, 0, f, countof(f), hModule);
         }
     }
 
+    // 亚里欧斯等特殊人员装备回路解锁
+    if (bSpecialTeamMemberEquipmentLimitKaijo)
+    {
+        MEMORY_PATCH p[] =
+        {
+            PATCH_MEMORY(0x63EB,  2,  0x4E1E55),    // quartz
+            PATCH_MEMORY(0x35EB,  2,  0x4C7AC2),    // mQuartz display
+            PATCH_MEMORY(0x6AEB,  2,  0x49A278),    // equip
+        };
+        Nt_PatchMemory(p, countof(p), NULL, 0, hModule);
+    }
+
+    // 组队
+    if (bEnableSelectTeamMember)
+    {
+        MEMORY_PATCH p[] =
+        {
+            PATCH_MEMORY(0x0,  1,  0x48740C),       // count
+        };
+
+        MEMORY_FUNCTION_PATCH f[] =
+        {
+            INLINE_HOOK_JUMP_RVA(0x273BDF, METHOD_PTR(&CDebug::MainControl), CDebug::StubMainControl),
+        };
+        Nt_PatchMemory(p, countof(p), f, countof(f), hModule);
+    }
     return TRUE;
 }
 

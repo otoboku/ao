@@ -20,11 +20,14 @@ INT nDifficulty;
 INT nBattleEncount;
 INT nSupportCraftInterval;
 BOOL bDisableDamageRandom;
+BOOL bDisableDamageUpLimit;
 INT nATBonus;
 INT nSepithUpLimit;
 BOOL bAutoAnalyzeMonsInf;
 
 BOOL bSelectTeamMemberFreely;
+BOOL bSpecialTeamMemberEquipmentLimitKaijo;
+BOOL bEnableSelectTeamMember;
 INT nAutoFish;
 INT nFastFish;
 
@@ -163,11 +166,15 @@ VOID ConfigInit()
         { (INT*)&nBattleEncount, 'i', L"Battle", L"BattleEncount", 3, },
         { (INT*)&nSupportCraftInterval, 'i', L"Battle", L"SupportCraftInterval", 0, },
         { (BOOL*)&bDisableDamageRandom, 'b', L"Battle", L"DisableDamageRandom", FALSE, },
+        { (BOOL*)&bDisableDamageUpLimit, 'b', L"Battle", L"DisableDamageUpLimit", FALSE, },
         { (INT*)&nATBonus, 'i', L"Battle", L"ATBonus", 0, },
         { (INT*)&nSepithUpLimit, 'i', L"Battle", L"SepithUpLimit", 0, },
         { (BOOL*)&bAutoAnalyzeMonsInf, 'b', L"Battle", L"AutoAnalyzeMonsInf", FALSE, },
 
         { (BOOL*)&bSelectTeamMemberFreely, 'b', L"DT", L"SelectTeamMemberFreely", FALSE, },
+        { (BOOL*)&bSpecialTeamMemberEquipmentLimitKaijo, 'b', L"DT", L"SpecialTeamMemberEquipmentLimitKaijo", FALSE, }, 
+        { (BOOL*)&bEnableSelectTeamMember, 'b', L"DT", L"EnableSelectTeamMember", FALSE, }, 
+        
         { (INT*)&nAutoFish, 'i', L"DT", L"AutoFish", 0, },
         { (INT*)&nFastFish, 'i', L"DT", L"FastFish", 0, },
     };
@@ -194,6 +201,9 @@ VOID ConfigInit()
 
     if (nATBonus < 0 || nATBonus > 16)
         nATBonus = 0;
+
+    if (nDifficulty < 0 || nDifficulty > 5)
+        nDifficulty = 0;
 
     SaturateConvertEx(&nSepithUpLimit, nSepithUpLimit, 9999, 0);
     nAutoFish = SaturateConvert(USHORT(0), nAutoFish);
@@ -495,7 +505,7 @@ SHORT THISCALL CClass::RollerCoasterFastExit(int vKey)
 
 VOID THISCALL CBattle::SetBattleStatusFinal(PMONSTER_STATUS MSData)
 {
-    if(!nDifficulty || !MSData->IsChrEnemyOnly())
+    if(nDifficulty != 5 || !MSData->IsChrEnemyOnly())
     {
         return (this->*StubSetBattleStatusFinal)(MSData);
     }
@@ -528,6 +538,14 @@ VOID THISCALL CBattle::SetBattleStatusFinal(PMONSTER_STATUS MSData)
     {
         MSData->State2 |= 0x0800;
     }
+}
+
+ULONG THISCALL EDAO::GetDifficulty()
+{
+    if (nDifficulty > 0 && nDifficulty < 5)
+        return nDifficulty - 1;
+    else
+        return (this->*StubGetDifficulty)();
 }
 
 BOOL THISCALL CBattle::CheckQuartz(ULONG ChrPosition, ULONG ItemId, PULONG EquippedIndex /* = NULL */)
@@ -630,7 +648,7 @@ NAKED VOID NakedConditionalShowOrigAT()
     INLINE_ASM
     {
         MOV EAX,DWORD PTR SS:[EBP-0xC];
-        cmp byte PTR DS:[EAX+0x73], 6;
+        cmp byte PTR DS:[EAX+0x6E], 6;  //0x73
         JG L00000001;
         push 0x9F67EB;
         retn;
