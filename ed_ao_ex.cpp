@@ -9,7 +9,7 @@
 #include "edao_vm.h"
 
 
-#define CONSOLE_DEBUG   1
+#define CONSOLE_DEBUG   0
 
 BOOL UnInitialize(PVOID BaseAddress)
 {
@@ -386,6 +386,27 @@ BOOL Initialize(PVOID BaseAddress)
             INLINE_HOOK_JUMP_RVA(0x273BDF, METHOD_PTR(&CDebug::MainControl), CDebug::StubMainControl),
         };
         Nt_PatchMemory(p, countof(p), f, countof(f), hModule);
+    }
+
+    // Poker
+    if (bRoyalFlush)
+    {
+        MEMORY_FUNCTION_PATCH f[] =
+        {
+            INLINE_HOOK_JUMP_RVA_NULL(0x27785C, METHOD_PTR(&CClass::PokerRoyalFlush)),
+        };
+        Nt_PatchMemory(NULL, 0, f, countof(f), hModule);
+    }
+
+    // 自动 恐怖过山车
+    if (bAutoHorrorCoaster)
+    {
+        MEMORY_PATCH p[] =
+        {
+            PATCH_MEMORY(0x11EB,    2,  0x6AAB1A),
+            PATCH_MEMORY(0x00,      1,  0x6AABC6),
+        };
+        Nt_PatchMemory(p, countof(p), NULL, 0, hModule);
     }
     return TRUE;
 }

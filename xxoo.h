@@ -30,6 +30,8 @@ BOOL bSpecialTeamMemberEquipmentLimitKaijo;
 BOOL bEnableSelectTeamMember;
 INT nAutoFish;
 INT nFastFish;
+BOOL bRoyalFlush;
+BOOL bAutoHorrorCoaster;
 
 typedef struct _SStatusRate
 {
@@ -53,8 +55,18 @@ SStatusRate statusRateUserDefined;
 
 class CClass
 {
+    typedef struct // 0x4C
+    {
+        DUMMY_STRUCT(6);
+        USHORT  IsUsed;     // 0x6
+        DUMMY_STRUCT(4);
+        USHORT  digit;      // 0xC
+        DUMMY_STRUCT(0x3E);
+    } POKER_ENTRY;
+
 public:
     SHORT THISCALL RollerCoasterFastExit(int vKey);
+    VOID THISCALL PokerRoyalFlush();
 };
 
 #if 0
@@ -177,6 +189,8 @@ VOID ConfigInit()
         
         { (INT*)&nAutoFish, 'i', L"DT", L"AutoFish", 0, },
         { (INT*)&nFastFish, 'i', L"DT", L"FastFish", 0, },
+        { (INT*)&bRoyalFlush, 'b', L"DT", L"RoyalFlush", 0, },
+        { (INT*)&bAutoHorrorCoaster, 'b', L"DT", L"AutoHorrorCoaster", 0, },
     };
  
     CONFIG_ENTRY *Entry;
@@ -715,3 +729,27 @@ NAKED VOID CFish::ChangeFishingWaitTime()
 /************************************************************************
     Fish End
 ************************************************************************/
+
+VOID CClass::PokerRoyalFlush()
+{
+    POKER_ENTRY* Entry = (POKER_ENTRY*)this;
+
+    Entry[0].digit = 6;
+    Entry[1].digit = 2;
+    Entry[2].digit = 7;
+    Entry[3].digit = 3;
+    Entry[4].digit = 8;
+    Entry[5].digit = 4;
+
+    Entry[6].digit = 9;
+    Entry[7].digit = 10;
+    Entry[8].digit = 11;
+    Entry[9].digit = 12;
+    Entry[10].digit = 13;
+    Entry[11].digit = 1;
+
+    Entry[12].digit = 5;
+    
+    //Swap(Entry[6].digit, Entry[12].digit);  // 7-13
+    //Swap(Entry[7].digit, Entry[0].digit);   // 8-1
+}
