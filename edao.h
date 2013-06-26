@@ -356,6 +356,9 @@ public:
 
     BOOL IsCustomChar(ULONG_PTR ChrId)
     {
+        //mark
+        if (ChrId >= 0xC)
+            return FALSE;
         return GetPartyChipMap()[ChrId] >= MINIMUM_CUSTOM_CHAR_ID;
     }
 
@@ -824,8 +827,8 @@ public:
     VOID FASTCALL HandleConditionBeforeMasterQuartzKipaTakeEffect(PMONSTER_STATUS MSData);
     BOOL THISCALL IsNeedBattleEvaluationSuperKill(ULONG ChrPosition);
 
-    VOID THISCALL SetBattleStatusFinal(PMONSTER_STATUS MSData);
-    DECL_STATIC_METHOD_POINTER(CBattle, SetBattleStatusFinal);
+    VOID THISCALL SetBattleStatusFinalByDifficulty(PMONSTER_STATUS MSData);
+    DECL_STATIC_METHOD_POINTER(CBattle, SetBattleStatusFinalByDifficulty);
 
     BOOL THISCALL CheckQuartz(ULONG ChrPosition, ULONG ItemId, PULONG EquippedIndex = NULL);
     DECL_STATIC_METHOD_POINTER(CBattle, CheckQuartz);
@@ -834,6 +837,8 @@ public:
     DECL_STATIC_METHOD_POINTER(CBattle, ThinkRunaway);
     DECL_STATIC_METHOD_POINTER(CBattle, ThinkSCraft);
     DECL_STATIC_METHOD_POINTER(CBattle, ExecuteActionScript);
+
+    static PCHAR_STATUS pChrStatusBackup;
 };
 
 INIT_STATIC_MEMBER(CBattle::StubSetCurrentActionChrInfo);
@@ -841,8 +846,9 @@ INIT_STATIC_MEMBER(CBattle::StubThinkRunaway);
 INIT_STATIC_MEMBER(CBattle::StubThinkSCraft);
 INIT_STATIC_MEMBER(CBattle::StubLoadMSFile);
 INIT_STATIC_MEMBER(CBattle::StubExecuteActionScript);
-INIT_STATIC_MEMBER(CBattle::StubSetBattleStatusFinal);
+INIT_STATIC_MEMBER(CBattle::StubSetBattleStatusFinalByDifficulty);
 INIT_STATIC_MEMBER(CBattle::StubCheckQuartz);
+INIT_STATIC_MEMBER(CBattle::pChrStatusBackup);
 
 class CSound
 {
@@ -1085,9 +1091,17 @@ public:
 
     //mark
     ULONG THISCALL GetDifficulty();
-    DECL_STATIC_METHOD_POINTER(EDAO, GetDifficulty);
+
+    VOID THISCALL SetBattleStatusFinalByEquipment(ULONG ChrPosition, PCHAR_STATUS pStatusFinal, PCHAR_STATUS pStatusBasic)
+    {
+        DETOUR_METHOD(EDAO, SetBattleStatusFinalByEquipment, 0x00676ECA, ChrPosition, pStatusFinal, pStatusBasic);
+    }
+
+    // Ä¾Å¼ ¸´»î
+    VOID THISCALL SetBattleStatusFinalWhenRecover(ULONG ChrPosition, PCHAR_STATUS pStatusFinal, PCHAR_STATUS pStatusBasic);
 
     DECL_STATIC_METHOD_POINTER(EDAO, CheckItemEquipped);
+    DECL_STATIC_METHOD_POINTER(EDAO, GetDifficulty);
 };
 
 DECL_SELECTANY TYPE_OF(EDAO::StubCheckItemEquipped) EDAO::StubCheckItemEquipped = NULL;

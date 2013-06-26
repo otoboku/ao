@@ -68,6 +68,11 @@ PMONSTER_STATUS FASTCALL CBattle::OverWriteBattleStatusWithChrStatus(PMONSTER_ST
     if (!IsCustomChar(MSData->CharID))
         return MSData;
 
+    //mark
+    if (CBattle::pChrStatusBackup == NULL)
+        CBattle::pChrStatusBackup = new CHAR_STATUS[MAXIMUM_CHR_NUMBER_IN_BATTLE];
+    pChrStatusBackup[MSData->CharPosition] = *Raw;
+
     Final->MaximumHP    += Raw->MaximumHP   / 2;
     Final->InitialHP    += Raw->InitialHP   / 2;
     Final->MaximumEP    += Raw->MaximumEP   / 2;

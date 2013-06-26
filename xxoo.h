@@ -517,12 +517,15 @@ SHORT THISCALL CClass::RollerCoasterFastExit(int vKey)
     return 0;
 }
 
-VOID THISCALL CBattle::SetBattleStatusFinal(PMONSTER_STATUS MSData)
+VOID THISCALL CBattle::SetBattleStatusFinalByDifficulty(PMONSTER_STATUS MSData)
 {
-    if(nDifficulty != 5 || !MSData->IsChrEnemyOnly())
+    if(!MSData->IsChrEnemyOnly())
     {
-        return (this->*StubSetBattleStatusFinal)(MSData);
+        return;
     }
+
+    if (nDifficulty == 5)
+    {
     SaturateConvert(&MSData->ChrStatus[1].MaximumHP, (INT64)MSData->ChrStatus[1].MaximumHP * statusRateUserDefined.HP / 100);
     SaturateConvert(&MSData->ChrStatus[1].InitialHP, (INT64)MSData->ChrStatus[1].InitialHP * statusRateUserDefined.HP / 100);
     SaturateConvert(&MSData->ChrStatus[1].STR, (INT64)MSData->ChrStatus[1].STR * statusRateUserDefined.STR / 100);
@@ -533,6 +536,11 @@ VOID THISCALL CBattle::SetBattleStatusFinal(PMONSTER_STATUS MSData)
     SaturateConvertEx(&MSData->ChrStatus[1].DEX, (INT64)MSData->ChrStatus[1].DEX * statusRateUserDefined.DEX / 100, (SHORT)0xCCC);
     SaturateConvertEx(&MSData->ChrStatus[1].AGL, (INT64)MSData->ChrStatus[1].AGL * statusRateUserDefined.AGL / 100, (SHORT)0xCCC);
     SaturateConvert(&MSData->ChrStatus[1].MOV, (INT64)MSData->ChrStatus[1].MOV * statusRateUserDefined.MOV / 100);
+    }
+    else
+    {
+        (this->*StubSetBattleStatusFinalByDifficulty)(MSData);
+    }
 
     SaturateConvertEx(&MSData->ChrStatus[1].DEXRate, (INT64)MSData->ChrStatus[1].DEXRate + statusRateUserDefined.DEXRate, (SHORT)100, (SHORT)-100);
     SaturateConvertEx(&MSData->ChrStatus[1].AGLRate, (INT64)MSData->ChrStatus[1].AGLRate + statusRateUserDefined.AGLRate, (SHORT)100, (SHORT)-100);
@@ -560,6 +568,33 @@ ULONG THISCALL EDAO::GetDifficulty()
         return nDifficulty - 1;
     else
         return (this->*StubGetDifficulty)();
+}
+
+VOID THISCALL EDAO::SetBattleStatusFinalWhenRecover(ULONG ChrPosition, PCHAR_STATUS pStatusFinal, PCHAR_STATUS pStatusBasic)
+{
+    CBattle* Battle = GetBattle();
+    PMONSTER_STATUS MSData = container_of(pStatusBasic, MONSTER_STATUS, ChrStatus);
+
+    SetBattleStatusFinalByEquipment(ChrPosition, pStatusFinal, pStatusBasic);
+    if (IsCustomChar(MSData->CharID) && Battle->pChrStatusBackup != NULL)
+    {
+        PCHAR_STATUS Raw = Battle->pChrStatusBackup + ChrPosition;
+        PCHAR_STATUS Final = &MSData->ChrStatus[BattleStatusFinal];
+
+        Final->MaximumHP    += Raw->MaximumHP   / 2;
+        Final->InitialHP    += Raw->InitialHP   / 2;
+        Final->MaximumEP    += Raw->MaximumEP   / 2;
+        Final->InitialEP    += Raw->InitialEP   / 2;
+        Final->STR          += Raw->STR         * 2 / 3;
+        Final->DEF          += Raw->DEF         * 2 / 3;
+        Final->ATS          += Raw->ATS         * 2 / 3;
+        Final->ADF          += Raw->ADF         * 2 / 3;
+        Final->DEX          += Raw->DEX         * 2 / 3;
+        Final->AGL          += Raw->AGL         * 2 / 3;
+        Final->MOV          += Raw->MOV         * 2 / 3;
+        Final->SPD          += Raw->SPD         * 2 / 3;
+    }
+    Battle->SetBattleStatusFinalByDifficulty(MSData);
 }
 
 BOOL THISCALL CBattle::CheckQuartz(ULONG ChrPosition, ULONG ItemId, PULONG EquippedIndex /* = NULL */)
