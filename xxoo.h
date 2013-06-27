@@ -65,9 +65,19 @@ class CClass
     } POKER_ENTRY;
 
 public:
-    SHORT THISCALL RollerCoasterFastExit(int vKey);
+    SHORT THISCALL HorrorCoasterFastExit(int vKey);
     VOID THISCALL PokerRoyalFlush();
+
+    VOID THISCALL ShowHorrorCoasterText(INT x, INT y, float par3, LPCSTR text, ULONG par5, ULONG color);
+    DECL_STATIC_METHOD_POINTER(CClass, ShowHorrorCoasterText);
+
+    VOID THISCALL HorrorCoasterEvaluationPositionRestore(ULONG par1);
+    DECL_STATIC_METHOD_POINTER(CClass, HorrorCoasterEvaluationPositionRestore);
+
+    VOID THISCALL PositionPC2PSP(PFLOAT par1, PFLOAT pXY, PFLOAT par3);
 };
+INIT_STATIC_MEMBER(CClass::StubShowHorrorCoasterText);
+INIT_STATIC_MEMBER(CClass::StubHorrorCoasterEvaluationPositionRestore);
 
 #if 0
 VOID ConfigInit()
@@ -497,7 +507,7 @@ BOOL THISCALL CBattle::IsNeedBattleEvaluationSuperKill(ULONG ChrPosition)
 }
 
 // 鬼屋按键
-SHORT THISCALL CClass::RollerCoasterFastExit(int vKey)
+SHORT THISCALL CClass::HorrorCoasterFastExit(int vKey)
 {
     UNREFERENCED_PARAMETER(vKey);
     TYPE_OF(&GetAsyncKeyState) StubGetAsyncKeyState;
@@ -787,4 +797,35 @@ VOID CClass::PokerRoyalFlush()
     
     //Swap(Entry[6].digit, Entry[12].digit);  // 7-13
     //Swap(Entry[7].digit, Entry[0].digit);   // 8-1
+}
+
+// log
+VOID THISCALL CClass::ShowHorrorCoasterText(INT x, INT y, float par3, LPCSTR text, ULONG par5, ULONG color)
+{
+    if (text != NULL && toupper(*text) == 'E')
+        PrintConsoleA("%d %d %f %s\r\n", x, y, par3, text);
+    (this->*StubShowHorrorCoasterText)(x, y, par3, text, par5, color);
+    //960*544
+    //(this->*StubShowHorrorCoasterText)(236, 55, par3, text, par5, color);
+}
+/*
+VOID THISCALL CClass::HorrorCoasterEvaluationPositionRestore(ULONG par1)
+{
+    (this->*StubHorrorCoasterEvaluationPositionRestore)(par1);
+    PINT x = (PINT)PtrAdd(this, 0x98);
+    PINT y = (PINT)PtrAdd(this, 0x9C);
+    *x = *x * 480 / EDAO::GetWindowWidth();
+    *y = *y * 272 / EDAO::GetWindowHeight();
+}*/
+
+// 文本显示位置错误
+VOID THISCALL CClass::PositionPC2PSP(PFLOAT par1, PFLOAT pXY, PFLOAT par3)
+{
+    TYPE_OF(&CClass::PositionPC2PSP) StubPositionPC2PSP;
+    *(PULONG_PTR)&StubPositionPC2PSP = 0x6724CE;
+
+    (this->*StubPositionPC2PSP)(par1, pXY, par3);
+    *pXY = *pXY * 480 / EDAO::GetWindowWidth();
+    pXY++;
+    *pXY = *pXY * 272 / EDAO::GetWindowHeight();
 }

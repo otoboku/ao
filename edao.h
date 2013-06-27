@@ -1102,6 +1102,36 @@ public:
 
     DECL_STATIC_METHOD_POINTER(EDAO, CheckItemEquipped);
     DECL_STATIC_METHOD_POINTER(EDAO, GetDifficulty);
+
+    static ULONG GetWindowWidth()
+    {
+        return *(PULONG)PtrAdd(GlobalGetEDAO(), 0x3084);
+    }
+
+    static ULONG GetWindowHeight()
+    {
+        return *(PULONG)PtrAdd(GlobalGetEDAO(), 0x3088);
+    }
+/*
+    VOID THISCALL ShowDebugText(LPCSTR lpText, INT x, INT y, INT color, INT par5, INT par6, INT par7)
+    {
+        DETOUR_METHOD(EDAO, ShowDebugText, 0x006729FB, lpText, x, y, color, par5, par6, par7);
+    }
+
+    VOID THISCALL ShowDebugTextPositionRestore1(LPCSTR lpText, INT x, INT y, INT color, INT par5, INT par6, INT par7)
+    {
+        x = (x-1)  * 480 / EDAO::GetWindowWidth() + 1;
+        y = (y-1) * 272 / EDAO::GetWindowHeight() + 1;
+        ShowDebugText(lpText, x, y, color, par5, par6, par7);
+    }
+
+    VOID THISCALL ShowDebugTextPositionRestore2(LPCSTR lpText, INT x, INT y, INT color, INT par5, INT par6, INT par7)
+    {
+        x = x * 480 / EDAO::GetWindowWidth();
+        y = y * 272 / EDAO::GetWindowHeight();
+        ShowDebugText(lpText, x, y, color, par5, par6, par7);
+    }
+*/
 };
 
 DECL_SELECTANY TYPE_OF(EDAO::StubCheckItemEquipped) EDAO::StubCheckItemEquipped = NULL;

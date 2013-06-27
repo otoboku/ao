@@ -95,8 +95,9 @@ BOOL Initialize(PVOID BaseAddress)
         INLINE_HOOK_CALL_RVA_NULL(0x5837EE, METHOD_PTR(&CBattle::NakedHandleConditionBeforeMasterQuartzKipaTakeEffect)),
         INLINE_HOOK_CALL_RVA_NULL(0x5838EA, METHOD_PTR(&CBattle::IsNeedBattleEvaluationSuperKill)),
 
-        INLINE_HOOK_CALL_RVA_NULL(0x6A4244, METHOD_PTR(&CClass::RollerCoasterFastExit)),
-
+        INLINE_HOOK_CALL_RVA_NULL(0x6A4244, METHOD_PTR(&CClass::HorrorCoasterFastExit)),
+        //INLINE_HOOK_JUMP_RVA     (0x273888, METHOD_PTR(&CClass::HorrorCoasterEvaluationPositionRestore), CClass::StubHorrorCoasterEvaluationPositionRestore),
+        INLINE_HOOK_CALL_RVA_NULL(0x6A58FF, METHOD_PTR(&CClass::PositionPC2PSP)),   // 鬼屋评价显示位置修正
 
         INLINE_HOOK_JUMP_RVA_NULL(0x279986, METHOD_PTR(&CSSaveData::SaveSystemData)),
         INLINE_HOOK_JUMP_RVA_NULL(0x279FA8, METHOD_PTR(&CSSaveData::LoadSystemData)),
@@ -110,9 +111,20 @@ BOOL Initialize(PVOID BaseAddress)
         INLINE_HOOK_CALL_RVA_NULL(0x675BC2, METHOD_PTR(&CFish::IsRodPulled)),
         INLINE_HOOK_CALL_RVA_NULL(0x67973B, METHOD_PTR(&CFish::GetRodEntry)),
 
+        // debug fix
+        //INLINE_HOOK_CALL_RVA_NULL(0x480915, METHOD_PTR(&EDAO::ShowDebugTextPositionRestore1)),
+        //INLINE_HOOK_CALL_RVA_NULL(0x48094D, METHOD_PTR(&EDAO::ShowDebugTextPositionRestore2)),
+        INLINE_HOOK_CALL_RVA_NULL(0x4806D3, METHOD_PTR(&CClass::PositionPC2PSP)),   // F6  #%03d : %s(lv%d)
+        INLINE_HOOK_CALL_RVA_NULL(0x480A1E, METHOD_PTR(&CClass::PositionPC2PSP)),   // F6 ChrName
+        INLINE_HOOK_CALL_RVA_NULL(0x47E2CA, METHOD_PTR(&CClass::PositionPC2PSP)),   // F6  ( %02d ) : %s [%d->%d],%d
+        INLINE_HOOK_CALL_RVA_NULL(0x5DB5E1, METHOD_PTR(&CClass::PositionPC2PSP)),   // F6 In Battle      
+        //INLINE_HOOK_CALL_RVA_NULL(0x47E46D, METHOD_PTR(&EDAO::ShowDebugTextPositionRestore1)),
+        //INLINE_HOOK_CALL_RVA_NULL(0x47E4AB, METHOD_PTR(&EDAO::ShowDebugTextPositionRestore2)),
+
 #if CONSOLE_DEBUG
         // log
         //INLINE_HOOK_JUMP_RVA     (0x51EB50, METHOD_PTR(&CScript::ScpGetFunctionAddress), CScript::StubScpGetFunctionAddress),
+        //INLINE_HOOK_JUMP     (0x006729D8, METHOD_PTR(&CClass::ShowHorrorCoasterText), CClass::StubShowHorrorCoasterText),
 #endif
     };
 
