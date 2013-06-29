@@ -65,11 +65,16 @@ ML_NAMESPACE_BEGIN(CraftConditions)
 
     static const ULONG_PTR Stealth             = 0x04000000;
     static const ULONG_PTR ArtsReflect         = 0x08000000;
+    static const ULONG_PTR BurningHeart        = 0x10000000;
     static const ULONG_PTR Reserve_1           = 0x10000000;
     static const ULONG_PTR Reserve_2           = 0x20000000;
     static const ULONG_PTR Reserve_3           = 0x40000000;
+    static const ULONG_PTR BodyAbnormal        = 0x40000000;
 
     static const ULONG_PTR Dead                = 0x80000000;
+
+    static const SHORT BodyAbnormal_Little = 0x2;
+    static const SHORT BodyAbnormal_GreenPepper = 0x3;
 
 ML_NAMESPACE_END
 
@@ -833,6 +838,8 @@ public:
     BOOL THISCALL CheckQuartz(ULONG ChrPosition, ULONG ItemId, PULONG EquippedIndex = NULL);
     DECL_STATIC_METHOD_POINTER(CBattle, CheckQuartz);
 
+    PMS_EFFECT_INFO THISCALL CheckConditionGreenPepperWhenThinkCraft(PMONSTER_STATUS MSData, ULONG_PTR Condition, INT ConditionRateType);
+
     DECL_STATIC_METHOD_POINTER(CBattle, SetCurrentActionChrInfo);
     DECL_STATIC_METHOD_POINTER(CBattle, ThinkRunaway);
     DECL_STATIC_METHOD_POINTER(CBattle, ThinkSCraft);
@@ -922,7 +929,11 @@ public:
 
     static EDAO* GlobalGetEDAO()
     {
+#if CHT_VER
+        return *(EDAO **)0xC27988;
+#else
         return *(EDAO **)0xC29988;
+#endif
     }
 
     CGlobal* GetGlobal()
@@ -1257,7 +1268,7 @@ public:
 
     static MemorySystemData* GetMemorySystemData()
     {
-        return *(MemorySystemData **)0xC29988;
+        return (MemorySystemData*)EDAO::GlobalGetEDAO();
     }
 
     // SaveData2SystemData()
@@ -1397,6 +1408,7 @@ public:
         return (this->*StubMainControl)();
     }
 
+    BOOL THISCALL IsFileExist(PCSTR FileName);
     DECL_STATIC_METHOD_POINTER(CDebug, MainControl);
 };
 

@@ -48,7 +48,7 @@ BOOL Initialize(PVOID BaseAddress)
     MEMORY_PATCH p[] =
     {
         // bug fix
-        PATCH_MEMORY(0xEB,  1,  0x60CC8F),      // burst energy
+        PATCH_MEMORY(0xEB,  1,  0x60CC8F),      // burst condition
 
         // restore
         //PATCH_MEMORY(p0086B6A0, 9, 0x0086B6A0-0x400000),
@@ -98,6 +98,7 @@ BOOL Initialize(PVOID BaseAddress)
         INLINE_HOOK_CALL_RVA_NULL(0x6A4244, METHOD_PTR(&CClass::HorrorCoasterFastExit)),
         //INLINE_HOOK_JUMP_RVA     (0x273888, METHOD_PTR(&CClass::HorrorCoasterEvaluationPositionRestore), CClass::StubHorrorCoasterEvaluationPositionRestore),
         INLINE_HOOK_CALL_RVA_NULL(0x6A58FF, METHOD_PTR(&CClass::PositionPC2PSP)),   // 鬼屋评价显示位置修正
+        INLINE_HOOK_CALL_RVA_NULL(0x36419B, Return2ExtraFix),
 
         INLINE_HOOK_JUMP_RVA_NULL(0x279986, METHOD_PTR(&CSSaveData::SaveSystemData)),
         INLINE_HOOK_JUMP_RVA_NULL(0x279FA8, METHOD_PTR(&CSSaveData::LoadSystemData)),
@@ -120,6 +121,11 @@ BOOL Initialize(PVOID BaseAddress)
         INLINE_HOOK_CALL_RVA_NULL(0x5DB5E1, METHOD_PTR(&CClass::PositionPC2PSP)),   // F6 In Battle      
         //INLINE_HOOK_CALL_RVA_NULL(0x47E46D, METHOD_PTR(&EDAO::ShowDebugTextPositionRestore1)),
         //INLINE_HOOK_CALL_RVA_NULL(0x47E4AB, METHOD_PTR(&EDAO::ShowDebugTextPositionRestore2)),
+
+        // 变青椒后只能普通攻击
+        INLINE_HOOK_CALL_RVA_NULL(0x58E76B, METHOD_PTR(&CBattle::CheckConditionGreenPepperWhenThinkCraft)),     // ThinkSCraft     
+        INLINE_HOOK_CALL_RVA_NULL(0x58E4DB, METHOD_PTR(&CBattle::CheckConditionGreenPepperWhenThinkCraft)),     // ThinkCraft
+        INLINE_HOOK_CALL_RVA_NULL(0x58E24B, METHOD_PTR(&CBattle::CheckConditionGreenPepperWhenThinkCraft)),     // ThinkMagic
 
 #if CONSOLE_DEBUG
         // log

@@ -46,6 +46,7 @@ typedef struct _SStatusRate
     INT MOV;
     INT DEXRate;
     INT AGLRate;
+    BOOL    ResistNone;
     BOOL    ResistAbnormalCondition;
     BOOL    ResistAbilityDown;
     BOOL    ResistATDelay;
@@ -181,6 +182,7 @@ VOID ConfigInit()
         { (INT*)&statusRateUserDefined.MOV, 'i', L"Battle", L"MOV", 100, },
         { (INT*)&statusRateUserDefined.DEXRate, 'i', L"Battle", L"DEXRate", 0, },
         { (INT*)&statusRateUserDefined.AGLRate, 'i', L"Battle", L"AGLRate", 0, },
+        { (BOOL*)&statusRateUserDefined.ResistNone, 'b', L"Battle", L"ResistNone", FALSE, },
         { (BOOL*)&statusRateUserDefined.ResistAbnormalCondition, 'b', L"Battle", L"ResistAbnormalCondition", FALSE, },
         { (BOOL*)&statusRateUserDefined.ResistAbilityDown, 'b', L"Battle", L"ResistAbilityDown", FALSE, },
         { (BOOL*)&statusRateUserDefined.ResistATDelay, 'b', L"Battle", L"ResistATDelay", FALSE, },
@@ -492,6 +494,16 @@ PMS_EFFECT_INFO THISCALL CBattle::FindEffectInfoByConditionEx(PMONSTER_STATUS MS
     return NULL;
 }
 
+PMS_EFFECT_INFO THISCALL CBattle::CheckConditionGreenPepperWhenThinkCraft(PMONSTER_STATUS MSData, ULONG_PTR Condition, INT ConditionRateType)
+{
+    PMS_EFFECT_INFO pEffectInfo;
+    pEffectInfo = FindEffectInfoByConditionEx(MSData, CraftConditions::BodyAbnormal);
+    if (pEffectInfo != NULL && pEffectInfo->ConditionRate == CraftConditions::BodyAbnormal_GreenPepper)
+        return pEffectInfo;
+    else
+        return FindEffectInfoByConditionEx(MSData, Condition, ConditionRateType);
+}
+
 BOOL THISCALL CBattle::IsNeedBattleEvaluationSuperKill(ULONG ChrPosition)
 {
     if (FLAG_ON(g_flag, NFLAG::IsSubHPEveryAct))
@@ -557,7 +569,13 @@ VOID THISCALL CBattle::SetBattleStatusFinalByDifficulty(PMONSTER_STATUS MSData)
 
     ULONG   conditionAbnormal = 0x40008FFF;
     ULONG   conditionDown = 0x00FF0000;
+    USHORT  conditionATDelay = 0x0800;
 
+    if (statusRateUserDefined.ResistNone)
+    {
+        MSData->Resistance = 0;
+        CLEAR_FLAG(MSData->State2, conditionATDelay);
+    }
     if (statusRateUserDefined.ResistAbnormalCondition)
     {
         MSData->Resistance |= conditionAbnormal;
@@ -568,7 +586,7 @@ VOID THISCALL CBattle::SetBattleStatusFinalByDifficulty(PMONSTER_STATUS MSData)
     }
     if (statusRateUserDefined.ResistATDelay)
     {
-        MSData->State2 |= 0x0800;
+        SET_FLAG(MSData->State2, conditionATDelay);
     }
 }
 
@@ -828,4 +846,24 @@ VOID THISCALL CClass::PositionPC2PSP(PFLOAT par1, PFLOAT pXY, PFLOAT par3)
     *pXY = *pXY * 480 / EDAO::GetWindowWidth();
     pXY++;
     *pXY = *pXY * 272 / EDAO::GetWindowHeight();
+}
+
+// Extra 鬼屋 结束后不返回Extra，BGM不切换，简体BUG，参照繁体版修复
+NAKED VOID Return2ExtraFix()
+{
+    INLINE_ASM
+    {
+        mov eax,dword ptr ss:[ebp-0xc];
+        cmp dword ptr ds:[eax+0xa70c8],0x0;
+        je short LReturn2ExtraFix01;
+        //mov eax,dword ptr ss:[ebp-0xc];
+        mov ecx,dword ptr ds:[eax+0x82adc];
+        //mov edx,0x7;
+        //mov word ptr ds:[ecx+0x20],dx;
+        mov word ptr ds:[ecx+0x20], 7;
+
+LReturn2ExtraFix01:
+        mov eax,0x1;
+	    ret;
+    }
 }

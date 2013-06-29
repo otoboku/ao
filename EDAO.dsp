@@ -19,6 +19,7 @@ CFG=EDAO - Win32 Release
 !MESSAGE 
 !MESSAGE "EDAO - Win32 Release" (based on "Win32 (x86) Dynamic-Link Library")
 !MESSAGE "EDAO - Win32 d3d9" (based on "Win32 (x86) Dynamic-Link Library")
+!MESSAGE "EDAO - Win32 cht" (based on "Win32 (x86) Dynamic-Link Library")
 !MESSAGE 
 
 # Begin Project
@@ -85,12 +86,42 @@ LINK32=link.exe
 # ADD LINK32 mylib_nt.lib undoc_ntdll.lib ntdll.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386 /out:"J:\Falcom\ED_AO\DINPUT8.dll" /ltcg /NOENTRY
 # SUBTRACT LINK32 /pdb:none
 
+!ELSEIF  "$(CFG)" == "EDAO - Win32 cht"
+
+# PROP BASE Use_MFC 0
+# PROP BASE Use_Debug_Libraries 0
+# PROP BASE Output_Dir "EDAO___Win32_cht"
+# PROP BASE Intermediate_Dir "EDAO___Win32_cht"
+# PROP BASE Ignore_Export_Lib 0
+# PROP BASE Target_Dir ""
+# PROP Use_MFC 0
+# PROP Use_Debug_Libraries 0
+# PROP Output_Dir "cht"
+# PROP Intermediate_Dir "cht"
+# PROP Ignore_Export_Lib 0
+# PROP Target_Dir ""
+# ADD BASE CPP /nologo /Gr /MD /W4 /O2 /D "WIN32" /D "NDEBUG" /D USE_NT_VER=1 /FD /GS- /MP /arch:SSE /GL /c
+# ADD CPP /nologo /Gr /MD /W4 /O2 /D "WIN32" /D "NDEBUG" /D USE_NT_VER=1 /D CHT_VER=1 /FD /GS- /MP /arch:SSE /GL /c
+# ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
+# ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
+# ADD BASE RSC /l 0x409 /d "NDEBUG"
+# ADD RSC /l 0x409 /d "NDEBUG"
+BSC32=bscmake.exe
+# ADD BASE BSC32 /nologo
+# ADD BSC32 /nologo
+LINK32=link.exe
+# ADD BASE LINK32 ntdll.lib mylib_nt.lib undoc_ntdll.lib ntdll_xp.lib ntdllpC_all.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386 /out:"ed_ao_ex.dll" /ltcg
+# SUBTRACT BASE LINK32 /pdb:none
+# ADD LINK32 ntdll.lib mylib_nt.lib undoc_ntdll.lib ntdll_xp.lib ntdllpC_all.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386 /out:"cht\ed_ao_cht_ex.dll" /ltcg
+# SUBTRACT LINK32 /pdb:none
+
 !ENDIF 
 
 # Begin Target
 
 # Name "EDAO - Win32 Release"
 # Name "EDAO - Win32 d3d9"
+# Name "EDAO - Win32 cht"
 # Begin Source File
 
 SOURCE=.\Battle.cpp
@@ -98,6 +129,34 @@ SOURCE=.\Battle.cpp
 # Begin Source File
 
 SOURCE=.\ed_ao_ex.cpp
+
+!IF  "$(CFG)" == "EDAO - Win32 Release"
+
+!ELSEIF  "$(CFG)" == "EDAO - Win32 d3d9"
+
+!ELSEIF  "$(CFG)" == "EDAO - Win32 cht"
+
+# PROP Exclude_From_Build 1
+
+!ENDIF 
+
+# End Source File
+# Begin Source File
+
+SOURCE=.\ed_ao_ex_cht.cpp
+
+!IF  "$(CFG)" == "EDAO - Win32 Release"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "EDAO - Win32 d3d9"
+
+# PROP Exclude_From_Build 1
+
+!ELSEIF  "$(CFG)" == "EDAO - Win32 cht"
+
+!ENDIF 
+
 # End Source File
 # Begin Source File
 
@@ -108,6 +167,11 @@ SOURCE=.\edao.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "EDAO - Win32 d3d9"
+
+!ELSEIF  "$(CFG)" == "EDAO - Win32 cht"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
 
 !ENDIF 
 
@@ -133,6 +197,11 @@ SOURCE=.\SoundArc.cpp
 # PROP Exclude_From_Build 1
 
 !ELSEIF  "$(CFG)" == "EDAO - Win32 d3d9"
+
+!ELSEIF  "$(CFG)" == "EDAO - Win32 cht"
+
+# PROP BASE Exclude_From_Build 1
+# PROP Exclude_From_Build 1
 
 !ENDIF 
 
