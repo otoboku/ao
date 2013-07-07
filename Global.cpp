@@ -1,7 +1,6 @@
 #pragma comment(lib, "gdiplus.lib")
 
 #include "edao.h"
-#include <GdiPlus.h>
 
 /************************************************************************
   EDAO
@@ -23,6 +22,146 @@ BOOL EDAO::CheckItemEquipped(ULONG ItemId, PULONG EquippedIndex)
     return (this->*StubCheckItemEquipped)(ItemId, EquippedIndex);
 }
 
+enum
+{
+    CHR_ID_LAZY         = 4,
+    CHR_ID_YIN          = 5,
+
+    CHR_ID_LAZY_KNIGHT  = 0x1F,
+    CHR_ID_RIXIA        = 0x20,
+};
+
+LONG CDECL EDAO::GetCampImage(PSTR Buffer, PCSTR Format, LONG ChrId)
+{
+    CHAR FullPath[MAX_NTPATH];
+
+    sprintf(FullPath, "data/campimg/chrimg%02d.itp", ChrId);
+    if (!AoIsFileExist(FullPath))
+        ChrId = 9999;
+
+    return sprintf(Buffer, Format, ChrId);
+}
+
+LONG CDECL EDAO::GetBattleFace(PSTR Buffer, PCSTR Format, PCSTR DataPath, LONG ChrId)
+{
+    LONG_PTR Length;
+
+    Length = sprintf(Buffer, Format, DataPath, ChrId);
+    if (!AoIsFileExist(Buffer))
+        Length = sprintf(Buffer, Format, DataPath, 9999);
+
+    return Length;
+}
+
+LONG CDECL EDAO::GetFieldAttackChr(PSTR Buffer, PCSTR Format, LONG ChrId)
+{
+    CHAR FullPath[MAX_NTPATH];
+
+    sprintf(FullPath, "data/system/fachr%03d._bn", ChrId);
+    if (!AoIsFileExist(FullPath))
+        ChrId = 999;
+
+    return sprintf(Buffer, Format, ChrId);
+}
+
+LONG FASTCALL EDAO::GetCFace(ULONG ChrId)
+{
+    ULONG PartyId;
+
+    PartyId = GetSaveData()->GetPartyChipMap()[ChrId];
+    if (PartyId >= MINIMUM_CUSTOM_CHAR_ID)
+    {
+        CHAR FaceFile[MAX_NTPATH];
+
+        sprintf(FaceFile, "./data/campimg/cface%02d.itp", PartyId);
+        if (AoIsFileExist(FaceFile))
+            return PartyId;
+    }
+
+    switch (ChrId)
+    {
+        case CHR_ID_LAZY:
+            return GetSaveData()->IsLazyKnight() ? CHR_ID_LAZY_KNIGHT : ChrId;
+
+        case CHR_ID_YIN:
+            return GetSaveData()->IsYinRixia() ? CHR_ID_RIXIA : ChrId;
+    }
+
+    return ChrId;
+}
+
+LONG FASTCALL EDAO::GetStatusIcon(ULONG ChrId)
+{
+    INLINE_ASM mov ChrId, eax;
+
+    ULONG PartyId;
+
+    switch (ChrId)
+    {
+        case CHR_ID_YIN:
+            break;
+
+        default:
+            return ChrId;
+    }
+
+    PartyId = GetSaveData()->GetPartyChipMap()[ChrId];
+    if (PartyId == CHR_ID_RIXIA)
+        return 0xC;
+
+    switch (ChrId)
+    {
+        case CHR_ID_YIN:
+            return GetSaveData()->IsYinRixia() ? 0xC : ChrId;
+    }
+
+    return ChrId;
+}
+
+LONG FASTCALL EDAO::GetLeaderChangeVoice(ULONG PartyId)
+{
+    ULONG ChrId;
+
+    ChrId = GetSaveData()->GetPartyList()[1];
+
+    switch (ChrId)
+    {
+        case CHR_ID_YIN:
+            break;
+
+        default:
+            return ChrId;
+    }
+
+    if (PartyId == CHR_ID_RIXIA)
+        return 0xB;
+
+    switch (ChrId)
+    {
+        case CHR_ID_YIN:
+            return GetSaveData()->IsYinRixia() ? 0xB : ChrId;
+    }
+
+    return ChrId;
+}
+
+/************************************************************************
+  CActor
+************************************************************************/
+
+ULONG FASTCALL CSSaveData::GetTeamAttackMemberId(ULONG ChrId)
+{
+    switch (ChrId)
+    {
+        case CHR_ID_LAZY:
+            return IsLazyKnight() ? CHR_ID_LAZY_KNIGHT : ChrId;
+
+        case CHR_ID_YIN:
+            return IsYinRixia() ? CHR_ID_RIXIA : ChrId;
+    }
+
+    return ChrId;
+}
 
 /************************************************************************
   CScript
@@ -62,7 +201,7 @@ BOOL THISCALL CScript::ScpSaveRestoreParty(PSCENA_ENV_BLOCK Block)
     enum { Save = 1, Restore = 2 };
 
     NeedRefreshFA = GetScenaTable()[Block->ScenaIndex][Block->CurrentOffset + 1] == Restore &&
-                    RtlCompareMemory(GetActor()->GetPartyListSaved(), GetActor()->GetPartyList(), sizeof(Chr)) != sizeof(Chr);
+                    RtlCompareMemory(GetSaveData()->GetPartyListSaved(), GetSaveData()->GetPartyList(), sizeof(Chr)) != sizeof(Chr);
 
     Result = (this->*StubScpSaveRestoreParty)(Block);
 
@@ -223,5 +362,99 @@ NAKED VOID EDAO::NakedSetSaveDataScrollStep()
         mov     dword ptr [ebp-0x174], eax;
         mov     ecx, dword ptr [ebp-0x24]
         jmp     SetSaveDataScrollStep
+    }
+}
+
+
+/************************************************************************
+  keyboard input
+************************************************************************/
+
+VOID HandleSingleKey(ULONG_PTR KeyCode, BOOL KeyPress)
+{
+    FLOAT   Delta;
+    ULONG   Index;
+
+    extern BOOL Turbo;
+
+    enum { X = 0, Y = 1, Z = 2, Z2 = 42 };
+    enum
+    {
+        V = FIELD_OFFSET(CAMERA_INFO, Vertical),
+        O = FIELD_OFFSET(CAMERA_INFO, Obliquity),
+        H = FIELD_OFFSET(CAMERA_INFO, Horizon),
+        D = FIELD_OFFSET(CAMERA_INFO, Distance),
+    };
+
+    switch (KeyPress)
+    {
+        case TRUE:
+            switch (KeyCode)
+            {
+                case DIK_NUMPAD4:   Index = X; Delta = -.5f; goto CHANGE_CHR_COORD;
+                case DIK_NUMPAD6:   Index = X; Delta = +.5f;  goto CHANGE_CHR_COORD;
+
+                case DIK_NUMPAD2:   Index = Y; Delta = -.5f; goto CHANGE_CHR_COORD;
+                case DIK_NUMPAD8:   Index = Y; Delta = +.5f;  goto CHANGE_CHR_COORD;
+
+                case DIK_NUMPAD7:   Index = Z; Delta = +1.f;  goto CHANGE_CHR_COORD;
+                case DIK_NUMPAD9:   Index = Z; Delta = -1.f;  goto CHANGE_CHR_COORD;
+
+CHANGE_CHR_COORD:
+                {
+                    EDAO*   edao;
+                    PFLOAT  Coord;
+
+                    edao = EDAO::GlobalGetEDAO();
+                    Coord = edao->GetChrCoord();
+
+                    PtrAdd(Coord, 0x80)[Index] += Delta;
+                    edao->UpdateChrCoord(*(PVOID *)PtrAdd(edao, 0x78F78));
+                    break;
+                }
+
+                case DIK_INSERT:    Index = H; Delta = -1.f; goto CHANGE_CAMERA_DEGREE;
+                case DIK_DELETE:    Index = H; Delta = +1.f; goto CHANGE_CAMERA_DEGREE;
+
+                case DIK_HOME:      Index = V; Delta = +1.f; goto CHANGE_CAMERA_DEGREE;
+                case DIK_END:       Index = V; Delta = -1.f; goto CHANGE_CAMERA_DEGREE;
+
+                case DIK_PRIOR:     Index = O; Delta = -1.f; goto CHANGE_CAMERA_DEGREE;
+                case DIK_NEXT:      Index = O; Delta = +1.f; goto CHANGE_CAMERA_DEGREE;
+
+                case DIK_NUMPAD1:   Index = D; Delta = -1.f; goto CHANGE_CAMERA_DEGREE;
+                case DIK_NUMPAD3:   Index = D; Delta = +1.f; goto CHANGE_CAMERA_DEGREE;
+
+CHANGE_CAMERA_DEGREE:
+
+                    *(PFLOAT)PtrAdd(EDAO::GlobalGetEDAO()->GetScript()->GetCamera()->GetCameraInfo(), Index) += Delta;
+                    break;
+            }
+    }
+}
+
+VOID THISCALL CInput::HandleMainInterfaceInputState(PVOID Parameter1, CInput *Input, PVOID Parameter3)
+{
+    CHAR                    *Key, KeyState[0x100];
+    HRESULT                 Result;
+    LPDIRECTINPUTDEVICE8A   InputDevice;
+
+    (this->*StubHandleMainInterfaceInputState)(Parameter1, Input, Parameter3);
+
+    if (*(PCHAR)PtrAdd(EDAO::GlobalGetEDAO(), 0xA7071) != 1)
+        return;
+
+    InputDevice = Input->GetDInputDevice();
+    if (InputDevice == NULL)
+        return;
+
+    Result = InputDevice->GetDeviceState(sizeof(KeyState), KeyState);
+    if (FAILED(Result))
+        return;
+
+    FOR_EACH(Key, KeyState, countof(KeyState))
+    {
+        if (*Key < 0)
+            HandleSingleKey(Key - KeyState, TRUE);
     }
 }

@@ -190,6 +190,10 @@ SOURCE=.\Global.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\Global10.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\SoundArc.cpp
 
 !IF  "$(CFG)" == "EDAO - Win32 Release"

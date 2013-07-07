@@ -359,7 +359,7 @@ BOOL THISCALL CScript::ScpLeaveParty(PSCENA_ENV_BLOCK Block)
     BOOL    Result;
     int     i;
     ULONG   ChrCount = 0;
-    PUSHORT pPartyList = GetActor()->GetPartyList();
+    PUSHORT pPartyList = GetSaveData()->GetPartyList();
 
     Result = (this->*StubScpLeaveParty)(Block);
     
@@ -375,7 +375,7 @@ BOOL THISCALL CScript::ScpLeaveParty(PSCENA_ENV_BLOCK Block)
     {
         if (*(pPartyList + i) < 0xC)
         {
-            GetActor()->SetChrPositionAuto(*(pPartyList + i), pPartyList, ChrCount);
+            GetSaveData()->SetChrPositionAuto(*(pPartyList + i), pPartyList, ChrCount);
         }
     }
  

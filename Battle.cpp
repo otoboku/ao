@@ -22,7 +22,7 @@ VOID FASTCALL CBattle::CopyMagicAndCraftData(PMONSTER_STATUS MSData)
 
     MaxMagicNumber  = countof(MSData->MagicAiInfo);
     Magic           = MSData->MagicAiInfo;
-    MagicList       = GetActor()->GetChrMagicList() + MSData->CharID * MaxMagicNumber;
+    MagicList       = GetSaveData()->GetChrMagicList() + MSData->CharID * MaxMagicNumber;
 
     for (ULONG_PTR Count = countof(MSData->MagicAiInfo); Count; --Count)
     {
@@ -122,9 +122,9 @@ NAKED ULONG CBattle::NakedGetChrIdForSCraft()
     INLINE_ASM
     {
         mov     ecx, [ebp - 08h];
-        call    CBattle::GetActor
+        call    CBattle::GetSaveData
         mov     ecx, eax;
-        call    CActor::GetPartyChipMap
+        call    CSSaveData::GetPartyChipMap
         mov     ecx, dword ptr [ebp - 14h];
         movzx   ecx, [ecx]MONSTER_STATUS.CharID;
         movzx   eax, [eax + ecx * 2];
@@ -139,7 +139,7 @@ ULONG FASTCALL CBattle::GetVoiceChrIdWorker(PMONSTER_STATUS MSData)
     ULONG ChrId, PartyId;
 
     ChrId = MSData->CharID;
-    PartyId = GetActor()->GetPartyChipMap()[ChrId];
+    PartyId = GetSaveData()->GetPartyChipMap()[ChrId];
 
     return IsCustomChar(ChrId) ? PartyId : ChrId;
 }
@@ -197,11 +197,7 @@ NAKED VOID CBattle::NakedGetUnderAttackVoiceChrId()
     INLINE_ASM
     {
         call    CBattle::NakedGetTurnVoiceChrId
-        //cmp     ecx, MINIMUM_CUSTOM_CHAR_ID
-        //mov     eax, dword ptr [ebp-0xF8];
-        //cmovae  eax, ecx;
-        mov     dword ptr [ebp-0xF8], ecx;
-        test    ecx, ecx;
+        mov     dword ptr [ebp-0xF8], eax;
         ret;
     }
 }

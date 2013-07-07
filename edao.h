@@ -1,27 +1,49 @@
 #ifndef _EDAO_H_5c8a3013_4334_4138_9413_3d0209da878e_
 #define _EDAO_H_5c8a3013_4334_4138_9413_3d0209da878e_
 
+#define DIRECTINPUT_VERSION 0x800
+
 #include "MyLibrary.h"
+#include <GdiPlus.h>
+#include <dinput.h>
+
+#if D3D9_VER
+    #define NtGetTickCount (ULONG64)GetTickCount
+#endif
 
 #pragma warning (disable: 4201)
 #pragma warning (disable: 4996)
+
 ML_OVERLOAD_NEW
 
 class EDAO;
 class CGlobal;
+class CScript;
+class CSSaveData;
 class CBattle;
+
+class CMap;
+class CInput;
+class CSound;
+class CCamera;
+class CMiniGame;
 class CDebug;
+
+#define CActor CSSaveData
 
 #define INIT_STATIC_MEMBER(x) DECL_SELECTANY TYPE_OF(x) x = NULL
 #define DECL_STATIC_METHOD_POINTER(cls, method) static TYPE_OF(&cls::method) Stub##method
 #define DETOUR_METHOD(cls, method, addr, ...) TYPE_OF(&cls::method) (method); *(PULONG_PTR)&(method) = addr; return (this->*method)(__VA_ARGS__)
 #define DETOUR_METHOD_NO_RET(cls, method, addr) TYPE_OF(&cls::method) Stub##method; *(PULONG_PTR)&(Stub##method) = addr
 
-#define UCL_COMPRESS_MAGIC TAG4('UCL4')
 
 #define MINIMUM_CUSTOM_CHAR_ID          0xB0
 #define MINIMUM_CUSTOM_CRAFT_INDEX      0x3E8
 #define MAXIMUM_CHR_NUMBER_IN_BATTLE    0x16
+
+
+#define PSP_WIDTH_F                       480.f
+#define PSP_HEIGHT_F                      272.f
 
 #pragma pack(push, 1)
 
@@ -125,16 +147,16 @@ typedef struct
 
 enum
 {
-    ACTION_ATTACK,
-    ACTION_MOVE,
-    ACTION_MAGIC,
-    ACTION_CRAFT,
-    ACTION_SCRAFT,
-    ACTION_ITEM,
-    ACTION_ARIA_MAGIC,
-    ACTION_CAST_MAGIC,
-    ACTION_ARIA_CRAFT,
-    ACTION_CAST_CRAFT,
+    ACTION_ATTACK       = 0,
+    ACTION_MOVE         = 1,
+    ACTION_MAGIC        = 2,
+    ACTION_CRAFT        = 3,
+    ACTION_SCRAFT       = 4,
+    ACTION_ITEM         = 5,
+    ACTION_ARIA_MAGIC   = 6,
+    ACTION_CAST_MAGIC   = 7,
+    ACTION_ARIA_CRAFT   = 8,
+    ACTION_CAST_CRAFT   = 9,
 };
 
 enum
@@ -340,10 +362,131 @@ typedef struct _MONSTER_STATUS
 
 #pragma pack(pop)
 
+EDAO* GlobalGetEDAO();
 
-class CActor
+class CSSaveData
 {
+#pragma pack(push, 1)
+    typedef union
+    {
+        DUMMY_STRUCT(0x4C4);
+        struct
+        {
+            DUMMY_STRUCT(0x4);
+            INT     Adapter;        // 0x4
+            INT     Device;
+            INT     Mode;
+            INT     WindowWidth;    // 0x10
+            INT     WindowHeight;   // 0x14
+            DUMMY_STRUCT(0x475-0x18); 
+            BYTE    WindowMode;     // 0x475
+            DUMMY_STRUCT(0x484-0x476); 
+            BYTE    BgmVolumeIni;   // 0x484    ini
+            BYTE    SeVolumeIni;    // 0x485
+            BYTE    BgmOff;         // 0x486    ini invalid
+            BYTE    SeOff;          // 0x487    ini invalid
+            DUMMY_STRUCT(0x34);
+            BYTE    BgmVolume;      // 0x4BC    81C68
+            BYTE    SeVolume;       // 0x4BD    81C69
+            DUMMY_STRUCT(0x2);
+            ULONG   Option;         // 0x4C0
+            
+        } ;
+        
+    } SystemConfigData;
+    
+    typedef struct 
+    {
+        DUMMY_STRUCT(0x7EDD6);
+        USHORT  TitleVisualCount1;  // 0x7EDD6
+        DUMMY_STRUCT(0x817AC - 0x7EDD6 - 2);   
+        //DUMMY_STRUCT(0x817AC);
+        SystemConfigData Config;    // 0x817AC                             
+        DUMMY_STRUCT(0xC);
+        UINT64  Record;             // 0x81C7C
+        ULONG   Tokuten;            // 0x81C84
+        ULONG   Medal;              // 0x81C88
+        DUMMY_STRUCT(0x8);
+        ULONG   GameAccount;        // 0x81C94 invalid bug? PomttoAccount
+        DUMMY_STRUCT(0x25434 - 0xC);
+        ULONG   TitleVisualCount;   // 0xA70C0
+        ULONG   ExtraMode;          // 0xA70C4
+        DUMMY_STRUCT(0x4);
+        ULONG   Unknown_4D4;        // 0xA70CC
+        
+    } MemorySystemData;
+    
+    
+    typedef union  // 0x504
+    {
+        DUMMY_STRUCT(0x504);
+        struct
+        {
+            SystemConfigData Config;
+            UINT64  Record;             // 0x4C4
+            ULONG   ExtraMode;          // 0x4CC
+            ULONG   Tokuten;            // 0x4D0
+            ULONG   Unknown_4D4;        // 0x4D4
+            ULONG   Medal;              // 0x4D8
+            ULONG   TitleVisualCount;   // 0x4DC
+            ULONG   GameAccount;        // 0x4E0
+        };
+        
+    } LocalSystemData;
+#pragma pack(pop)
+
 public:
+    VOID SaveData2SystemData();
+    VOID SystemData2SaveData();
+
+    static MemorySystemData* GetMemorySystemData()
+    {
+        return (MemorySystemData*)::GlobalGetEDAO();
+    }
+
+    // SaveData2SystemData()
+    VOID THISCALL SaveSystemData(LocalSystemData* pLocal)
+    {
+        if (pLocal == NULL)
+            return;
+
+        MemorySystemData* pMemory = GetMemorySystemData();
+        ZeroMemory(pLocal, sizeof(*pLocal));
+
+        pLocal->Config = pMemory->Config;
+        pLocal->Record = pMemory->Record;
+        pLocal->ExtraMode = pMemory->ExtraMode;
+        pLocal->Tokuten = pMemory->Tokuten;
+        pLocal->Unknown_4D4 = pMemory->Unknown_4D4;
+        pLocal->Medal = pMemory->Medal;
+        pLocal->TitleVisualCount = MY_MAX(pMemory->TitleVisualCount, pMemory->TitleVisualCount1);
+        pLocal->GameAccount = pMemory->GameAccount;
+
+    }
+
+    // SystemData2SaveData()
+    VOID THISCALL LoadSystemData(LocalSystemData* pLocal)
+    {
+        if (pLocal == NULL)
+            return;
+
+        MemorySystemData* pMemory = GetMemorySystemData();
+
+        //pMemory->Config = pLocal->Config;
+        if (pLocal->Config.WindowMode == 0 && pLocal->Config.WindowWidth == 0){}
+        else
+            pMemory->Config.Option = pLocal->Config.Option;
+        pMemory->Record = pLocal->Record;
+        pMemory->ExtraMode = pLocal->ExtraMode;
+        pMemory->Tokuten = pLocal->Tokuten;
+        pMemory->Unknown_4D4 = pLocal->Unknown_4D4;
+        pMemory->Medal = pLocal->Medal;
+        pMemory->TitleVisualCount = pLocal->TitleVisualCount;
+        pMemory->GameAccount = pLocal->GameAccount;       
+    }
+
+public:
+
     PUSHORT GetPartyChipMap()
     {
         return (PUSHORT)PtrAdd(this, 0x6140);
@@ -371,6 +514,24 @@ public:
     {
         return (PUSHORT)PtrAdd(this, 0x5D4);
     }
+
+    PBYTE GetScenaFlags()
+    {
+        return (PBYTE)PtrAdd(this, 0x9C);
+    }
+
+    BOOL IsYinRixia()
+    {
+        return FLAG_ON(GetScenaFlags()[0x165], 1 << 5);
+    }
+
+    BOOL IsLazyKnight()
+    {
+        return FLAG_ON(GetScenaFlags()[0x1A0], 1);
+    }
+
+    ULONG FASTCALL GetTeamAttackMemberId(ULONG ChrId);
+
 
     // mark
     VOID THISCALL SetChrPositionAuto(ULONG ChrId, PUSHORT pPartyList, ULONG ChrCount)
@@ -590,10 +751,11 @@ public:
     VOID THISCALL SetSelectedCraft(PMONSTER_STATUS MSData, USHORT CraftIndex, USHORT AiIndex);
     VOID THISCALL SetSelectedSCraft(PMONSTER_STATUS MSData, USHORT CraftIndex, USHORT AiIndex);
 
-    CActor* GetActor()
+    CSSaveData* GetSaveData()
     {
-        return *(CActor **)PtrAdd(this, 0x38D28);
+        return *(CSSaveData **)PtrAdd(this, 0x38D28);
     }
+
 
     CBattleInfoBox* GetBattleInfoBox()
     {
@@ -602,7 +764,7 @@ public:
 
     BOOL IsCustomChar(ULONG_PTR ChrId)
     {
-        return GetActor()->IsCustomChar(ChrId);
+        return GetSaveData()->IsCustomChar(ChrId);
     }
 
     EDAO* GetEDAO()
@@ -873,6 +1035,29 @@ public:
 
 typedef struct
 {
+    DUMMY_STRUCT(0x30);
+
+    FLOAT Vertical;         // 0x30
+    FLOAT Obliquity;        // 0x34
+    FLOAT Horizon;          // 0x38
+
+    DUMMY_STRUCT(0x54 - 0x38 - sizeof(FLOAT));
+
+    FLOAT Distance;         // 0x54
+
+} CAMERA_INFO, *PCAMERA_INFO;
+
+class CCamera
+{
+public:
+    PCAMERA_INFO GetCameraInfo()
+    {
+        return (PCAMERA_INFO)*(PVOID *)PtrAdd(this, 0xB88);
+    }
+};
+
+typedef struct
+{
     USHORT  State;
     BYTE    ScenaIndex;
 
@@ -891,9 +1076,14 @@ public:
         return (EDAO *)PtrSub(this, 0x384EC);
     }
 
-    CActor* GetActor()
+    CCamera* GetCamera()
     {
-        return *(CActor **)this;
+        return *(CCamera **)PtrAdd(this, 0x524);
+    }
+
+    CSSaveData* GetSaveData()
+    {
+        return *(CSSaveData **)this;
     }
 
     PBYTE* GetScenaTable()
@@ -921,6 +1111,36 @@ INIT_STATIC_MEMBER(CScript::StubScpSaveRestoreParty);
 INIT_STATIC_MEMBER(CScript::StubScpLeaveParty);
 INIT_STATIC_MEMBER(CScript::StubScpGetFunctionAddress);
 
+class CMap
+{
+public:
+    PULONG GetFrameNumber()
+    {
+        return (PULONG)PtrAdd(this, 0x1C7C);
+    }
+};
+
+class CInput
+{
+public:
+    BOOL UseJoyStick()
+    {
+        return *(PBOOL)this;
+    }
+
+    LPDIRECTINPUTDEVICE8A GetDInputDevice()
+    {
+        return *(LPDIRECTINPUTDEVICE8A *)PtrAdd(this, 0x218);
+    }
+
+    VOID THISCALL HandleMainInterfaceInputState(PVOID Parameter1, CInput *Input, PVOID Parameter3);
+
+    DECL_STATIC_METHOD_POINTER(CInput, HandleMainInterfaceInputState);
+};
+
+INIT_STATIC_MEMBER(CInput::StubHandleMainInterfaceInputState);
+
+
 class EDAO
 {
     // battle
@@ -929,11 +1149,17 @@ public:
 
     static EDAO* GlobalGetEDAO()
     {
-#if CHT_VER
-        return *(EDAO **)0xC27988;
-#else
-        return *(EDAO **)0xC29988;
-#endif
+        return ::GlobalGetEDAO();
+    }
+
+    static VOID JumpToMap()
+    {
+        return ((TYPE_OF(&EDAO::JumpToMap))0x6A0DF0)();
+    }
+
+    CMap* GetMap()
+    {
+        return (CMap *)PtrAdd(this, 0x141C);
     }
 
     CGlobal* GetGlobal()
@@ -956,10 +1182,9 @@ public:
         return (CScript *)PtrAdd(this, 0x384EC);
     }
 
-    CActor* GetActor()
+    CSSaveData* GetSaveData()
     {
-        return GetScript()->GetActor();
-        //return (CActor *)PtrAdd(this, 0x78CB8);
+        return GetScript()->GetSaveData();
     }
 
     CDebug* GetDebug()
@@ -969,7 +1194,7 @@ public:
 
     BOOL IsCustomChar(ULONG_PTR ChrId)
     {
-        return GetActor()->IsCustomChar(ChrId);
+        return GetSaveData()->IsCustomChar(ChrId);
     }
 
     PUSHORT GetSBreakList()
@@ -977,9 +1202,24 @@ public:
         return (PUSHORT)PtrAdd(this, 0x7EE10);
     }
 
+    PFLOAT GetChrCoord()
+    {
+        return (PFLOAT)(*(PULONG_PTR)PtrAdd(EDAO::GlobalGetEDAO(), 0x78CB8 + 0x2BC));
+    }
+
+    VOID UpdateChrCoord(PVOID Parameter)
+    {
+        DETOUR_METHOD(EDAO, UpdateChrCoord, 0x74F490, Parameter);
+    }
+
     ULONG_PTR GetLayer()
     {
         return *(PUSHORT)PtrAdd(this, 0xA6FA8);
+    }
+
+    PSIZE GetWindowSize()
+    {
+        return (PSIZE)PtrAdd(this, 0x3084);
     }
 
     VOID LoadFieldAttackData(ULONG_PTR Dummy = 0)
@@ -1011,7 +1251,7 @@ public:
     {
         TYPE_OF(&EDAO::StubDrawNumber) StubDrawNumber;
 
-        *(PVOID *)&StubDrawNumber = (PVOID)0x6778E3;
+        *(PVOID *)&StubDrawNumber = (PVOID)0x734A00;
 
         return (this->*StubDrawNumber)(X, Y, Text, OneU1, Color, ZeroU1);
     }
@@ -1084,9 +1324,20 @@ public:
         return (this->*f)(ChrId, Level, Unknown);
     }
 
+
+    /************************************************************************
+      hack for boss
+    ************************************************************************/
+
     VOID NakedGetChrSBreak();
     VOID FASTCALL GetChrSBreak(PMONSTER_STATUS MSData);
+    LONG FASTCALL GetStatusIcon(ULONG ChrId);
+    LONG FASTCALL GetCFace(ULONG ChrId);
+    LONG FASTCALL GetLeaderChangeVoice(ULONG ChrId);
 
+    static LONG CDECL GetCampImage(PSTR Buffer, PCSTR Format, LONG ChrId);
+    static LONG CDECL GetBattleFace(PSTR Buffer, PCSTR Format, PCSTR DataPath, LONG ChrId);
+    static LONG CDECL GetFieldAttackChr(PSTR Buffer, PCSTR Format, LONG ChrId);
 
     /************************************************************************
       tweak
@@ -1148,13 +1399,36 @@ public:
 DECL_SELECTANY TYPE_OF(EDAO::StubCheckItemEquipped) EDAO::StubCheckItemEquipped = NULL;
 INIT_STATIC_MEMBER(EDAO::StubGetDifficulty);
 
+class CCoordConverter
+{
+public:
+    VOID MapPSPCoordToPC(Gdiplus::PointF Source[2], Gdiplus::PointF Target[2], PFLOAT Transform = NULL)
+    {
+        DETOUR_METHOD(CCoordConverter, MapPSPCoordToPC, 0x6A7030, Source, Target, Transform);
+    }
+};
+
+class CMiniGame
+{
+public:
+
+    static VOID FASTCALL HorrorHouse_GetMonsterPosition(CCoordConverter *Converter, PVOID, Gdiplus::PointF *PSPCoord, Gdiplus::PointF *PCCoord, PFLOAT Transform)
+    {
+        EDAO *edao = EDAO::GlobalGetEDAO();
+
+        Converter->MapPSPCoordToPC(PSPCoord, PCCoord, Transform);
+
+        PCCoord->X *= PSP_WIDTH_F / edao->GetWindowSize()->cx;
+        PCCoord->Y *= PSP_HEIGHT_F / edao->GetWindowSize()->cy;
+    }
+};
 
 class CGlobal
 {
 public:
-    PCRAFT_INFO    THISCALL GetMagicData(USHORT MagicId);
-    PCSTR           THISCALL GetMagicDescription(USHORT MagicId);
-    PBYTE           THISCALL GetMagicQueryTable(USHORT MagicId);
+    PCRAFT_INFO THISCALL GetMagicData(USHORT MagicId);
+    PCSTR       THISCALL GetMagicDescription(USHORT MagicId);
+    PBYTE       THISCALL GetMagicQueryTable(USHORT MagicId);
 
     EDAO* GetEDAO()
     {
@@ -1163,7 +1437,7 @@ public:
 
     BOOL IsCustomChar(ULONG_PTR ChrId)
     {
-        return GetEDAO()->GetActor()->IsCustomChar(ChrId);
+        return GetEDAO()->GetSaveData()->IsCustomChar(ChrId);
     }
 
     PCHAR_STATUS GetChrStatus(ULONG_PTR ChrId)
@@ -1189,199 +1463,7 @@ DECL_SELECTANY TYPE_OF(CGlobal::StubGetMagicData)           CGlobal::StubGetMagi
 DECL_SELECTANY TYPE_OF(CGlobal::StubGetMagicDescription)    CGlobal::StubGetMagicDescription = NULL;
 DECL_SELECTANY TYPE_OF(CGlobal::StubGetMagicQueryTable)     CGlobal::StubGetMagicQueryTable = NULL;
 
-
-
-class CSSaveData
-{
-#pragma pack(push, 1)
-    typedef union
-    {
-        DUMMY_STRUCT(0x4C4);
-        struct
-        {
-            DUMMY_STRUCT(0x4);
-            INT     Adapter;        // 0x4
-            INT     Device;
-            INT     Mode;
-            INT     WindowWidth;    // 0x10
-            INT     WindowHeight;   // 0x14
-            DUMMY_STRUCT(0x475-0x18); 
-            BYTE    WindowMode;     // 0x475
-            DUMMY_STRUCT(0x484-0x476); 
-            BYTE    BgmVolumeIni;   // 0x484    ini
-            BYTE    SeVolumeIni;    // 0x485
-            BYTE    BgmOff;         // 0x486    ini invalid
-            BYTE    SeOff;          // 0x487    ini invalid
-            DUMMY_STRUCT(0x34);
-            BYTE    BgmVolume;      // 0x4BC    81C68
-            BYTE    SeVolume;       // 0x4BD    81C69
-            DUMMY_STRUCT(0x2);
-            ULONG   Option;         // 0x4C0
-            
-        } ;
-        
-    } SystemConfigData;
-    
-    typedef struct 
-    {
-        DUMMY_STRUCT(0x7EDD6);
-        USHORT  TitleVisualCount1;  // 0x7EDD6
-        DUMMY_STRUCT(0x817AC - 0x7EDD6 - 2);   
-        //DUMMY_STRUCT(0x817AC);
-        SystemConfigData Config;    // 0x817AC                             
-        DUMMY_STRUCT(0xC);
-        UINT64  Record;             // 0x81C7C
-        ULONG   Tokuten;            // 0x81C84
-        ULONG   Medal;              // 0x81C88
-        DUMMY_STRUCT(0x8);
-        ULONG   GameAccount;        // 0x81C94 invalid bug? PomttoAccount
-        DUMMY_STRUCT(0x25434 - 0xC);
-        ULONG   TitleVisualCount;   // 0xA70C0
-        ULONG   ExtraMode;          // 0xA70C4
-        DUMMY_STRUCT(0x4);
-        ULONG   Unknown_4D4;        // 0xA70CC
-        
-    } MemorySystemData;
-    
-    
-    typedef union  // 0x504
-    {
-        DUMMY_STRUCT(0x504);
-        struct
-        {
-            SystemConfigData Config;
-            UINT64  Record;             // 0x4C4
-            ULONG   ExtraMode;          // 0x4CC
-            ULONG   Tokuten;            // 0x4D0
-            ULONG   Unknown_4D4;        // 0x4D4
-            ULONG   Medal;              // 0x4D8
-            ULONG   TitleVisualCount;   // 0x4DC
-            ULONG   GameAccount;        // 0x4E0
-        };
-        
-    } LocalSystemData;
-#pragma pack(pop)
-
-public:
-    VOID SaveData2SystemData();
-    VOID SystemData2SaveData();
-
-    static MemorySystemData* GetMemorySystemData()
-    {
-        return (MemorySystemData*)EDAO::GlobalGetEDAO();
-    }
-
-    // SaveData2SystemData()
-    VOID THISCALL SaveSystemData(LocalSystemData* pLocal)
-    {
-        if (pLocal == NULL)
-            return;
-
-        MemorySystemData* pMemory = GetMemorySystemData();
-        ZeroMemory(pLocal, sizeof(*pLocal));
-
-        pLocal->Config = pMemory->Config;
-        pLocal->Record = pMemory->Record;
-        pLocal->ExtraMode = pMemory->ExtraMode;
-        pLocal->Tokuten = pMemory->Tokuten;
-        pLocal->Unknown_4D4 = pMemory->Unknown_4D4;
-        pLocal->Medal = pMemory->Medal;
-        pLocal->TitleVisualCount = MY_MAX(pMemory->TitleVisualCount, pMemory->TitleVisualCount1);
-        pLocal->GameAccount = pMemory->GameAccount;
-
-    }
-
-    // SystemData2SaveData()
-    VOID THISCALL LoadSystemData(LocalSystemData* pLocal)
-    {
-        if (pLocal == NULL)
-            return;
-
-        MemorySystemData* pMemory = GetMemorySystemData();
-
-        //pMemory->Config = pLocal->Config;
-        if (pLocal->Config.WindowMode == 0 && pLocal->Config.WindowWidth == 0){}
-        else
-            pMemory->Config.Option = pLocal->Config.Option;
-        pMemory->Record = pLocal->Record;
-        pMemory->ExtraMode = pLocal->ExtraMode;
-        pMemory->Tokuten = pLocal->Tokuten;
-        pMemory->Unknown_4D4 = pLocal->Unknown_4D4;
-        pMemory->Medal = pLocal->Medal;
-        pMemory->TitleVisualCount = pLocal->TitleVisualCount;
-        pMemory->GameAccount = pLocal->GameAccount;       
-    }
-};
-
-class EDAOFileStream
-{
-public:
-    ULONG THISCALL Read(PVOID Buffer, ULONG Size, ULONG Count = 1, ULONG Unknown = 0, ULONG Unknown2 = 0)
-    {
-        TYPE_OF(&EDAOFileStream::Read) StubRead;
-
-        *(PVOID *)&StubRead = (PVOID)0x6725AA;
-
-        return (this->*StubRead)(Buffer, Size, Count, Unknown, Unknown2);
-    }
-
-    BOOL THISCALL Seek(LONG Offset, ULONG SeekMethod)
-    {
-        TYPE_OF(&EDAOFileStream::Seek) StubSeek;
-
-        *(PVOID *)&StubSeek = (PVOID)0x675787;
-        return (this->*StubSeek)(Offset, SeekMethod);
-    }
-
-    ULONG THISCALL Uncompress(PVOID Output, ULONG BlockSize, ULONG BlockCount)
-    {
-        LONG_PTR            BytesRead;
-        PVOID               Buffer;
-        UCL_COMPRESS_HEADER Header;
-
-        static PVOID        StaticBuffer;
-        static ULONG_PTR    StaticBufferSize;
-
-        ULONG pos = m_Position;
-
-        BytesRead = Read(&Header, sizeof(Header));
-        if (BytesRead != sizeof(Header) || Header.Magic != UCL_COMPRESS_MAGIC)
-        {
-            Seek(-BytesRead, SEEK_CUR);
-            m_Position = pos;
-
-            return (this->*StubUncompress)(Output, BlockSize, BlockCount);
-        }
-
-        Buffer = StaticBuffer;
-        if (Header.CompressedSize > StaticBufferSize)
-        {
-            StaticBufferSize = Header.CompressedSize;
-            Buffer = ReAllocateMemoryP(Buffer, StaticBufferSize);
-            StaticBuffer = Buffer;
-        }
-
-        if (Buffer == NULL)
-            return 0;
-
-        Read(Buffer, Header.CompressedSize);
-
-        UCL_NRV2E_Decompress(Buffer, Header.CompressedSize, Output, &BlockSize);
-
-        return BlockSize;
-    }
-
-    static TYPE_OF(&EDAOFileStream::Uncompress) StubUncompress;
-
-    CHAR    m_FileName[0x24];   // 0x00
-    ULONG   m_Position;         // 0x24
-    ULONG   m_Size;             // 0x28
-    DUMMY_STRUCT(0x54);         // 0x2C
-    BYTE    m_BufferIndex;
-    BYTE    m_BufferFlags;
-};
-
-DECL_SELECTANY TYPE_OF(EDAOFileStream::StubUncompress) EDAOFileStream::StubUncompress = NULL;
+BOOL AoIsFileExist(PCSTR FileName);
 
 //mark
 class CDebug
