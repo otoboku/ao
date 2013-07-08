@@ -72,6 +72,8 @@ BOOL Initialize(PVOID BaseAddress)
         INLINE_HOOK_CALL_RVA_NULL(0x5DFA1B, METHOD_PTR(&CBattle::NakedGetUnderAttackVoiceChrId)),  // boss挨打语音修复
 
         INLINE_HOOK_CALL_RVA_NULL(0x5A3814, METHOD_PTR(&CBattle::NakedOverWriteBattleStatusWithChrStatus)),
+
+        INLINE_HOOK_JUMP_RVA     (0x275061, METHOD_PTR(&CBattle::IsChrCanTeamRush), CBattle::StubIsChrCanTeamRush),
         //INLINE_HOOK_CALL_RVA_NULL(0x5F690B, CBattle::FormatBattleChrAT),
         // monster info box
         
@@ -236,6 +238,18 @@ BOOL Initialize(PVOID BaseAddress)
         Nt_PatchMemory(NULL, 0, f, countof(f), hModule);
     }
 
+    // 特效关闭
+    if (!bEnableSpecialEffect)
+    {
+        MEMORY_PATCH p[] =
+        {
+            PATCH_MEMORY(0x7E,  1,  0x2CAA98),      // enable shimmer when width > 1024
+            PATCH_MEMORY(0x7E,  1,  0x2C33BE),      // enable blur when width > 1024
+            PATCH_MEMORY(0x7E,  1,  0x2EFBB8),      // capture ?
+        };
+        Nt_PatchMemory(p, countof(p), NULL, 0, hModule);
+    }
+
     // 遇敌方式，开场状况
     if (nBattleEncount != 3)
     {
@@ -344,17 +358,6 @@ BOOL Initialize(PVOID BaseAddress)
             INLINE_HOOK_JUMP_RVA    (0x274238, METHOD_PTR(&CBattle::CheckQuartz), CBattle::StubCheckQuartz),
         };
         Nt_PatchMemory(NULL, 0, f, countof(f), hModule);
-    }
-
-    // 特效关闭
-    {
-        MEMORY_PATCH p[] =
-        {
-            PATCH_MEMORY(0x7E,  1,  0x2CAA98),      // enable shimmer when width > 1024
-            PATCH_MEMORY(0x7E,  1,  0x2C33BE),      // enable blur when width > 1024
-            PATCH_MEMORY(0x7E,  1,  0x2EFBB8),      // capture ?
-        };
-        Nt_PatchMemory(p, countof(p), NULL, 0, hModule);
     }
 
     // 可以让主角四人组离队

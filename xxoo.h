@@ -16,6 +16,7 @@ BOOL bForceKillEnemyAtScene;
 BOOL bForceShowBurstMode;
 BOOL bForceShowInfOnMiniMap;
 BOOL bEnableSkipCraftAnime;
+BOOL bEnableSpecialEffect;
 INT nDifficulty;
 INT nBattleEncount;
 INT nSupportCraftInterval;
@@ -75,7 +76,7 @@ public:
     VOID THISCALL HorrorCoasterEvaluationPositionRestore(ULONG par1);
     DECL_STATIC_METHOD_POINTER(CClass, HorrorCoasterEvaluationPositionRestore);
 
-    VOID THISCALL PositionPC2PSP(PFLOAT par1, PFLOAT pXY, PFLOAT par3);
+    VOID THISCALL PositionPC2PSP(PFLOAT par1, Gdiplus::PointF *Target, PFLOAT par3);
 };
 INIT_STATIC_MEMBER(CClass::StubShowHorrorCoasterText);
 INIT_STATIC_MEMBER(CClass::StubHorrorCoasterEvaluationPositionRestore);
@@ -169,6 +170,7 @@ VOID ConfigInit()
         { (BOOL*)&bForceShowBurstMode, 'b', L"Arianrhod", L"ForceShowBurstMode", TRUE, },
         { (BOOL*)&bForceShowInfOnMiniMap, 'b', L"Arianrhod", L"ForceShowInfOnMiniMap", TRUE, },
         { (BOOL*)&bEnableSkipCraftAnime, 'b', L"Arianrhod", L"EnableSkipCraftAnime", TRUE, },
+        { (BOOL*)&bEnableSpecialEffect, 'b', L"Arianrhod", L"EnableSpecialEffect", FALSE, },
 
         { (INT*)&nDifficulty, 'i', L"Battle", L"Difficulty", 0, },
         { (INT*)&statusRateUserDefined.HP, 'i', L"Battle", L"HP", 100, },
@@ -625,6 +627,29 @@ VOID THISCALL EDAO::SetBattleStatusFinalWhenRecover(ULONG ChrPosition, PCHAR_STA
     Battle->SetBattleStatusFinalByDifficulty(MSData);
 }
 
+BOOL THISCALL CBattle::IsChrCanTeamRush(PMONSTER_STATUS MSData, PCRAFT_INFO pCraft)
+{
+    BOOL Result = (this->*StubIsChrCanTeamRush)(MSData, pCraft);
+    if (Result)
+    {
+        PAS_FILE pAS_File = GetASFile(MSData);
+        if (pAS_File)
+        {
+            ULONG ActionCount = pAS_File->GetActionCount();
+            if (!pAS_File->IsActionValid(BattleActionScript::SysCraft_TeamRushInit, ActionCount) ||
+                !pAS_File->IsActionValid(BattleActionScript::SysCraft_TeamRushAction, ActionCount))
+            {
+                Result = FALSE;
+            }
+        }
+        else
+        {
+            Result = FALSE;
+        }
+    }
+    return Result;
+}
+
 BOOL THISCALL CBattle::CheckQuartz(ULONG ChrPosition, ULONG ItemId, PULONG EquippedIndex /* = NULL */)
 {
     switch (ItemId)
@@ -837,15 +862,16 @@ VOID THISCALL CClass::HorrorCoasterEvaluationPositionRestore(ULONG par1)
 }*/
 
 // 文本显示位置错误
-VOID THISCALL CClass::PositionPC2PSP(PFLOAT par1, PFLOAT pXY, PFLOAT par3)
+VOID THISCALL CClass::PositionPC2PSP(PFLOAT par1, Gdiplus::PointF *Target, PFLOAT par3)
 {
     TYPE_OF(&CClass::PositionPC2PSP) StubPositionPC2PSP;
     *(PULONG_PTR)&StubPositionPC2PSP = 0x6724CE;
 
-    (this->*StubPositionPC2PSP)(par1, pXY, par3);
-    *pXY = *pXY * 480 / EDAO::GetWindowWidth();
-    pXY++;
-    *pXY = *pXY * 272 / EDAO::GetWindowHeight();
+    EDAO *edao = EDAO::GlobalGetEDAO();
+    
+    (this->*StubPositionPC2PSP)(par1, Target, par3);
+    Target->X *= PSP_WIDTH_F / edao->GetWindowSize()->cx;
+    Target->Y *= PSP_HEIGHT_F / edao->GetWindowSize()->cy;
 }
 
 // Extra 鬼屋 结束后不返回Extra，BGM不切换，简体BUG，参照繁体版修复

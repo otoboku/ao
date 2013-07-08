@@ -100,6 +100,33 @@ ML_NAMESPACE_BEGIN(CraftConditions)
 
 ML_NAMESPACE_END
 
+ML_NAMESPACE_BEGIN(BattleActionScript)
+enum
+{
+    SysCraft_Init           = 0x00,
+    SysCraft_Stand          = 0x01,
+    SysCraft_Move           = 0x02,
+    SysCraft_UnderAttack    = 0x03,
+    SysCraft_Dead           = 0x04,
+    SysCraft_NormalAttack   = 0x05,
+    SysCraft_ArtsAria       = 0x06,
+    SysCraft_ArtsCast       = 0x07,
+    SysCraft_Win            = 0x08,
+    SysCraft_EnterBattle    = 0x09,
+    SysCraft_UseItem        = 0x0A,
+    SysCraft_Stun           = 0x0B,
+    SysCraft_Unknown2       = 0x0C,
+    SysCraft_Reserve1       = 0x0D,
+    SysCraft_Reserve2       = 0x0E,
+    SysCraft_Counter        = 0x0F,
+    SysCraft_TeamRushInit   = 0x1E,
+    SysCraft_TeamRushAction = 0x1F,
+
+    INVALID_ACTION_OFFSET   = 0xFFFF,
+    EMPTY_ACTION            = INVALID_ACTION_OFFSET,
+};
+ML_NAMESPACE_END
+
 
 typedef struct  // 0x18
 {
@@ -240,6 +267,11 @@ typedef struct _MONSTER_STATUS
         return !FLAG_ON(State, CHR_FLAG_NPC | CHR_FLAG_PLAYER | CHR_FLAG_EMPTY);
     }
 
+    BOOL IsChrEmpty()
+    {
+        return FLAG_ON(State, CHR_FLAG_EMPTY);
+    }
+
     BOOL IsChrCanThinkSCraft(BOOL CheckAiType = FALSE)
     {
         if (!IsChrEnemy())
@@ -360,6 +392,38 @@ typedef struct _MONSTER_STATUS
 
 } MONSTER_STATUS, *PMONSTER_STATUS;
 
+typedef union _AS_FILE
+{
+    ULONG GetActionCount()
+    {
+        ULONG Count = 0;
+        PUSHORT ActionList = (PUSHORT)PtrAdd(this, (ULONG)ActionListOffset);
+        while (ActionList < (PUSHORT)PtrAdd(this, sizeof(*this)) && *ActionList != 0)
+        {
+            Count++;
+            ActionList++;
+        }
+        return Count;
+    }
+
+    BOOL IsActionValid(ULONG ActionNo, ULONG ActionCount)
+    {
+        if (ActionNo >= ActionCount)
+            return FALSE;
+        PUSHORT ActionList = (PUSHORT)PtrAdd(this, (ULONG)ActionListOffset);
+        if (ActionList[ActionNo] == BattleActionScript::EMPTY_ACTION)
+            return FALSE;
+        return TRUE;
+    }
+
+    DUMMY_STRUCT(0x5F00);
+    struct
+    {
+        USHORT      ActionListOffset;
+        USHORT      ChrPosFactorOffset;
+    };
+} AS_FILE, *PAS_FILE;
+
 #pragma pack(pop)
 
 EDAO* GlobalGetEDAO();
@@ -439,9 +503,14 @@ public:
     VOID SaveData2SystemData();
     VOID SystemData2SaveData();
 
-    static MemorySystemData* GetMemorySystemData()
+    EDAO* GetEDAO()
     {
-        return (MemorySystemData*)::GlobalGetEDAO();
+        return (EDAO *)PtrSub(this, 0x78CB8);
+    }
+
+    MemorySystemData* GetMemorySystemData()
+    {
+        return (MemorySystemData*)GetEDAO();
     }
 
     // SaveData2SystemData()
@@ -987,6 +1056,20 @@ public:
     ************************************************************************/
 
     // mark
+    PAS_FILE GetASFile()
+    {
+        return (PAS_FILE)PtrAdd(this, 0x3A800);
+    }
+    
+    PAS_FILE GetASFile(PMONSTER_STATUS MSData)
+    {
+        if (MSData->CharPosition >= MAXIMUM_CHR_NUMBER_IN_BATTLE || MSData->IsChrEmpty())
+            return NULL;
+        else
+            return &(GetASFile()[MSData->CharPosition]);
+    }
+
+
     VOID NakedCheckAliveBeforeHeal();
     VOID FASTCALL CheckAliveBeforeHeal(ULONG CharPosition);
     VOID THISCALL SubHPEveryAct2WhenAttack(PMONSTER_STATUS dst, PCHAR_STATUS pChrStatusFinal, INT HP);
@@ -1001,6 +1084,9 @@ public:
     DECL_STATIC_METHOD_POINTER(CBattle, CheckQuartz);
 
     PMS_EFFECT_INFO THISCALL CheckConditionGreenPepperWhenThinkCraft(PMONSTER_STATUS MSData, ULONG_PTR Condition, INT ConditionRateType);
+
+    BOOL IsChrCanTeamRush(PMONSTER_STATUS MSData, PCRAFT_INFO pCraft);
+    DECL_STATIC_METHOD_POINTER(CBattle, IsChrCanTeamRush);
 
     DECL_STATIC_METHOD_POINTER(CBattle, SetCurrentActionChrInfo);
     DECL_STATIC_METHOD_POINTER(CBattle, ThinkRunaway);
@@ -1017,6 +1103,8 @@ INIT_STATIC_MEMBER(CBattle::StubLoadMSFile);
 INIT_STATIC_MEMBER(CBattle::StubExecuteActionScript);
 INIT_STATIC_MEMBER(CBattle::StubSetBattleStatusFinalByDifficulty);
 INIT_STATIC_MEMBER(CBattle::StubCheckQuartz);
+INIT_STATIC_MEMBER(CBattle::StubIsChrCanTeamRush);
+
 INIT_STATIC_MEMBER(CBattle::pChrStatusBackup);
 
 class CSound
@@ -1184,7 +1272,8 @@ public:
 
     CSSaveData* GetSaveData()
     {
-        return GetScript()->GetSaveData();
+        //return GetScript()->GetSaveData();
+        return (CSSaveData*)PtrAdd(this, 0x78CB8);
     }
 
     CDebug* GetDebug()
@@ -1364,7 +1453,7 @@ public:
 
     DECL_STATIC_METHOD_POINTER(EDAO, CheckItemEquipped);
     DECL_STATIC_METHOD_POINTER(EDAO, GetDifficulty);
-
+/*
     static ULONG GetWindowWidth()
     {
         return *(PULONG)PtrAdd(GlobalGetEDAO(), 0x3084);
@@ -1374,7 +1463,7 @@ public:
     {
         return *(PULONG)PtrAdd(GlobalGetEDAO(), 0x3088);
     }
-/*
+
     VOID THISCALL ShowDebugText(LPCSTR lpText, INT x, INT y, INT color, INT par5, INT par6, INT par7)
     {
         DETOUR_METHOD(EDAO, ShowDebugText, 0x006729FB, lpText, x, y, color, par5, par6, par7);
@@ -1484,6 +1573,7 @@ public:
             if (StubGetAsyncKeyState('P') & 0x1)
             {
                 SelectPartyChr();
+                return;
             }
         }
 
