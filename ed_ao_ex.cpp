@@ -9,7 +9,7 @@
 #include "edao_vm.h"
 
 
-#define CONSOLE_DEBUG   0
+#define CONSOLE_DEBUG   1
 
 BOOL UnInitialize(PVOID BaseAddress)
 {
@@ -30,6 +30,12 @@ BOOL Initialize(PVOID BaseAddress)
     SetExeDirectoryAsCurrent();
 
     HMODULE hModule = GetExeModuleHandle();
+
+#if CONSOLE_DEBUG
+    QueryPerformanceFrequency(&lFrequency);
+
+    *(PBOOL)((PBYTE)Nt_GetModuleHandle(L"DINPUT8.dll") + 0x70E8) = FALSE;
+#endif
 
 /*
     {
@@ -107,6 +113,7 @@ BOOL Initialize(PVOID BaseAddress)
         INLINE_HOOK_JUMP_RVA_NULL(0x279FA8, METHOD_PTR(&CSSaveData::LoadSystemData)),
 
         INLINE_HOOK_JUMP_RVA_NULL(0x276402, NFreeType::FT_New_Face_Ex),     // load font once
+        INLINE_HOOK_JUMP_RVA     (0x2798F0, METHOD_PTR(&EDAO::CalcChrT_Status), EDAO::StubCalcChrT_Status),
 
         // 
         INLINE_HOOK_JUMP_RVA     (0x2756E7, METHOD_PTR(&CBattle::SetBattleStatusFinalByDifficulty), CBattle::StubSetBattleStatusFinalByDifficulty),

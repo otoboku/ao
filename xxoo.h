@@ -1,5 +1,9 @@
 //#include "edao.h"
 
+#if CONSOLE_DEBUG
+LARGE_INTEGER lFrequency, lStopCounter, lStartCounter;
+#endif
+
 // mark
 ULONG   g_flag = 0;
 namespace NFLAG
@@ -541,6 +545,10 @@ SHORT THISCALL CClass::HorrorCoasterFastExit(int vKey)
     return 0;
 }
 
+/************************************************************************
+    Status Start
+************************************************************************/
+
 VOID THISCALL CBattle::SetBattleStatusFinalByDifficulty(PMONSTER_STATUS MSData)
 {
     if(!MSData->IsChrEnemyOnly())
@@ -626,6 +634,195 @@ VOID THISCALL EDAO::SetBattleStatusFinalWhenRecover(ULONG ChrPosition, PCHAR_STA
     }
     Battle->SetBattleStatusFinalByDifficulty(MSData);
 }
+
+PCHAR_T_STATUS THISCALL EDAO::CalcChrT_StatusNew(INT ChrNo, INT Level)
+{
+    PCHAR_T_STATUS pStatus;
+
+    float       HP;
+    float       STR;
+    float       DEF;
+    float       ATS;
+    float       ADF;
+    float       DEX;
+    float       AGL;
+    float       SPD;
+    USHORT      AGLRate;
+    USHORT      MOV;
+
+    if (ChrNo >= 0xC)
+        return NULL;
+
+    if (Level > 150)
+    {
+        Level = 150;
+    }
+    else if (Level < 45)
+    {
+        Level = 45;
+    }
+/*
+                                    // 00, 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11
+    static BYTE HP_RatioY[12]       = {00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, };
+    static BYTE STR_RatioY[12]      = {20, 18, 25, 21, 18, 20, 21, 21, 19, 21, 22, 00, };
+    static BYTE DEF_RatioY[12]      = {10,  8,  9, 11,  9,  8, 11, 11, 10,  9, 11, 00, };
+    static BYTE ATS_RatioY[12]      = {18, 19, 20, 18, 19, 18, 19, 19, 18, 16, 17, 00, };
+    static BYTE ADF_RatioY[12]      = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 00, };
+    static BYTE DEX_RatioY[12]      = {19, 20, 19, 17, 19, 21, 22, 24, 18, 19, 19, 00, };
+    static BYTE AGL_RatioY[12]      = { 7,  9,  6,  7,  9, 10,  8,  9,  8,  7,  7, 00, };
+    static BYTE AGLRate_RatioY[12]  = {00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, };
+    static BYTE MOV_RatioY[12]      = { 4,  3,  3,  5,  6,  5,  8,  6,  4,  3,  5, 00, };
+    static BYTE SPD_RatioY[12]      = {30, 29, 28, 27, 31, 30, 29, 31, 28, 29, 29, 00, };
+
+    HP      = (float)HP_RatioY[ChrNo];
+    STR     = (float)STR_RatioY[ChrNo];
+    DEF     = (float)DEF_RatioY[ChrNo];
+    ATS     = (float)ATS_RatioY[ChrNo];
+    ADF     = (float)ADF_RatioY[ChrNo];
+    DEX     = (float)DEX_RatioY[ChrNo];
+    AGL     = (float)AGL_RatioY[ChrNo];
+    SPD     = (float)SPD_RatioY[ChrNo];
+    MOV     = MOV_RatioY[ChrNo];
+    AGLRate = AGLRate_RatioY[ChrNo];
+*/
+    static CHAR_T_STATUS_RatioY RatioY[12] =
+    {
+        //HP    STR DEF ATS ADF DEX AGL     MOV SPD
+        { 00,   20, 10, 18, 10, 19, 7,  00, 4,  30, },
+        { 00,   18, 8,  19, 10, 20, 9,  00, 3,  29, },
+        { 00,   25, 9,  20, 10, 19, 6,  00, 3,  28, },
+        { 00,   21, 11, 18, 10, 17, 7,  00, 5,  27, },
+        { 00,   18, 9,  19, 10, 19, 9,  00, 6,  31, },
+        { 00,   20, 8,  18, 10, 21, 10, 00, 5,  30, },
+        { 00,   21, 11, 19, 10, 22, 8,  00, 8,  29, },
+        { 00,   21, 11, 19, 10, 24, 9,  00, 6,  31, },
+        { 00,   19, 10, 18, 10, 18, 8,  00, 4,  28, },
+        { 00,   21, 9,  16, 10, 19, 7,  00, 3,  29, },
+        { 00,   22, 11, 17, 10, 19, 7,  00, 5,  29, },
+    };
+
+    static CHAR_T_STATUS_RatioX RatioX[12] =
+    {
+        //HP    STR     DEF     ATS     ADF     DEX     AGL     SPD
+        { 2.3f, 0.109f, 0.105f, 0.105f, 0.1f,   0.001f, 0.001f, 0.005f, },
+        { 2.0f, 0.09f,  0.09f,  0.11f,  0.11f,  0.001f, 0.001f, 0.005f, },    
+        { 1.7f, 0.08f,  0.095f, 0.115f, 0.105f, 0.001f, 0.001f, 0.005f, },    
+        { 2.5f, 0.115f, 0.105f, 0.1f,   0.09f,  0.001f, 0.001f, 0.005f, },    
+        { 2.2f, 0.095f, 0.104f, 0.111f, 0.11f,  0.001f, 0.001f, 0.005f, },    
+        { 2.1f, 0.112f, 0.085f, 0.105f, 0.105f, 0.001f, 0.001f, 0.005f, },    
+        { 2.7f, 0.113f, 0.105f, 0.113f, 0.105f, 0.001f, 0.001f, 0.005f, },    
+        { 2.45f,0.12f,  0.11f,  0.111f, 0.1f,   0.001f, 0.001f, 0.005f, },    
+        { 2.15f,0.105f, 0.1f,   0.095f, 0.095f, 0.001f, 0.001f, 0.005f, },    
+        { 2.4f, 0.11f,  0.1f,   0.1f,   0.09f,  0.001f, 0.001f, 0.005f, },    
+        { 2.6f, 0.111f, 0.111f, 0.09f,  0.09f,  0.001f, 0.001f, 0.005f, },
+    };
+
+    HP      = (float)RatioY[ChrNo].HP;
+    STR     = (float)RatioY[ChrNo].STR;
+    DEF     = (float)RatioY[ChrNo].DEF;
+    ATS     = (float)RatioY[ChrNo].ATS;
+    ADF     = (float)RatioY[ChrNo].ADF;
+    DEX     = (float)RatioY[ChrNo].DEX;
+    AGL     = (float)RatioY[ChrNo].AGL;
+    SPD     = (float)RatioY[ChrNo].SPD;
+    MOV     = RatioY[ChrNo].MOV;
+    AGLRate = RatioY[ChrNo].AGLRate;
+
+#if 1
+    for (int i = 1; i < Level + 16; ++i )
+    {
+        HP  += (float)i * RatioX[ChrNo].HP;
+        STR += (float)i * RatioX[ChrNo].STR;
+        DEF += (float)i * RatioX[ChrNo].DEF;
+        ATS += (float)i * RatioX[ChrNo].ATS;
+        ADF += (float)i * RatioX[ChrNo].ADF;
+        DEX += (float)i * RatioX[ChrNo].DEX;
+        AGL += (float)i * RatioX[ChrNo].AGL;
+        SPD += (float)i * RatioX[ChrNo].SPD;
+    }
+#else
+    // dif
+    {
+        int i = (Level + 15) * (Level + 16) / 2;
+        HP  += (float)i * RatioX[ChrNo].HP;
+        STR += (float)i * RatioX[ChrNo].STR;
+        DEF += (float)i * RatioX[ChrNo].DEF;
+        ATS += (float)i * RatioX[ChrNo].ATS;
+        ADF += (float)i * RatioX[ChrNo].ADF;
+        DEX += (float)i * RatioX[ChrNo].DEX;
+        AGL += (float)i * RatioX[ChrNo].AGL;
+        SPD += (float)i * RatioX[ChrNo].SPD;
+    }
+#endif
+    pStatus = *(PCHAR_T_STATUS*)PtrAdd(this, 0xA2FA4);
+    //ZeroMemory(pStatus, sizeof(*pStatus));
+    pStatus->Level      = 0;
+    pStatus->HP         = (USHORT)HP;
+    pStatus->EP         = 0;
+    pStatus->STR        = (USHORT)STR;
+    pStatus->DEF        = (USHORT)DEF;
+    pStatus->ATS        = (USHORT)ATS;
+    pStatus->ADF        = (USHORT)ADF;
+    pStatus->DEX        = (USHORT)DEX;
+    pStatus->AGL        = (USHORT)AGL;
+    pStatus->AGLRate    = (USHORT)AGLRate;
+    pStatus->MOV        = (USHORT)MOV;
+    pStatus->SPD        = (USHORT)SPD;
+
+    return pStatus;
+}
+
+PCHAR_T_STATUS THISCALL EDAO::CalcChrT_Status(INT ChrNo, INT Level)
+{
+#if CONSOLE_DEBUG
+    static ULONG TestCount = 6;
+    if (TestCount)
+    {
+        QueryPerformanceCounter(&lStartCounter);
+        for (int i=0; i<12; i++)
+        {
+            for (int j=45; j<=150; j++)
+                (this->*StubCalcChrT_Status)(i, j);
+        }
+        QueryPerformanceCounter(&lStopCounter);
+        PrintConsoleW(L"Elapsed time pre: %lf ms\n", (lStopCounter.QuadPart - lStartCounter.QuadPart) * 1000.0 / lFrequency.QuadPart);
+
+        QueryPerformanceCounter(&lStartCounter);
+        for (int i=0; i<12; i++)
+        {
+            for (int j=45; j<=150; j++)
+                CalcChrT_StatusNew(i, j);
+        }
+        QueryPerformanceCounter(&lStopCounter);
+        PrintConsoleW(L"Elapsed time new: %lf ms\n", (lStopCounter.QuadPart - lStartCounter.QuadPart) * 1000.0 / lFrequency.QuadPart);
+        TestCount--;
+    }
+#endif
+
+#if 1
+    CHAR_T_STATUS status;
+    PCHAR_T_STATUS pStatus;
+
+    pStatus = (this->*StubCalcChrT_Status)(ChrNo, Level);
+    CopyMemory(&status, pStatus, sizeof(status));
+    pStatus = CalcChrT_StatusNew(ChrNo, Level);
+    if (ChrNo < 11)
+    {
+        // arch:SSE2下完全相同
+        if(RtlCompareMemory(&status, pStatus, sizeof(status)) != sizeof(status))
+        {
+            AllocConsole();
+            PrintConsoleW(L"Not Same: Chr:%d Levle%d\n", ChrNo, Level);
+        }
+    }
+    return pStatus;
+#else
+    return CalcChrT_StatusNew(ChrNo, Level);
+#endif
+}
+/************************************************************************
+    Status End
+************************************************************************/
 
 BOOL THISCALL CBattle::IsChrCanTeamRush(PMONSTER_STATUS MSData, PCRAFT_INFO pCraft)
 {
@@ -733,7 +930,7 @@ L00000002:
 }
 
 /************************************************************************
-    Restore
+    Restore Start
 ************************************************************************/
 
 NAKED VOID NakedGetUnderAttackVoiceChrIdRestore()
@@ -851,15 +1048,6 @@ VOID THISCALL CClass::ShowHorrorCoasterText(INT x, INT y, float par3, LPCSTR tex
     //960*544
     //(this->*StubShowHorrorCoasterText)(236, 55, par3, text, par5, color);
 }
-/*
-VOID THISCALL CClass::HorrorCoasterEvaluationPositionRestore(ULONG par1)
-{
-    (this->*StubHorrorCoasterEvaluationPositionRestore)(par1);
-    PINT x = (PINT)PtrAdd(this, 0x98);
-    PINT y = (PINT)PtrAdd(this, 0x9C);
-    *x = *x * 480 / EDAO::GetWindowWidth();
-    *y = *y * 272 / EDAO::GetWindowHeight();
-}*/
 
 // 文本显示位置错误
 VOID THISCALL CClass::PositionPC2PSP(PFLOAT par1, Gdiplus::PointF *Target, PFLOAT par3)

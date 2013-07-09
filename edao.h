@@ -127,6 +127,29 @@ enum
 };
 ML_NAMESPACE_END
 
+ML_NAMESPACE_BEGIN(T_NAME_INDEX)
+enum
+{
+    Lloyd       = 0x0,
+    Elie        = 0x1,
+    Tio         = 0x2,
+    Randy       = 0x3,
+
+    Lazy        = 0x4,
+    Waji        = 0x4,
+
+    Yin         = 0x5,
+    Rixia       = 0x5,
+    INNE        = 0x5,
+
+    Zeit        = 0x6,
+    Arios       = 0x7,
+    Noel        = 0x8,
+    Dudley      = 0x9,
+    Garcia      = 0xA,
+    ReserveB    = 0xB,
+};
+ML_NAMESPACE_END
 
 typedef struct  // 0x18
 {
@@ -199,37 +222,83 @@ typedef union
 
     struct
     {
-        ULONG                   MaximumHP;                  // 0x234
-        ULONG                   InitialHP;                  // 0x238
-        USHORT                  Level;                      // 0x23C
-        USHORT                  MaximumEP;                  // 0x23E
-        USHORT                  InitialEP;                  // 0x240
-        USHORT                  InitialCP;                  // 0x242
-        ULONG                   EXP;                        // 0x244
+        ULONG                   MaximumHP;                  // 0x0     0x234    0x268
+        ULONG                   InitialHP;                  // 0x4     0x238    0x26C
+        USHORT                  Level;                      // 0x8     0x23C    0x270
+        USHORT                  MaximumEP;                  // 0xA     0x23E    0x272
+        USHORT                  InitialEP;                  // 0xC     0x240    0x274
+        USHORT                  InitialCP;                  // 0xE     0x242    0x276
+        ULONG                   EXP;                        // 0x10    0x244    0x278
         //DUMMY_STRUCT(2);
 
-        SHORT                   STR;                        // 0x248
-        SHORT                   DEF;                        // 0x24A
-        SHORT                   ATS;                        // 0x24C
-        SHORT                   ADF;                        // 0x24E
-        SHORT                   DEX;                        // 0x250
-        SHORT                   AGL;                        // 0x252
-        SHORT                   MOV;                        // 0x254
-        SHORT                   SPD;                        // 0x256
-        SHORT                   DEXRate;                    // 0x258
-        SHORT                   AGLRate;                    // 0x25A
-        USHORT                  MaximumCP;                  // 0x25C
+        SHORT                   STR;                        // 0x14    0x248    0x27C
+        SHORT                   DEF;                        // 0x16    0x24A    0x27E
+        SHORT                   ATS;                        // 0x18    0x24C    0x280
+        SHORT                   ADF;                        // 0x1A    0x24E    0x282
+        SHORT                   DEX;                        // 0x1C    0x250    0x284
+        SHORT                   AGL;                        // 0x1E    0x252    0x286
+        SHORT                   MOV;                        // 0x20    0x254    0x288
+        SHORT                   SPD;                        // 0x22    0x256    0x28A
+        SHORT                   DEXRate;                    // 0x24    0x258    0x28C
+        SHORT                   AGLRate;                    // 0x26    0x25A    0x28E
+        USHORT                  MaximumCP;                  // 0x28    0x25C    0x290
 
         DUMMY_STRUCT(2);                                    // 0x25E
 
-        USHORT                  RNG;                        // 0x260
+        USHORT                  RNG;                        // 0x2C    0x260    0x294
 
         DUMMY_STRUCT(2);
 
-        ULONG                   ConditionFlags;             // 0x264
+        ULONG                   ConditionFlags;             // 0x30    0x264    0x298
     };
 
 } CHAR_STATUS, *PCHAR_STATUS;
+
+typedef struct _CHAR_T_STATUS
+{
+    USHORT      Level;
+    USHORT      HP;
+    USHORT      EP;
+    USHORT      STR;
+    USHORT      DEF;
+    USHORT      ATS;
+    USHORT      ADF;
+    USHORT      DEX;
+    USHORT      AGL;
+    USHORT      AGLRate;
+    USHORT      MOV;
+    USHORT      SPD;
+} CHAR_T_STATUS, *PCHAR_T_STATUS;
+
+typedef struct _CHAR_T_STATUS_RatioX
+{
+    float       HP;
+    float       STR;
+    float       DEF;
+    float       ATS;
+    float       ADF;
+    float       DEX;
+    float       AGL;
+    float       SPD;
+    //ULONG       AGLRate;
+    //ULONG       MOV;
+} CHAR_T_STATUS_RatioX;
+
+typedef struct _CHAR_T_STATUS_RatioY
+{
+    //BYTE      Level;
+    BYTE      HP;
+    //BYTE      EP;
+    BYTE      STR;
+    BYTE      DEF;
+    BYTE      ATS;
+    BYTE      ADF;
+    BYTE      DEX;
+    BYTE      AGL;
+    BYTE      AGLRate;
+    BYTE      MOV;
+    BYTE      SPD;
+} CHAR_T_STATUS_RatioY;
 
 typedef struct
 {
@@ -1460,6 +1529,10 @@ public:
 
     DECL_STATIC_METHOD_POINTER(EDAO, CheckItemEquipped);
     DECL_STATIC_METHOD_POINTER(EDAO, GetDifficulty);
+
+    PCHAR_T_STATUS THISCALL CalcChrT_StatusNew(INT ChrNo, INT Level);
+    PCHAR_T_STATUS THISCALL CalcChrT_Status(INT ChrNo, INT Level);
+    DECL_STATIC_METHOD_POINTER(EDAO, CalcChrT_Status);
 /*
     static ULONG GetWindowWidth()
     {
@@ -1492,8 +1565,9 @@ public:
 */
 };
 
-DECL_SELECTANY TYPE_OF(EDAO::StubCheckItemEquipped) EDAO::StubCheckItemEquipped = NULL;
+INIT_STATIC_MEMBER(EDAO::StubCheckItemEquipped);
 INIT_STATIC_MEMBER(EDAO::StubGetDifficulty);
+INIT_STATIC_MEMBER(EDAO::StubCalcChrT_Status);
 
 class CCoordConverter
 {
