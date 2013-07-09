@@ -284,22 +284,6 @@ typedef struct _CHAR_T_STATUS_RatioX
     //ULONG       MOV;
 } CHAR_T_STATUS_RatioX;
 
-typedef struct _CHAR_T_STATUS_RatioY
-{
-    //BYTE      Level;
-    BYTE      HP;
-    //BYTE      EP;
-    BYTE      STR;
-    BYTE      DEF;
-    BYTE      ATS;
-    BYTE      ADF;
-    BYTE      DEX;
-    BYTE      AGL;
-    BYTE      AGLRate;
-    BYTE      MOV;
-    BYTE      SPD;
-} CHAR_T_STATUS_RatioY;
-
 typedef struct
 {
     ULONG               ConditionFlags;

@@ -650,7 +650,7 @@ PCHAR_T_STATUS THISCALL EDAO::CalcChrT_StatusNew(INT ChrNo, INT Level)
     USHORT      AGLRate;
     USHORT      MOV;
 
-    if (ChrNo >= 0xC)
+    if (ChrNo >= 0xB)
         return NULL;
 
     if (Level > 150)
@@ -685,37 +685,39 @@ PCHAR_T_STATUS THISCALL EDAO::CalcChrT_StatusNew(INT ChrNo, INT Level)
     MOV     = MOV_RatioY[ChrNo];
     AGLRate = AGLRate_RatioY[ChrNo];
 */
-    static CHAR_T_STATUS_RatioY RatioY[12] =
+    static CHAR_T_STATUS RatioY[11] =
     {
-        //HP    STR DEF ATS ADF DEX AGL     MOV SPD
-        { 00,   20, 10, 18, 10, 19, 7,  00, 4,  30, },
-        { 00,   18, 8,  19, 10, 20, 9,  00, 3,  29, },
-        { 00,   25, 9,  20, 10, 19, 6,  00, 3,  28, },
-        { 00,   21, 11, 18, 10, 17, 7,  00, 5,  27, },
-        { 00,   18, 9,  19, 10, 19, 9,  00, 6,  31, },
-        { 00,   20, 8,  18, 10, 21, 10, 00, 5,  30, },
-        { 00,   21, 11, 19, 10, 22, 8,  00, 8,  29, },
-        { 00,   21, 11, 19, 10, 24, 9,  00, 6,  31, },
-        { 00,   19, 10, 18, 10, 18, 8,  00, 4,  28, },
-        { 00,   21, 9,  16, 10, 19, 7,  00, 3,  29, },
-        { 00,   22, 11, 17, 10, 19, 7,  00, 5,  29, },
+        //Level HP  EP  STR DEF ATS ADF DEX AGL Rate    MOV SPD
+        { 0,    0,  0,  20, 10, 18, 10, 19, 7,  0,      4,  30, },
+        { 0,    0,  0,  18, 8,  19, 10, 20, 9,  0,      3,  29, },
+        { 0,    0,  0,  25, 9,  20, 10, 19, 6,  0,      3,  28, },
+        { 0,    0,  0,  21, 11, 18, 10, 17, 7,  0,      5,  27, },
+        { 0,    0,  0,  18, 9,  19, 10, 19, 9,  0,      6,  31, },
+        { 0,    0,  0,  20, 8,  18, 10, 21, 10, 0,      5,  30, },
+        { 0,    0,  0,  21, 11, 19, 10, 22, 8,  0,      8,  29, },
+        { 0,    0,  0,  21, 11, 19, 10, 24, 9,  0,      6,  31, },
+        { 0,    0,  0,  19, 10, 18, 10, 18, 8,  0,      4,  28, },
+        { 0,    0,  0,  21, 9,  16, 10, 19, 7,  0,      3,  29, },
+        { 0,    0,  0,  22, 11, 17, 10, 19, 7,  0,      5,  29, },
     };
 
-    static CHAR_T_STATUS_RatioX RatioX[12] =
+    static CHAR_T_STATUS_RatioX RatioX[11] =
     {
         //HP    STR     DEF     ATS     ADF     DEX     AGL     SPD
         { 2.3f, 0.109f, 0.105f, 0.105f, 0.1f,   0.001f, 0.001f, 0.005f, },
-        { 2.0f, 0.09f,  0.09f,  0.11f,  0.11f,  0.001f, 0.001f, 0.005f, },    
-        { 1.7f, 0.08f,  0.095f, 0.115f, 0.105f, 0.001f, 0.001f, 0.005f, },    
-        { 2.5f, 0.115f, 0.105f, 0.1f,   0.09f,  0.001f, 0.001f, 0.005f, },    
-        { 2.2f, 0.095f, 0.104f, 0.111f, 0.11f,  0.001f, 0.001f, 0.005f, },    
-        { 2.1f, 0.112f, 0.085f, 0.105f, 0.105f, 0.001f, 0.001f, 0.005f, },    
-        { 2.7f, 0.113f, 0.105f, 0.113f, 0.105f, 0.001f, 0.001f, 0.005f, },    
-        { 2.45f,0.12f,  0.11f,  0.111f, 0.1f,   0.001f, 0.001f, 0.005f, },    
-        { 2.15f,0.105f, 0.1f,   0.095f, 0.095f, 0.001f, 0.001f, 0.005f, },    
-        { 2.4f, 0.11f,  0.1f,   0.1f,   0.09f,  0.001f, 0.001f, 0.005f, },    
+        { 2.0f, 0.09f,  0.09f,  0.11f,  0.11f,  0.001f, 0.001f, 0.005f, },
+        { 1.7f, 0.08f,  0.095f, 0.115f, 0.105f, 0.001f, 0.001f, 0.005f, },
+        { 2.5f, 0.115f, 0.105f, 0.1f,   0.09f,  0.001f, 0.001f, 0.005f, },
+        { 2.2f, 0.095f, 0.104f, 0.111f, 0.11f,  0.001f, 0.001f, 0.005f, },
+        { 2.1f, 0.112f, 0.085f, 0.105f, 0.105f, 0.001f, 0.001f, 0.005f, },
+        { 2.7f, 0.113f, 0.105f, 0.113f, 0.105f, 0.001f, 0.001f, 0.005f, },
+        { 2.45f,0.12f,  0.11f,  0.111f, 0.1f,   0.001f, 0.001f, 0.005f, },
+        { 2.15f,0.105f, 0.1f,   0.095f, 0.095f, 0.001f, 0.001f, 0.005f, },
+        { 2.4f, 0.11f,  0.1f,   0.1f,   0.09f,  0.001f, 0.001f, 0.005f, },
         { 2.6f, 0.111f, 0.111f, 0.09f,  0.09f,  0.001f, 0.001f, 0.005f, },
     };
+
+    //RatioY[T_NAME_INDEX::Rixia].AGLRate = 30;
 
     HP      = (float)RatioY[ChrNo].HP;
     STR     = (float)RatioY[ChrNo].STR;
@@ -733,6 +735,9 @@ PCHAR_T_STATUS THISCALL EDAO::CalcChrT_StatusNew(INT ChrNo, INT Level)
     {
         HP  += (float)i * RatioX[ChrNo].HP;
         STR += (float)i * RatioX[ChrNo].STR;
+    }
+    {
+        int i = (Level + 15) * (Level + 16) / 2;
         DEF += (float)i * RatioX[ChrNo].DEF;
         ATS += (float)i * RatioX[ChrNo].ATS;
         ADF += (float)i * RatioX[ChrNo].ADF;
@@ -799,7 +804,7 @@ PCHAR_T_STATUS THISCALL EDAO::CalcChrT_Status(INT ChrNo, INT Level)
     }
 #endif
 
-#if 1
+#if 0
     CHAR_T_STATUS status;
     PCHAR_T_STATUS pStatus;
 

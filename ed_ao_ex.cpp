@@ -9,7 +9,7 @@
 #include "edao_vm.h"
 
 
-#define CONSOLE_DEBUG   1
+#define CONSOLE_DEBUG   0
 
 BOOL UnInitialize(PVOID BaseAddress)
 {
@@ -34,7 +34,7 @@ BOOL Initialize(PVOID BaseAddress)
 #if CONSOLE_DEBUG
     QueryPerformanceFrequency(&lFrequency);
 
-    *(PBOOL)((PBYTE)Nt_GetModuleHandle(L"DINPUT8.dll") + 0x70E8) = FALSE;
+    //*(PBOOL)((PBYTE)Nt_GetModuleHandle(L"DINPUT8.dll") + 0x70E8) = FALSE;
 #endif
 
 /*
