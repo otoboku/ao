@@ -252,6 +252,13 @@ enum
     CHR_FLAG_EMPTY  = 0x8000,
 };
 
+enum
+{
+    CHR_FLAG2_ResistBeatBack    = 0x0200,
+    CHR_FLAG2_ResistATDelay     = 0x0800,
+    //CHR_FLAG2_AbsoluteMiss      = 0x2000,
+};
+
 //typedef union _MONSTER_STATUS
 typedef struct _MONSTER_STATUS
 {

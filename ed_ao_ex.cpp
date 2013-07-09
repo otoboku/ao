@@ -19,6 +19,7 @@ BOOL UnInitialize(PVOID BaseAddress)
 #define METHOD_PTR(_method) PtrAdd((PVOID)NULL, _method)
 
 #include "xxoo.h"
+#include "freetype_hook.h"
 
 BOOL Initialize(PVOID BaseAddress)
 {
@@ -104,6 +105,8 @@ BOOL Initialize(PVOID BaseAddress)
 
         INLINE_HOOK_JUMP_RVA_NULL(0x279986, METHOD_PTR(&CSSaveData::SaveSystemData)),
         INLINE_HOOK_JUMP_RVA_NULL(0x279FA8, METHOD_PTR(&CSSaveData::LoadSystemData)),
+
+        INLINE_HOOK_JUMP_RVA_NULL(0x276402, NFreeType::FT_New_Face_Ex),     // load font once
 
         // 
         INLINE_HOOK_JUMP_RVA     (0x2756E7, METHOD_PTR(&CBattle::SetBattleStatusFinalByDifficulty), CBattle::StubSetBattleStatusFinalByDifficulty),

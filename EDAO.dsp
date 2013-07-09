@@ -44,7 +44,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "EDAO_EXPORTS" /YX /FD /c
-# ADD CPP /nologo /Gr /MD /W4 /O2 /D "WIN32" /D "NDEBUG" /D USE_NT_VER=1 /FD /GS- /MP /arch:SSE /GL /c
+# ADD CPP /nologo /Gr /MD /W4 /O2 /I "..\freetype-2.4.11\include" /D "WIN32" /D "NDEBUG" /D USE_NT_VER=1 /FD /GS- /MP /arch:SSE /GL /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
@@ -183,6 +183,10 @@ SOURCE=.\edao.h
 # Begin Source File
 
 SOURCE=.\edao_vm.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\freetype_hook.h
 # End Source File
 # Begin Source File
 
