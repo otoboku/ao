@@ -38,6 +38,8 @@ INT nFastFish;
 BOOL bRoyalFlush;
 BOOL bAutoHorrorCoaster;
 
+INT nYin_no_AGLRate;
+
 typedef struct _SStatusRate
 {
     INT HP;
@@ -207,8 +209,10 @@ VOID ConfigInit()
         
         { (INT*)&nAutoFish, 'i', L"DT", L"AutoFish", 0, },
         { (INT*)&nFastFish, 'i', L"DT", L"FastFish", 0, },
-        { (INT*)&bRoyalFlush, 'b', L"DT", L"RoyalFlush", 0, },
-        { (INT*)&bAutoHorrorCoaster, 'b', L"DT", L"AutoHorrorCoaster", 0, },
+        { (BOOL*)&bRoyalFlush, 'b', L"DT", L"RoyalFlush", 0, },
+        { (BOOL*)&bAutoHorrorCoaster, 'b', L"DT", L"AutoHorrorCoaster", 0, },
+
+        { (INT*)&nYin_no_AGLRate, 'i', L"Status", L"Yin_no_AGLRate", 0, },
     };
  
     CONFIG_ENTRY *Entry;
@@ -240,6 +244,8 @@ VOID ConfigInit()
     SaturateConvertEx(&nSepithUpLimit, nSepithUpLimit, 9999, 0);
     nAutoFish = SaturateConvert(USHORT(0), nAutoFish);
     nFastFish = SaturateConvert(USHORT(0), nFastFish);
+
+    SaturateConvertEx(&nYin_no_AGLRate, nYin_no_AGLRate, 100, 0);
 
 #if CONSOLE_DEBUG
     FOR_EACH(Entry, Config, countof(Config))
@@ -608,6 +614,18 @@ ULONG THISCALL EDAO::GetDifficulty()
         return (this->*StubGetDifficulty)();
 }
 
+// !bArianrhodLimitKaijo  ÷≤·–ﬁ∏¥
+ULONG_PTR StubCalcSpecificStatusByDifficulty;
+ULONG CDECL CalcSpecificStatusByDifficulty(ULONG Type, ULONG Correction, ULONG StatusData, PULONG pMSFileIndex)
+{
+    if (!bArianrhodLimitKaijo && *pMSFileIndex == 0x30004200)
+    {
+        return StatusData;
+    }
+    else
+        return ((TYPE_OF(&CalcSpecificStatusByDifficulty))StubCalcSpecificStatusByDifficulty)(Type, Correction, StatusData, pMSFileIndex);
+}
+
 VOID THISCALL EDAO::SetBattleStatusFinalWhenRecover(ULONG ChrPosition, PCHAR_STATUS pStatusFinal, PCHAR_STATUS pStatusBasic)
 {
     CBattle* Battle = GetBattle();
@@ -717,7 +735,8 @@ PCHAR_T_STATUS THISCALL EDAO::CalcChrT_StatusNew(INT ChrNo, INT Level)
         { 2.6f, 0.111f, 0.111f, 0.09f,  0.09f,  0.001f, 0.001f, 0.005f, },
     };
 
-    //RatioY[T_NAME_INDEX::Rixia].AGLRate = 30;
+    //mark
+    RatioY[T_NAME_INDEX::Rixia].AGLRate = nYin_no_AGLRate;
 
     HP      = (float)RatioY[ChrNo].HP;
     STR     = (float)RatioY[ChrNo].STR;

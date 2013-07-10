@@ -9,7 +9,7 @@
 #include "edao_vm.h"
 
 
-#define CONSOLE_DEBUG   0
+#define CONSOLE_DEBUG   1
 
 BOOL UnInitialize(PVOID BaseAddress)
 {
@@ -119,6 +119,7 @@ BOOL Initialize(PVOID BaseAddress)
         INLINE_HOOK_JUMP_RVA     (0x2756E7, METHOD_PTR(&CBattle::SetBattleStatusFinalByDifficulty), CBattle::StubSetBattleStatusFinalByDifficulty),
         INLINE_HOOK_JUMP_RVA     (0x274E40, METHOD_PTR(&EDAO::GetDifficulty), EDAO::StubGetDifficulty),
         INLINE_HOOK_CALL_RVA_NULL(0x5AA772, METHOD_PTR(&EDAO::SetBattleStatusFinalWhenRecover)),    // Ä¾Å¼»Ö¸´ÄÜÁ¦Öµ
+        INLINE_HOOK_JUMP_RVA     (0x278F68, CalcSpecificStatusByDifficulty, StubCalcSpecificStatusByDifficulty),
 
         // fish
         INLINE_HOOK_CALL_RVA_NULL(0x675BC2, METHOD_PTR(&CFish::IsRodPulled)),
