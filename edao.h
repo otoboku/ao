@@ -276,25 +276,30 @@ typedef struct _CHAR_T_STATUS
     USHORT      AGLRate;
     USHORT      MOV;
     USHORT      SPD;
+    USHORT      DEXRate;
+    USHORT      RNG;
 } CHAR_T_STATUS, *PCHAR_T_STATUS;
 
 typedef struct _CHAR_T_STATUS_RatioX
 {
-    float       HP;
-    float       STR;
-    float       DEF;
-    float       ATS;
-    float       ADF;
-    float       DEX;
-    float       AGL;
-    float       SPD;
-    //ULONG       AGLRate;
-    //ULONG       MOV;
+    float      HP;
+    float      EP;
+    float      STR;
+    float      DEF;
+    float      ATS;
+    float      ADF;
+    float      DEX;
+    float      AGL;
+    float      MOV;
+    float      SPD;
+    float      DEXRate;
+    float      AGLRate;
+    float      RNG;
 } CHAR_T_STATUS_RatioX;
 
 typedef struct _CHAR_T_STATUS_RatioY
 {
-    USHORT      HP;
+    UINT        HP;
     USHORT      EP;
     USHORT      STR;
     USHORT      DEF;
@@ -1546,6 +1551,7 @@ public:
     DECL_STATIC_METHOD_POINTER(EDAO, CheckItemEquipped);
     DECL_STATIC_METHOD_POINTER(EDAO, GetDifficulty);
 
+    static CHAR_T_STATUS ChrT_Status;
     static PCHAR_T_STATUS CalcChrT_StatusNew(PCHAR_T_STATUS pStatus, INT ChrNo, INT Level);
     PCHAR_T_STATUS THISCALL CalcChrT_Status(INT ChrNo, INT Level);
     DECL_STATIC_METHOD_POINTER(EDAO, CalcChrT_Status);
@@ -1592,6 +1598,7 @@ INIT_STATIC_MEMBER(EDAO::StubGetDifficulty);
 INIT_STATIC_MEMBER(EDAO::StubCalcChrT_Status);
 INIT_STATIC_MEMBER(EDAO::StubCalcChrRawStatusFromLevel);
 INIT_STATIC_MEMBER(EDAO::StubCalcChrRawStatusByFinalStatus);
+DECL_SELECTANY TYPE_OF(EDAO::ChrT_Status) EDAO::ChrT_Status;
 
 class CCoordConverter
 {
