@@ -1,4 +1,5 @@
 //#include "edao.h"
+#include "json.h"
 
 #if CONSOLE_DEBUG
 LARGE_INTEGER lFrequency, lStopCounter, lStartCounter;
@@ -9,6 +10,41 @@ ULONG   g_flag = 0;
 namespace NFLAG
 {
     static const ULONG_PTR IsSubHPEveryAct  = 0x00000001;
+}
+
+namespace T_NAME
+{
+    CHAR_T_STATUS_RatioY RatioY[T_NAME::CHR_COUNT] =
+    {
+        //  HP  EP  STR DEF ATS ADF DEX AGL MOV SPD DEX AGL RNG
+        {   0,  0,  20, 10, 18, 10, 19, 7,  4,  30, 0,  0,  0   },
+        {   0,  0,  18, 8,  19, 10, 20, 9,  3,  29, 0,  0,  0   },
+        {   0,  0,  25, 9,  20, 10, 19, 6,  3,  28, 0,  0,  0   },
+        {   0,  0,  21, 11, 18, 10, 17, 7,  5,  27, 0,  0,  0   },
+        {   0,  0,  18, 9,  19, 10, 19, 9,  6,  31, 0,  0,  0   },
+        {   0,  0,  20, 8,  18, 10, 21, 10, 5,  30, 0,  0,  0   },
+        {   0,  0,  21, 11, 19, 10, 22, 8,  8,  29, 0,  0,  0   },
+        {   0,  0,  21, 11, 19, 10, 24, 9,  6,  31, 0,  0,  0   },
+        {   0,  0,  19, 10, 18, 10, 18, 8,  4,  28, 0,  0,  0   },
+        {   0,  0,  21, 9,  16, 10, 19, 7,  3,  29, 0,  0,  0   },
+        {   0,  0,  22, 11, 17, 10, 19, 7,  5,  29, 0,  0,  0   },
+    };
+
+    CHAR_T_STATUS_RatioX RatioX[T_NAME::CHR_COUNT] =
+    {
+        //HP    STR     DEF     ATS     ADF     DEX     AGL     SPD
+        { 2.3f, 0.109f, 0.105f, 0.105f, 0.1f,   0.001f, 0.001f, 0.005f, },
+        { 2.0f, 0.09f,  0.09f,  0.11f,  0.11f,  0.001f, 0.001f, 0.005f, },
+        { 1.7f, 0.08f,  0.095f, 0.115f, 0.105f, 0.001f, 0.001f, 0.005f, },
+        { 2.5f, 0.115f, 0.105f, 0.1f,   0.09f,  0.001f, 0.001f, 0.005f, },
+        { 2.2f, 0.095f, 0.104f, 0.111f, 0.11f,  0.001f, 0.001f, 0.005f, },
+        { 2.1f, 0.112f, 0.085f, 0.105f, 0.105f, 0.001f, 0.001f, 0.005f, },
+        { 2.7f, 0.113f, 0.105f, 0.113f, 0.105f, 0.001f, 0.001f, 0.005f, },
+        { 2.45f,0.12f,  0.11f,  0.111f, 0.1f,   0.001f, 0.001f, 0.005f, },
+        { 2.15f,0.105f, 0.1f,   0.095f, 0.095f, 0.001f, 0.001f, 0.005f, },
+        { 2.4f, 0.11f,  0.1f,   0.1f,   0.09f,  0.001f, 0.001f, 0.005f, },
+        { 2.6f, 0.111f, 0.111f, 0.09f,  0.09f,  0.001f, 0.001f, 0.005f, },
+    };
 }
 
 ULONG_PTR StubCheckStackBalance = 0x006790C6;
@@ -653,9 +689,11 @@ VOID THISCALL EDAO::SetBattleStatusFinalWhenRecover(ULONG ChrPosition, PCHAR_STA
     Battle->SetBattleStatusFinalByDifficulty(MSData);
 }
 
-PCHAR_T_STATUS THISCALL EDAO::CalcChrT_StatusNew(INT ChrNo, INT Level)
+PCHAR_T_STATUS EDAO::CalcChrT_StatusNew(PCHAR_T_STATUS pStatus, INT ChrNo, INT Level)
 {
-    PCHAR_T_STATUS pStatus;
+    //PCHAR_T_STATUS pStatus;
+    if (!pStatus)
+        return pStatus;
 
     float       HP;
     float       STR;
@@ -668,7 +706,7 @@ PCHAR_T_STATUS THISCALL EDAO::CalcChrT_StatusNew(INT ChrNo, INT Level)
     USHORT      AGLRate;
     USHORT      MOV;
 
-    if (ChrNo >= 0xB)
+    if (ChrNo >= MAXIMUM_CHR_NUMBER_WITH_STATUS)
         return NULL;
 
     if (Level > 150)
@@ -679,64 +717,11 @@ PCHAR_T_STATUS THISCALL EDAO::CalcChrT_StatusNew(INT ChrNo, INT Level)
     {
         Level = 45;
     }
-/*
-                                    // 00, 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11
-    static BYTE HP_RatioY[12]       = {00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, };
-    static BYTE STR_RatioY[12]      = {20, 18, 25, 21, 18, 20, 21, 21, 19, 21, 22, 00, };
-    static BYTE DEF_RatioY[12]      = {10,  8,  9, 11,  9,  8, 11, 11, 10,  9, 11, 00, };
-    static BYTE ATS_RatioY[12]      = {18, 19, 20, 18, 19, 18, 19, 19, 18, 16, 17, 00, };
-    static BYTE ADF_RatioY[12]      = {10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 00, };
-    static BYTE DEX_RatioY[12]      = {19, 20, 19, 17, 19, 21, 22, 24, 18, 19, 19, 00, };
-    static BYTE AGL_RatioY[12]      = { 7,  9,  6,  7,  9, 10,  8,  9,  8,  7,  7, 00, };
-    static BYTE AGLRate_RatioY[12]  = {00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, 00, };
-    static BYTE MOV_RatioY[12]      = { 4,  3,  3,  5,  6,  5,  8,  6,  4,  3,  5, 00, };
-    static BYTE SPD_RatioY[12]      = {30, 29, 28, 27, 31, 30, 29, 31, 28, 29, 29, 00, };
 
-    HP      = (float)HP_RatioY[ChrNo];
-    STR     = (float)STR_RatioY[ChrNo];
-    DEF     = (float)DEF_RatioY[ChrNo];
-    ATS     = (float)ATS_RatioY[ChrNo];
-    ADF     = (float)ADF_RatioY[ChrNo];
-    DEX     = (float)DEX_RatioY[ChrNo];
-    AGL     = (float)AGL_RatioY[ChrNo];
-    SPD     = (float)SPD_RatioY[ChrNo];
-    MOV     = MOV_RatioY[ChrNo];
-    AGLRate = AGLRate_RatioY[ChrNo];
-*/
-    static CHAR_T_STATUS RatioY[11] =
-    {
-        //Level HP  EP  STR DEF ATS ADF DEX AGL Rate    MOV SPD
-        { 0,    0,  0,  20, 10, 18, 10, 19, 7,  0,      4,  30, },
-        { 0,    0,  0,  18, 8,  19, 10, 20, 9,  0,      3,  29, },
-        { 0,    0,  0,  25, 9,  20, 10, 19, 6,  0,      3,  28, },
-        { 0,    0,  0,  21, 11, 18, 10, 17, 7,  0,      5,  27, },
-        { 0,    0,  0,  18, 9,  19, 10, 19, 9,  0,      6,  31, },
-        { 0,    0,  0,  20, 8,  18, 10, 21, 10, 0,      5,  30, },
-        { 0,    0,  0,  21, 11, 19, 10, 22, 8,  0,      8,  29, },
-        { 0,    0,  0,  21, 11, 19, 10, 24, 9,  0,      6,  31, },
-        { 0,    0,  0,  19, 10, 18, 10, 18, 8,  0,      4,  28, },
-        { 0,    0,  0,  21, 9,  16, 10, 19, 7,  0,      3,  29, },
-        { 0,    0,  0,  22, 11, 17, 10, 19, 7,  0,      5,  29, },
-    };
-
-    static CHAR_T_STATUS_RatioX RatioX[11] =
-    {
-        //HP    STR     DEF     ATS     ADF     DEX     AGL     SPD
-        { 2.3f, 0.109f, 0.105f, 0.105f, 0.1f,   0.001f, 0.001f, 0.005f, },
-        { 2.0f, 0.09f,  0.09f,  0.11f,  0.11f,  0.001f, 0.001f, 0.005f, },
-        { 1.7f, 0.08f,  0.095f, 0.115f, 0.105f, 0.001f, 0.001f, 0.005f, },
-        { 2.5f, 0.115f, 0.105f, 0.1f,   0.09f,  0.001f, 0.001f, 0.005f, },
-        { 2.2f, 0.095f, 0.104f, 0.111f, 0.11f,  0.001f, 0.001f, 0.005f, },
-        { 2.1f, 0.112f, 0.085f, 0.105f, 0.105f, 0.001f, 0.001f, 0.005f, },
-        { 2.7f, 0.113f, 0.105f, 0.113f, 0.105f, 0.001f, 0.001f, 0.005f, },
-        { 2.45f,0.12f,  0.11f,  0.111f, 0.1f,   0.001f, 0.001f, 0.005f, },
-        { 2.15f,0.105f, 0.1f,   0.095f, 0.095f, 0.001f, 0.001f, 0.005f, },
-        { 2.4f, 0.11f,  0.1f,   0.1f,   0.09f,  0.001f, 0.001f, 0.005f, },
-        { 2.6f, 0.111f, 0.111f, 0.09f,  0.09f,  0.001f, 0.001f, 0.005f, },
-    };
+    using namespace T_NAME;
 
     //mark
-    RatioY[T_NAME_INDEX::Rixia].AGLRate = nYin_no_AGLRate;
+    //RatioY[T_NAME::Rixia].AGLRate = nYin_no_AGLRate;
 
     HP      = (float)RatioY[ChrNo].HP;
     STR     = (float)RatioY[ChrNo].STR;
@@ -778,7 +763,7 @@ PCHAR_T_STATUS THISCALL EDAO::CalcChrT_StatusNew(INT ChrNo, INT Level)
         SPD += (float)i * RatioX[ChrNo].SPD;
     }
 #endif
-    pStatus = *(PCHAR_T_STATUS*)PtrAdd(this, 0xA2FA4);
+    //pStatus = *(PCHAR_T_STATUS*)PtrAdd(this, 0xA2FA4);
     //ZeroMemory(pStatus, sizeof(*pStatus));
     pStatus->Level      = 0;
     pStatus->HP         = (USHORT)HP;
@@ -796,8 +781,28 @@ PCHAR_T_STATUS THISCALL EDAO::CalcChrT_StatusNew(INT ChrNo, INT Level)
     return pStatus;
 }
 
+VOID THISCALL EDAO::CalcChrRawStatusFromLevelNew(ULONG ChrId, ULONG Level, ULONG Unknown /* = 0 */)
+{
+    (this->*StubCalcChrRawStatusFromLevel)(ChrId, Level, Unknown);
+    if (ChrId < MAXIMUM_CHR_NUMBER_WITH_STATUS)
+    {
+        CSSaveData* SaveData = GetSaveData();
+        SaveData->Status[ChrId].DEXRate =  (SHORT)T_NAME::RatioY[ChrId].DEXRate;
+        SaveData->Status[ChrId].RNG     = (USHORT)T_NAME::RatioY[ChrId].RNG;
+    }
+}
+
+PCHAR_STATUS THISCALL EDAO::CalcChrRawStatusByFinalStatus(PCHAR_STATUS RawStatus, ULONG ChrID, PCHAR_STATUS FinalStatus)
+{
+    PCHAR_STATUS Result = (this->*StubCalcChrRawStatusByFinalStatus)(RawStatus, ChrID, FinalStatus);
+    Result->RNG = T_NAME::RatioY[ChrID].RNG;
+    return Result;
+}
+
 PCHAR_T_STATUS THISCALL EDAO::CalcChrT_Status(INT ChrNo, INT Level)
 {
+    PCHAR_T_STATUS pStatus = *(PCHAR_T_STATUS*)PtrAdd(this, 0xA2FA4);
+
 #if CONSOLE_DEBUG
     static ULONG TestCount = 6;
     if (TestCount)
@@ -815,7 +820,7 @@ PCHAR_T_STATUS THISCALL EDAO::CalcChrT_Status(INT ChrNo, INT Level)
         for (int i=0; i<12; i++)
         {
             for (int j=45; j<=150; j++)
-                CalcChrT_StatusNew(i, j);
+                CalcChrT_StatusNew(pStatus, i, j);
         }
         QueryPerformanceCounter(&lStopCounter);
         PrintConsoleW(L"Elapsed time new: %lf ms\n", (lStopCounter.QuadPart - lStartCounter.QuadPart) * 1000.0 / lFrequency.QuadPart);
@@ -823,13 +828,12 @@ PCHAR_T_STATUS THISCALL EDAO::CalcChrT_Status(INT ChrNo, INT Level)
     }
 #endif
 
-#if 0
+#if 1
     CHAR_T_STATUS status;
-    PCHAR_T_STATUS pStatus;
 
     pStatus = (this->*StubCalcChrT_Status)(ChrNo, Level);
     CopyMemory(&status, pStatus, sizeof(status));
-    pStatus = CalcChrT_StatusNew(ChrNo, Level);
+    pStatus = CalcChrT_StatusNew(pStatus, ChrNo, Level);
     if (ChrNo < 11)
     {
         // arch:SSE2下完全相同
@@ -841,8 +845,179 @@ PCHAR_T_STATUS THISCALL EDAO::CalcChrT_Status(INT ChrNo, INT Level)
     }
     return pStatus;
 #else
-    return CalcChrT_StatusNew(ChrNo, Level);
+    return CalcChrT_StatusNew(pStatus, ChrNo, Level);
 #endif
+}
+
+VOID DumpChrRawStatus()
+{
+    CHAR_T_STATUS   Status;
+    NtFileDisk file;
+    CHAR Buffer[16<<10];
+    CHAR* p;
+    //ULONG nWriten;
+    
+    using namespace T_NAME;
+    file.Create(L"status_dump.txt");
+    for (int i=0; i<CHR_COUNT; i++)
+    {
+        p = Buffer;
+        p += sprintf(p, "%s\r\n", ChrNameChs[i]);
+        p += sprintf(p, "Level\tHP\tSTR\tDEF\tATS\tADF\tDEX\tAGL\tMOV\tSPD\tDEXRate\tAGLRate\tRNG\r\n");
+        for (int Level=45; Level<=150; Level++)
+        {
+            EDAO::CalcChrT_StatusNew(&Status, i, Level);
+            p+= sprintf(p, "%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\r\n",
+                Level, Status.HP, 
+                (SHORT)Status.STR, (SHORT)Status.DEF, 
+                (SHORT)Status.ATS, (SHORT)Status.ADF, 
+                (SHORT)Status.DEX, (SHORT)Status.AGL, 
+                (SHORT)Status.MOV, (SHORT)Status.SPD, 
+                (SHORT)RatioY[i].DEXRate, (SHORT)Status.AGLRate, 
+                (USHORT)RatioY[i].RNG);
+        }
+        p+= sprintf(p, "\r\n");
+
+        file.Seek(0, SEEK_END);
+        file.Write(Buffer, p - Buffer);     
+    }
+    file.Close();
+}
+
+BOOL CHAR_T_STATUS_Ratio_To_Json(const char *filename)
+{
+    using namespace T_NAME;
+    INT Ret;
+
+    json_object *root_object = json_object_new_object();
+    json_object *chr_object[CHR_COUNT];
+    for (int i=0; i<countof(chr_object); i++)
+    {
+        chr_object[i] = json_object_new_object();
+    }
+
+    for (int i=0; i<countof(chr_object); i++)
+    {
+        json_object_object_add(chr_object[i], "xHP",        json_object_new_double(RatioX[i].HP));
+        json_object_object_add(chr_object[i], "xSTR",       json_object_new_double(RatioX[i].STR));
+        json_object_object_add(chr_object[i], "xDEF",       json_object_new_double(RatioX[i].DEF));
+        json_object_object_add(chr_object[i], "xATS",       json_object_new_double(RatioX[i].ATS));
+        json_object_object_add(chr_object[i], "xADF",       json_object_new_double(RatioX[i].ADF));
+        json_object_object_add(chr_object[i], "xDEX",       json_object_new_double(RatioX[i].DEX));
+        json_object_object_add(chr_object[i], "xAGL",       json_object_new_double(RatioX[i].AGL));
+        json_object_object_add(chr_object[i], "xSPD",       json_object_new_double(RatioX[i].SPD));
+
+        json_object_object_add(chr_object[i], "yHP",        json_object_new_int(RatioY[i].HP));
+        json_object_object_add(chr_object[i], "ySTR",       json_object_new_int(RatioY[i].STR));
+        json_object_object_add(chr_object[i], "yDEF",       json_object_new_int(RatioY[i].DEF));
+        json_object_object_add(chr_object[i], "yATS",       json_object_new_int(RatioY[i].ATS));
+        json_object_object_add(chr_object[i], "yADF",       json_object_new_int(RatioY[i].ADF));
+        json_object_object_add(chr_object[i], "yDEX",       json_object_new_int(RatioY[i].DEX));
+        json_object_object_add(chr_object[i], "yAGL",       json_object_new_int(RatioY[i].AGL));
+        json_object_object_add(chr_object[i], "yMOV",       json_object_new_int(RatioY[i].MOV));
+        json_object_object_add(chr_object[i], "ySPD",       json_object_new_int(RatioY[i].SPD));
+        json_object_object_add(chr_object[i], "yDEXRate",   json_object_new_int(RatioY[i].DEXRate));
+        json_object_object_add(chr_object[i], "yAGLRate",   json_object_new_int(RatioY[i].AGLRate));
+        json_object_object_add(chr_object[i], "yRNG",       json_object_new_int(RatioY[i].RNG));
+
+        json_object_object_add(root_object, ChrNameChs[i], chr_object[i]);
+    }
+    //PrintConsoleA("%s\n", json_object_to_json_string(root_object));
+    Ret = json_object_to_file_ext((char*)filename, root_object, JSON_C_TO_STRING_PRETTY | JSON_C_TO_STRING_NOZERO);
+    for (int i=0; i<countof(chr_object); i++)
+    {
+        json_object_put(chr_object[i]);
+    }
+    json_object_put(root_object);
+
+    if (Ret == -1)
+        return FALSE;
+    else
+        return TRUE;
+}
+
+BOOL CHAR_T_STATUS_Ratio_From_Json(const char *filename)
+{
+    using namespace T_NAME;
+    json_object *root_object = json_object_from_file(filename);
+    json_object *chr_object;
+    json_object *status_object;
+    if (!root_object)
+        return FALSE;
+
+    CHAR_T_STATUS_RatioX    RatioX1[CHR_COUNT];
+    CHAR_T_STATUS_RatioY    RatioY1[CHR_COUNT];
+    CopyMemory(RatioX1, RatioX, sizeof(RatioX));
+    CopyMemory(RatioY1, RatioY, sizeof(RatioY));
+
+    for (int i=0; i<CHR_COUNT; i++)
+    {
+        if (!json_object_object_get_ex(root_object, ChrNameChs[i], &chr_object))
+            continue;
+
+        if (json_object_object_get_ex(chr_object, "xHP", &status_object))
+            RatioX1[i].HP = (float)json_object_get_double(status_object);
+        if (json_object_object_get_ex(chr_object, "xSTR", &status_object))
+            RatioX1[i].STR = (float)json_object_get_double(status_object);
+        if (json_object_object_get_ex(chr_object, "xDEF", &status_object))
+            RatioX1[i].DEF = (float)json_object_get_double(status_object);
+        if (json_object_object_get_ex(chr_object, "xATS", &status_object))
+            RatioX1[i].ATS = (float)json_object_get_double(status_object);
+        if (json_object_object_get_ex(chr_object, "xADF", &status_object))
+            RatioX1[i].ADF = (float)json_object_get_double(status_object);
+        if (json_object_object_get_ex(chr_object, "xDEX", &status_object))
+            RatioX1[i].DEX = (float)json_object_get_double(status_object);
+        if (json_object_object_get_ex(chr_object, "xAGL", &status_object))
+            RatioX1[i].AGL = (float)json_object_get_double(status_object);
+        if (json_object_object_get_ex(chr_object, "xSPD", &status_object))
+            RatioX1[i].SPD = (float)json_object_get_double(status_object);
+
+        if (json_object_object_get_ex(chr_object, "yHP", &status_object))
+            RatioY1[i].HP = (USHORT)json_object_get_int(status_object);
+        if (json_object_object_get_ex(chr_object, "ySTR", &status_object))
+            RatioY1[i].STR = (USHORT)json_object_get_int(status_object);
+        if (json_object_object_get_ex(chr_object, "yDEF", &status_object))
+            RatioY1[i].DEF = (USHORT)json_object_get_int(status_object);
+        if (json_object_object_get_ex(chr_object, "yATS", &status_object))
+            RatioY1[i].ATS = (USHORT)json_object_get_int(status_object);
+        if (json_object_object_get_ex(chr_object, "yADF", &status_object))
+            RatioY1[i].ADF = (USHORT)json_object_get_int(status_object);
+        if (json_object_object_get_ex(chr_object, "yDEX", &status_object))
+            RatioY1[i].DEX = (USHORT)json_object_get_int(status_object);
+        if (json_object_object_get_ex(chr_object, "yAGL", &status_object))
+            RatioY1[i].AGL = (USHORT)json_object_get_int(status_object);
+        if (json_object_object_get_ex(chr_object, "yMOV", &status_object))
+            RatioY1[i].MOV = (USHORT)json_object_get_int(status_object);
+        if (json_object_object_get_ex(chr_object, "ySPD", &status_object))
+            RatioY1[i].SPD = (USHORT)json_object_get_int(status_object);
+        if (json_object_object_get_ex(chr_object, "yDEXRate", &status_object))
+            RatioY1[i].DEXRate = (USHORT)json_object_get_int(status_object);
+        if (json_object_object_get_ex(chr_object, "yAGLRate", &status_object))
+            RatioY1[i].AGLRate = (USHORT)json_object_get_int(status_object);
+        if (json_object_object_get_ex(chr_object, "yRNG", &status_object))
+            RatioY1[i].RNG = (USHORT)json_object_get_int(status_object);
+    }
+    json_object_put(root_object);
+
+#if CONSOLE_DEBUG
+#if 1
+    PrintConsoleA("\nCHAR_T_STATUS_Ratio_From_Json Succeed!\n\n");
+    for (int i=0; i<CHR_COUNT; i++)
+    {
+        if (RtlCompareMemory(&RatioX[i], &RatioX1[i], sizeof(RatioX[i])) != sizeof(RatioX[i]))
+        {
+            PrintConsoleA("RatioX Not Same: %s\n", ChrNameChs[i]);
+        }
+        if (RtlCompareMemory(&RatioY[i], &RatioY1[i], sizeof(RatioY[i])) != sizeof(RatioY[i]))
+        {
+            PrintConsoleA("RatioY Not Same: %s\n", ChrNameChs[i]);
+        }
+    }
+#endif
+#endif
+    CopyMemory(RatioX, RatioX1, sizeof(RatioX));
+    CopyMemory(RatioY, RatioY1, sizeof(RatioY));
+    return TRUE;
 }
 /************************************************************************
     Status End

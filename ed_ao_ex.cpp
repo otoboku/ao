@@ -21,6 +21,14 @@ BOOL UnInitialize(PVOID BaseAddress)
 #include "xxoo.h"
 #include "freetype_hook.h"
 
+VOID Test()
+{
+    //CHAR_T_STATUS_Ratio_To_Json("config_status.txt");
+    CHAR_T_STATUS_Ratio_From_Json("config_status.txt");
+    CHAR_T_STATUS_Ratio_To_Json("config_status_mem.txt");
+    DumpChrRawStatus();
+}
+
 BOOL Initialize(PVOID BaseAddress)
 {
     ml::MlInitialize();
@@ -34,7 +42,7 @@ BOOL Initialize(PVOID BaseAddress)
 #if CONSOLE_DEBUG
     QueryPerformanceFrequency(&lFrequency);
 
-    //*(PBOOL)((PBYTE)Nt_GetModuleHandle(L"DINPUT8.dll") + 0x70E8) = FALSE;
+    *(PBOOL)((PBYTE)Nt_GetModuleHandle(L"DINPUT8.dll") + 0x70E8) = FALSE;
 #endif
 
 /*
@@ -114,6 +122,8 @@ BOOL Initialize(PVOID BaseAddress)
 
         INLINE_HOOK_JUMP_RVA_NULL(0x276402, NFreeType::FT_New_Face_Ex),     // load font once
         INLINE_HOOK_JUMP_RVA     (0x2798F0, METHOD_PTR(&EDAO::CalcChrT_Status), EDAO::StubCalcChrT_Status),
+        INLINE_HOOK_JUMP_RVA     (0x275FF7, METHOD_PTR(&EDAO::CalcChrRawStatusFromLevelNew), EDAO::StubCalcChrRawStatusFromLevel),
+        INLINE_HOOK_JUMP_RVA     (0x273473, METHOD_PTR(&EDAO::CalcChrRawStatusByFinalStatus), EDAO::StubCalcChrRawStatusByFinalStatus),
 
         // 
         INLINE_HOOK_JUMP_RVA     (0x2756E7, METHOD_PTR(&CBattle::SetBattleStatusFinalByDifficulty), CBattle::StubSetBattleStatusFinalByDifficulty),
@@ -155,6 +165,7 @@ BOOL Initialize(PVOID BaseAddress)
     //PrintConsoleW(L"%x\r\n", FIELD_OFFSET(MONSTER_STATUS, SummonCount));
     PrintConsoleW(L"%x\r\n", FIELD_OFFSET(AT_BAR_ENTRY, IconAT));
     PrintConsoleW(L"%x\r\n", FIELD_OFFSET(AT_BAR_ENTRY, Pri));
+    Test();
 #endif
 
     Nt_PatchMemory(p, countof(p), f, countof(f), hModule);

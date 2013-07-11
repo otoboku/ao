@@ -40,7 +40,8 @@ class CDebug;
 #define MINIMUM_CUSTOM_CHAR_ID          0xB0
 #define MINIMUM_CUSTOM_CRAFT_INDEX      0x3E8
 #define MAXIMUM_CHR_NUMBER_IN_BATTLE    0x16
-
+#define MAXIMUM_CHR_NUMBER_WITH_STATUS  0xC
+#define SCENA_FLAG_COUNT                0x220
 
 #define PSP_WIDTH_F                       480.f
 #define PSP_HEIGHT_F                      272.f
@@ -127,7 +128,7 @@ enum
 };
 ML_NAMESPACE_END
 
-ML_NAMESPACE_BEGIN(T_NAME_INDEX)
+ML_NAMESPACE_BEGIN(T_NAME)
 enum
 {
     Lloyd       = 0x0,
@@ -148,7 +149,14 @@ enum
     Dudley      = 0x9,
     Garcia      = 0xA,
     ReserveB    = 0xB,
+    CHR_COUNT   = 0xC,
 };
+
+DECL_SELECTANY
+char* ChrName[] = {"Lloyd", "Elie", "Tio", "Randy", "Lazy", "Yin", "Zeit", "Arios", "Noel", "Dudley", "Garcia", "ReserveB"};
+DECL_SELECTANY
+char* ChrNameChs[] = {"罗伊德", "艾莉", "缇欧", "兰迪", "瓦吉", "银", "神狼蔡特", "亚里欧斯", "诺艾尔上士", "达德利搜查官", "加尔西亚", "保留B"};
+
 ML_NAMESPACE_END
 
 typedef struct  // 0x18
@@ -283,6 +291,23 @@ typedef struct _CHAR_T_STATUS_RatioX
     //ULONG       AGLRate;
     //ULONG       MOV;
 } CHAR_T_STATUS_RatioX;
+
+typedef struct _CHAR_T_STATUS_RatioY
+{
+    USHORT      HP;
+    USHORT      EP;
+    USHORT      STR;
+    USHORT      DEF;
+    USHORT      ATS;
+    USHORT      ADF;
+    USHORT      DEX;
+    USHORT      AGL;
+    USHORT      MOV;
+    USHORT      SPD;
+    USHORT      DEXRate;
+    USHORT      AGLRate;
+    USHORT      RNG;
+} CHAR_T_STATUS_RatioY;
 
 typedef struct
 {
@@ -484,7 +509,7 @@ typedef union _AS_FILE
     };
 } AS_FILE, *PAS_FILE;
 
-#pragma pack(pop)
+
 
 EDAO* GlobalGetEDAO();
 
@@ -667,7 +692,18 @@ public:
     {
         DETOUR_METHOD(CActor, SetChrPositionAuto, 0x676628, ChrId, pPartyList, ChrCount);
     }
+
+public:
+    DUMMY_STRUCT(0x9C);
+    BYTE        Flag[SCENA_FLAG_COUNT];     // 0x9C
+    PVOID       pScenaCharacterInf[2];
+    ULONG       ScenaCharacterCount[2];
+    USHORT      PartyList[8];               // 0x2CC
+    USHORT      PartyListSaved[8];          // 0x2DC
+    CHAR_STATUS Status[MAXIMUM_CHR_NUMBER_WITH_STATUS]; // 0x2EC
+
 };
+#pragma pack(pop)
 
 typedef union
 {
@@ -1466,11 +1502,7 @@ public:
 
     VOID CalcChrRawStatusFromLevel(ULONG ChrId, ULONG Level, ULONG Unknown = 0)
     {
-        TYPE_OF(&EDAO::CalcChrRawStatusFromLevel) f;
-
-        *(PVOID *)&f = (PVOID)0x675FF7;
-
-        return (this->*f)(ChrId, Level, Unknown);
+        DETOUR_METHOD(EDAO, CalcChrRawStatusFromLevel, 0x675FF7, ChrId, Level, Unknown);
     }
 
 
@@ -1514,9 +1546,15 @@ public:
     DECL_STATIC_METHOD_POINTER(EDAO, CheckItemEquipped);
     DECL_STATIC_METHOD_POINTER(EDAO, GetDifficulty);
 
-    PCHAR_T_STATUS THISCALL CalcChrT_StatusNew(INT ChrNo, INT Level);
+    static PCHAR_T_STATUS CalcChrT_StatusNew(PCHAR_T_STATUS pStatus, INT ChrNo, INT Level);
     PCHAR_T_STATUS THISCALL CalcChrT_Status(INT ChrNo, INT Level);
     DECL_STATIC_METHOD_POINTER(EDAO, CalcChrT_Status);
+
+    VOID THISCALL CalcChrRawStatusFromLevelNew(ULONG ChrId, ULONG Level, ULONG Unknown = 0);
+    DECL_STATIC_METHOD_POINTER(EDAO, CalcChrRawStatusFromLevel);
+
+    PCHAR_STATUS CalcChrRawStatusByFinalStatus(PCHAR_STATUS RawStatus, ULONG ChrID, PCHAR_STATUS FinalStatus);
+    DECL_STATIC_METHOD_POINTER(EDAO, CalcChrRawStatusByFinalStatus);
 /*
     static ULONG GetWindowWidth()
     {
@@ -1552,6 +1590,8 @@ public:
 INIT_STATIC_MEMBER(EDAO::StubCheckItemEquipped);
 INIT_STATIC_MEMBER(EDAO::StubGetDifficulty);
 INIT_STATIC_MEMBER(EDAO::StubCalcChrT_Status);
+INIT_STATIC_MEMBER(EDAO::StubCalcChrRawStatusFromLevel);
+INIT_STATIC_MEMBER(EDAO::StubCalcChrRawStatusByFinalStatus);
 
 class CCoordConverter
 {
