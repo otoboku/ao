@@ -1,6 +1,8 @@
 //#include "edao.h"
 #include "json.h"
 
+#pragma warning (disable: 4996)
+
 #if CONSOLE_DEBUG
 LARGE_INTEGER lFrequency, lStopCounter, lStartCounter;
 #endif
@@ -45,6 +47,9 @@ namespace T_NAME
         { 	2.4f,   0.0f,   0.11f,  0.1f,   0.1f,   0.09f,  0.001f, 0.001f, 0.0f,   0.005f, 0.0f,   0.0f,   0.0f,	},
         { 	2.6f,   0.0f,   0.111f, 0.111f, 0.09f,  0.09f,  0.001f, 0.001f, 0.0f,   0.005f, 0.0f,   0.0f,   0.0f,	},
     };
+
+    DECL_SELECTANY
+    const char* StatusName[] = {"HP", "EP", "STR", "DEF", "ATS", "ADF", "DEX", "AGL", "MOV", "SPD", "DEXRate", "AGLRate", "RNG"};
 }
 
 ULONG_PTR StubCheckStackBalance = 0x006790C6;
@@ -74,6 +79,8 @@ INT nFastFish;
 BOOL bRoyalFlush;
 BOOL bAutoHorrorCoaster;
 
+BOOL bCustomizeStatus;
+BOOL bDumpStatus;
 INT nYin_no_AGLRate;
 
 typedef struct _SStatusRate
@@ -248,6 +255,8 @@ VOID ConfigInit()
         { (BOOL*)&bRoyalFlush, 'b', L"DT", L"RoyalFlush", 0, },
         { (BOOL*)&bAutoHorrorCoaster, 'b', L"DT", L"AutoHorrorCoaster", 0, },
 
+        { (BOOL*)&bCustomizeStatus, 'b', L"Status", L"CustomizeStatus", 0, },
+        { (BOOL*)&bDumpStatus, 'b', L"Status", L"DumpStatus", 0, },
         { (INT*)&nYin_no_AGLRate, 'i', L"Status", L"Yin_no_AGLRate", 0, },
     };
  
@@ -711,9 +720,6 @@ PCHAR_T_STATUS EDAO::CalcChrT_StatusNew(PCHAR_T_STATUS pStatus, INT ChrNo, INT L
 
     using namespace T_NAME;
 
-    //mark
-    //RatioY[T_NAME::Rixia].AGLRate = nYin_no_AGLRate;
-
     Status.HP   = (float)RatioY[ChrNo].HP;
     Status.EP   = (float)RatioY[ChrNo].EP;
     Status.STR  = (float)RatioY[ChrNo].STR;
@@ -751,8 +757,9 @@ PCHAR_T_STATUS EDAO::CalcChrT_StatusNew(PCHAR_T_STATUS pStatus, INT ChrNo, INT L
     //pStatus = *(PCHAR_T_STATUS*)PtrAdd(this, 0xA2FA4);
     //ZeroMemory(pStatus, sizeof(*pStatus));
     pStatus->Level      = 0;
-    pStatus->HP         = (USHORT)Status.HP;
-    pStatus->EP         = 0;
+    //pStatus->HP         = (USHORT)Status.HP;
+    //pStatus->EP         = 0;
+    pStatus->HP         = (UINT)Status.HP;
     pStatus->STR        = (USHORT)Status.STR;
     pStatus->DEF        = (USHORT)Status.DEF;
     pStatus->ATS        = (USHORT)Status.ATS;
@@ -772,9 +779,9 @@ VOID THISCALL EDAO::CalcChrRawStatusFromLevelNew(ULONG ChrId, ULONG Level, ULONG
     (this->*StubCalcChrRawStatusFromLevel)(ChrId, Level, Unknown);
     if (ChrId < MAXIMUM_CHR_NUMBER_WITH_STATUS)
     {
-        CSSaveData* SaveData = GetSaveData();
-        SaveData->Status[ChrId].DEXRate = EDAO::ChrT_Status.DEXRate;
-        SaveData->Status[ChrId].RNG     = EDAO::ChrT_Status.RNG;
+        CSSaveData* SaveData = this->GetSaveData();
+        SaveData->ChrStatus[ChrId].DEXRate = EDAO::ChrT_Status.DEXRate;
+        SaveData->ChrStatus[ChrId].RNG     = EDAO::ChrT_Status.RNG;
     }
 }
 
@@ -788,7 +795,7 @@ PCHAR_STATUS THISCALL EDAO::CalcChrRawStatusByFinalStatus(PCHAR_STATUS RawStatus
 PCHAR_T_STATUS THISCALL EDAO::CalcChrT_Status(INT ChrNo, INT Level)
 {
     //PCHAR_T_STATUS pStatus = *(PCHAR_T_STATUS*)PtrAdd(this, 0xA2FA4);
-    PCHAR_T_STATUS pStatus = &EDAO::ChrT_Status;
+    //PCHAR_T_STATUS pStatus = &EDAO::ChrT_Status;
 
 #if CONSOLE_DEBUG
     static ULONG TestCount = 6;
@@ -813,13 +820,11 @@ PCHAR_T_STATUS THISCALL EDAO::CalcChrT_Status(INT ChrNo, INT Level)
         PrintConsoleW(L"Elapsed time new: %lf ms\n", (lStopCounter.QuadPart - lStartCounter.QuadPart) * 1000.0 / lFrequency.QuadPart);
         TestCount--;
     }
-#endif
 
-#if 1
+#if 0
     CHAR_T_STATUS status;
-
-    pStatus = (this->*StubCalcChrT_Status)(ChrNo, Level);
-    CopyMemory(&status, pStatus, sizeof(status));
+    PCHAR_T_STATUS pStatusOld = (this->*StubCalcChrT_Status)(ChrNo, Level);
+    CopyMemory(&status, pStatusOld, sizeof(status) - 0x4);
     pStatus = CalcChrT_StatusNew(pStatus, ChrNo, Level);
     if (ChrNo < 11)
     {
@@ -827,25 +832,31 @@ PCHAR_T_STATUS THISCALL EDAO::CalcChrT_Status(INT ChrNo, INT Level)
         if(RtlCompareMemory(&status, pStatus, sizeof(status) - 0x4) != sizeof(status) - 0x4)
         {
             AllocConsole();
-            PrintConsoleW(L"Not Same: Chr:%d Levle%d\n", ChrNo, Level);
+            PrintConsoleW(L"Not Same: Chr:%d Level%d\n", ChrNo, Level);
         }
     }
-    return pStatus;
-#else
-    return CalcChrT_StatusNew(pStatus, ChrNo, Level);
+    //return pStatus;
 #endif
+#endif
+
+    return CalcChrT_StatusNew(&EDAO::ChrT_Status, ChrNo, Level);
 }
 
-VOID DumpChrRawStatus()
+BOOL DumpChrRawStatus(LPCWSTR FileName)
 {
     CHAR_T_STATUS   Status;
     NtFileDisk file;
     CHAR Buffer[16<<10];
     CHAR* p;
     //ULONG nWriten;
-    
+
+    if (!FileName)
+        return FALSE;
+
+    if (!NT_SUCCESS(file.Create(FileName)))
+        return FALSE;
+
     using namespace T_NAME;
-    file.Create(L"status_dump.txt");
     for (int i=0; i<CHR_COUNT; i++)
     {
         p = Buffer;
@@ -869,6 +880,8 @@ VOID DumpChrRawStatus()
         file.Write(Buffer, p - Buffer);     
     }
     file.Close();
+
+    return TRUE;
 }
 
 BOOL CHAR_T_STATUS_Ratio_To_Json(const char *filename)
@@ -884,61 +897,16 @@ BOOL CHAR_T_STATUS_Ratio_To_Json(const char *filename)
     {
         json_object_object_add(root_object, ChrNameChs[i], chr_object = json_object_new_object());
 
-        json_object_object_add(chr_object, "HP",        status_object = json_object_new_array());
-        json_object_array_add(status_object, json_object_new_double(RatioX[i].HP));
-        json_object_array_add(status_object, json_object_new_int(RatioY[i].HP));
-        
-        //json_object_object_add(chr_object, "EP",        status_object = json_object_new_array());
-        //json_object_array_add(status_object, json_object_new_double(RatioX[i].EP));
-        //json_object_array_add(status_object, json_object_new_int(RatioY[i].EP));
-        
-        json_object_object_add(chr_object, "STR",        status_object = json_object_new_array());
-        json_object_array_add(status_object, json_object_new_double(RatioX[i].STR));
-        json_object_array_add(status_object, json_object_new_int(RatioY[i].STR));
-        
-        json_object_object_add(chr_object, "DEF",        status_object = json_object_new_array());
-        json_object_array_add(status_object, json_object_new_double(RatioX[i].DEF));
-        json_object_array_add(status_object, json_object_new_int(RatioY[i].DEF));
-        
-        json_object_object_add(chr_object, "ATS",        status_object = json_object_new_array());
-        json_object_array_add(status_object, json_object_new_double(RatioX[i].ATS));
-        json_object_array_add(status_object, json_object_new_int(RatioY[i].ATS));
-        
-        json_object_object_add(chr_object, "ADF",        status_object = json_object_new_array());
-        json_object_array_add(status_object, json_object_new_double(RatioX[i].ADF));
-        json_object_array_add(status_object, json_object_new_int(RatioY[i].ADF));
-        
-        json_object_object_add(chr_object, "DEX",        status_object = json_object_new_array());
-        json_object_array_add(status_object, json_object_new_double(RatioX[i].DEX));
-        json_object_array_add(status_object, json_object_new_int(RatioY[i].DEX));
-        
-        json_object_object_add(chr_object, "AGL",        status_object = json_object_new_array());
-        json_object_array_add(status_object, json_object_new_double(RatioX[i].AGL));
-        json_object_array_add(status_object, json_object_new_int(RatioY[i].AGL));
-        
-        json_object_object_add(chr_object, "MOV",        status_object = json_object_new_array());
-        json_object_array_add(status_object, json_object_new_double(RatioX[i].MOV));
-        json_object_array_add(status_object, json_object_new_int(RatioY[i].MOV));
-        
-        json_object_object_add(chr_object, "SPD",        status_object = json_object_new_array());
-        json_object_array_add(status_object, json_object_new_double(RatioX[i].SPD));
-        json_object_array_add(status_object, json_object_new_int(RatioY[i].SPD));
-        
-        json_object_object_add(chr_object, "DEXRate",        status_object = json_object_new_array());
-        json_object_array_add(status_object, json_object_new_double(RatioX[i].DEXRate));
-        json_object_array_add(status_object, json_object_new_int(RatioY[i].DEXRate));
-        
-        json_object_object_add(chr_object, "AGLRate",        status_object = json_object_new_array());
-        json_object_array_add(status_object, json_object_new_double(RatioX[i].AGLRate));
-        json_object_array_add(status_object, json_object_new_int(RatioY[i].AGLRate));
-        
-        json_object_object_add(chr_object, "RNG",        status_object = json_object_new_array());
-        json_object_array_add(status_object, json_object_new_double(RatioX[i].RNG));
-        json_object_array_add(status_object, json_object_new_int(RatioY[i].RNG));
-
+        for (int j=0; j<countof(StatusName); j++)
+        {
+            json_object_object_add(chr_object, StatusName[j], status_object = json_object_new_array());
+            json_object_array_add(status_object, json_object_new_double( ((PFLOAT)&RatioX[i].HP)[j] ));
+            json_object_array_add(status_object, json_object_new_int( ((PINT)&RatioY[i].HP)[j] ));
+        }
+        json_object_object_del(chr_object, "EP");
     }
     //PrintConsoleA("%s\n", json_object_to_json_string(root_object));
-    Ret = json_object_to_file_ext((char*)filename, root_object, JSON_C_TO_STRING_PRETTY | JSON_C_TO_STRING_NOZERO);
+    Ret = json_object_to_file_ext((char*)filename, root_object, JSON_C_TO_STRING_SPACED | JSON_C_TO_STRING_PRETTY | JSON_C_TO_STRING_NOZERO);
 
     json_object_put(root_object);
 
@@ -969,141 +937,23 @@ BOOL CHAR_T_STATUS_Ratio_From_Json(const char *filename)
         if (!json_object_object_get_ex(root_object, ChrNameChs[i], &chr_object))
             continue;
 
-        if (json_object_object_get_ex(chr_object, "HP", &status_object))
+        for (int j=0; j<countof(StatusName); j++)
         {
-            value_object[0] = json_object_array_get_idx(status_object, 0);
-            value_object[1] = json_object_array_get_idx(status_object, 1);
-            if (!value_object[0])
-                RatioX1[i].HP = (float)json_object_get_double(value_object[0]);
-            if (!value_object[1])
-                RatioY1[i].HP = (UINT)json_object_get_int(value_object[1]);
+            if (json_object_object_get_ex(chr_object, StatusName[j], &status_object))
+            {
+                value_object[0] = json_object_array_get_idx(status_object, 0);
+                value_object[1] = json_object_array_get_idx(status_object, 1);
+                if (value_object[0])
+                    ((PFLOAT)&RatioX1[i].HP)[j]  = (float)json_object_get_double(value_object[0]);
+                if (value_object[1])
+                    ((PINT)&RatioY1[i].HP)[j]    = json_object_get_int(value_object[1]);
+            }
         }
-        /*
-        if (json_object_object_get_ex(chr_object, "EP", &status_object))
-        {
-            value_object[0] = json_object_array_get_idx(status_object, 0);
-            value_object[1] = json_object_array_get_idx(status_object, 1);
-            if (!value_object[0])
-                RatioX1[i].EP = (float)json_object_get_double(value_object[0]);
-            if (!value_object[1])
-                RatioY1[i].EP = (USHORT)json_object_get_int(value_object[1]);
-        }
-        */
-        if (json_object_object_get_ex(chr_object, "STR", &status_object))
-        {
-            value_object[0] = json_object_array_get_idx(status_object, 0);
-            value_object[1] = json_object_array_get_idx(status_object, 1);
-            if (!value_object[0])
-                RatioX1[i].STR = (float)json_object_get_double(value_object[0]);
-            if (!value_object[1])
-                RatioY1[i].STR = (USHORT)json_object_get_int(value_object[1]);
-        }
-        
-        if (json_object_object_get_ex(chr_object, "DEF", &status_object))
-        {
-            value_object[0] = json_object_array_get_idx(status_object, 0);
-            value_object[1] = json_object_array_get_idx(status_object, 1);
-            if (!value_object[0])
-                RatioX1[i].DEF = (float)json_object_get_double(value_object[0]);
-            if (!value_object[1])
-                RatioY1[i].DEF = (USHORT)json_object_get_int(value_object[1]);
-        }
-        
-        if (json_object_object_get_ex(chr_object, "ATS", &status_object))
-        {
-            value_object[0] = json_object_array_get_idx(status_object, 0);
-            value_object[1] = json_object_array_get_idx(status_object, 1);
-            if (!value_object[0])
-                RatioX1[i].ATS = (float)json_object_get_double(value_object[0]);
-            if (!value_object[1])
-                RatioY1[i].ATS = (USHORT)json_object_get_int(value_object[1]);
-        }
-        
-        if (json_object_object_get_ex(chr_object, "ADF", &status_object))
-        {
-            value_object[0] = json_object_array_get_idx(status_object, 0);
-            value_object[1] = json_object_array_get_idx(status_object, 1);
-            if (!value_object[0])
-                RatioX1[i].ADF = (float)json_object_get_double(value_object[0]);
-            if (!value_object[1])
-                RatioY1[i].ADF = (USHORT)json_object_get_int(value_object[1]);
-        }
-        
-        if (json_object_object_get_ex(chr_object, "DEX", &status_object))
-        {
-            value_object[0] = json_object_array_get_idx(status_object, 0);
-            value_object[1] = json_object_array_get_idx(status_object, 1);
-            if (!value_object[0])
-                RatioX1[i].DEX = (float)json_object_get_double(value_object[0]);
-            if (!value_object[1])
-                RatioY1[i].DEX = (USHORT)json_object_get_int(value_object[1]);
-        }
-        
-        if (json_object_object_get_ex(chr_object, "AGL", &status_object))
-        {
-            value_object[0] = json_object_array_get_idx(status_object, 0);
-            value_object[1] = json_object_array_get_idx(status_object, 1);
-            if (!value_object[0])
-                RatioX1[i].AGL = (float)json_object_get_double(value_object[0]);
-            if (!value_object[1])
-                RatioY1[i].AGL = (USHORT)json_object_get_int(value_object[1]);
-        }
-        
-        if (json_object_object_get_ex(chr_object, "MOV", &status_object))
-        {
-            value_object[0] = json_object_array_get_idx(status_object, 0);
-            value_object[1] = json_object_array_get_idx(status_object, 1);
-            if (!value_object[0])
-                RatioX1[i].MOV = (float)json_object_get_double(value_object[0]);
-            if (!value_object[1])
-                RatioY1[i].MOV = (USHORT)json_object_get_int(value_object[1]);
-        }
-        
-        if (json_object_object_get_ex(chr_object, "SPD", &status_object))
-        {
-            value_object[0] = json_object_array_get_idx(status_object, 0);
-            value_object[1] = json_object_array_get_idx(status_object, 1);
-            if (!value_object[0])
-                RatioX1[i].SPD = (float)json_object_get_double(value_object[0]);
-            if (!value_object[1])
-                RatioY1[i].SPD = (USHORT)json_object_get_int(value_object[1]);
-        }
-        
-        if (json_object_object_get_ex(chr_object, "DEXRate", &status_object))
-        {
-            value_object[0] = json_object_array_get_idx(status_object, 0);
-            value_object[1] = json_object_array_get_idx(status_object, 1);
-            if (!value_object[0])
-                RatioX1[i].DEXRate = (float)json_object_get_double(value_object[0]);
-            if (!value_object[1])
-                RatioY1[i].DEXRate = (USHORT)json_object_get_int(value_object[1]);
-        }
-        
-        if (json_object_object_get_ex(chr_object, "AGLRate", &status_object))
-        {
-            value_object[0] = json_object_array_get_idx(status_object, 0);
-            value_object[1] = json_object_array_get_idx(status_object, 1);
-            if (!value_object[0])
-                RatioX1[i].AGLRate = (float)json_object_get_double(value_object[0]);
-            if (!value_object[1])
-                RatioY1[i].AGLRate = (USHORT)json_object_get_int(value_object[1]);
-        }
-        
-        if (json_object_object_get_ex(chr_object, "RNG", &status_object))
-        {
-            value_object[0] = json_object_array_get_idx(status_object, 0);
-            value_object[1] = json_object_array_get_idx(status_object, 1);
-            if (!value_object[0])
-                RatioX1[i].RNG = (float)json_object_get_double(value_object[0]);
-            if (!value_object[1])
-                RatioY1[i].RNG = (USHORT)json_object_get_int(value_object[1]);
-        }
-        
     }
     json_object_put(root_object);
 
 #if CONSOLE_DEBUG
-#if 1
+#if 0
     PrintConsoleA("\nCHAR_T_STATUS_Ratio_From_Json Succeed!\n\n");
     for (int i=0; i<CHR_COUNT; i++)
     {

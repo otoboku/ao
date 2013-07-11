@@ -9,7 +9,7 @@
 #include "edao_vm.h"
 
 
-#define CONSOLE_DEBUG   1
+#define CONSOLE_DEBUG   0
 
 BOOL UnInitialize(PVOID BaseAddress)
 {
@@ -24,9 +24,9 @@ BOOL UnInitialize(PVOID BaseAddress)
 VOID Test()
 {
     //CHAR_T_STATUS_Ratio_To_Json("config_status.txt");
-    CHAR_T_STATUS_Ratio_From_Json("config_status.txt");
-    CHAR_T_STATUS_Ratio_To_Json("config_status_mem.txt");
-    DumpChrRawStatus();
+    //CHAR_T_STATUS_Ratio_From_Json("ed_ao_ex.status.config.txt");
+    //CHAR_T_STATUS_Ratio_To_Json("config_status_mem.txt");
+    //DumpChrRawStatus(L"ed_ao_ex.status.dump.txt");
 }
 
 BOOL Initialize(PVOID BaseAddress)
@@ -68,6 +68,15 @@ BOOL Initialize(PVOID BaseAddress)
         // restore
         //PATCH_MEMORY(p0086B6A0, 9, 0x0086B6A0-0x400000),
 
+        // CHAR_T_STATUS.HP SHORT->INT
+        PATCH_MEMORY(0x9002488B,    4,  0x006C1682-0x400000),   // HP SHORT-INT
+        PATCH_MEMORY(0x0090D233,    3,  0x006C1692-0x400000),   // EP 0
+        PATCH_MEMORY(0x9002488B,    4,  0x0072E778-0x400000),   // HP SHORT-INT
+        PATCH_MEMORY(0x9002488B,    4,  0x0072E782-0x400000),   // HP SHORT-INT
+        PATCH_MEMORY(0x0090C933,    3,  0x0072E78C-0x400000),   // EP 0
+        PATCH_MEMORY(0x0090C933,    3,  0x0072E797-0x400000),   // EP 0
+        PATCH_MEMORY(0x9002518B,    4,  0x0086F297-0x400000),   // HP SHORT-INT
+        PATCH_MEMORY(0x9002518B,    4,  0x0088C0C3-0x400000),   // HP SHORT-INT
     };
 
     MEMORY_FUNCTION_PATCH f[] =
@@ -165,6 +174,7 @@ BOOL Initialize(PVOID BaseAddress)
     //PrintConsoleW(L"%x\r\n", FIELD_OFFSET(MONSTER_STATUS, SummonCount));
     PrintConsoleW(L"%x\r\n", FIELD_OFFSET(AT_BAR_ENTRY, IconAT));
     PrintConsoleW(L"%x\r\n", FIELD_OFFSET(AT_BAR_ENTRY, Pri));
+    PrintConsoleW(L"%x\r\n", FIELD_OFFSET(CSSaveData, ChrStatus));
     Test();
 #endif
 
@@ -453,6 +463,24 @@ BOOL Initialize(PVOID BaseAddress)
         };
         Nt_PatchMemory(p, countof(p), NULL, 0, hModule);
     }
+
+    if (bCustomizeStatus)
+    {
+        if (!Nt_IsPathExists(L"ed_ao_ex.status.config.txt"))
+            CHAR_T_STATUS_Ratio_To_Json("ed_ao_ex.status.config.txt");
+        else
+            CHAR_T_STATUS_Ratio_From_Json("ed_ao_ex.status.config.txt");
+    }
+    else if (nYin_no_AGLRate)
+    {
+        T_NAME::RatioY[T_NAME::Rixia].AGLRate = nYin_no_AGLRate;
+    }
+
+    if (bDumpStatus)
+    {
+        DumpChrRawStatus(L"ed_ao_ex.status.dump.txt");
+    }
+
     return TRUE;
 }
 

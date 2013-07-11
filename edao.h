@@ -265,8 +265,9 @@ typedef union
 typedef struct _CHAR_T_STATUS
 {
     USHORT      Level;
-    USHORT      HP;
-    USHORT      EP;
+    //USHORT      HP;
+    //USHORT      EP;
+    UINT        HP;
     USHORT      STR;
     USHORT      DEF;
     USHORT      ATS;
@@ -299,19 +300,19 @@ typedef struct _CHAR_T_STATUS_RatioX
 
 typedef struct _CHAR_T_STATUS_RatioY
 {
-    UINT        HP;
-    USHORT      EP;
-    USHORT      STR;
-    USHORT      DEF;
-    USHORT      ATS;
-    USHORT      ADF;
-    USHORT      DEX;
-    USHORT      AGL;
-    USHORT      MOV;
-    USHORT      SPD;
-    USHORT      DEXRate;
-    USHORT      AGLRate;
-    USHORT      RNG;
+    INT      HP;
+    INT      EP;
+    INT      STR;
+    INT      DEF;
+    INT      ATS;
+    INT      ADF;
+    INT      DEX;
+    INT      AGL;
+    INT      MOV;
+    INT      SPD;
+    INT      DEXRate;
+    INT      AGLRate;
+    INT      RNG;
 } CHAR_T_STATUS_RatioY;
 
 typedef struct
@@ -705,7 +706,7 @@ public:
     ULONG       ScenaCharacterCount[2];
     USHORT      PartyList[8];               // 0x2CC
     USHORT      PartyListSaved[8];          // 0x2DC
-    CHAR_STATUS Status[MAXIMUM_CHR_NUMBER_WITH_STATUS]; // 0x2EC
+    CHAR_STATUS ChrStatus[MAXIMUM_CHR_NUMBER_WITH_STATUS]; // 0x2EC
 
 };
 #pragma pack(pop)
