@@ -67,6 +67,7 @@ namespace T_NAME
 
     DECL_SELECTANY
     const char* StatusName[] = {"HP", "EP", "STR", "DEF", "ATS", "ADF", "DEX", "AGL", "MOV", "SPD", "DEXRate", "AGLRate", "RNG"};
+    const char* StatusNameTest[] = {"HP", "HP", "STR", "DEF", "ATS", "ADF", "DEX", "AGL", "MOV", "SPD", "DEXRate", "AGLRate", "RNG"};
 }
 
 ULONG_PTR StubCheckStackBalance = 0x006790C6;
@@ -775,10 +776,10 @@ PCHAR_T_STATUS EDAO::CalcChrT_StatusNew(PCHAR_T_STATUS pStatus, INT ChrNo, INT L
 
     //pStatus = *(PCHAR_T_STATUS*)PtrAdd(this, 0xA2FA4);
     //ZeroMemory(pStatus, sizeof(*pStatus));
-    pStatus->Level      = 0;
-    //pStatus->HP         = (USHORT)Status.HP;
+    //pStatus->Level      = 0;
     //pStatus->EP         = 0;
     SaturateConvertEx(&pStatus->HP, Status.HP, (UINT)99999999);
+    SaturateConvertEx(&pStatus->EP, Status.EP, (USHORT)20000);
     SaturateConvertEx(&pStatus->STR, Status.STR, (SHORT)20000);
     SaturateConvertEx(&pStatus->DEF, Status.DEF, (SHORT)20000);
     SaturateConvertEx(&pStatus->ATS, Status.ATS, (SHORT)20000);
@@ -882,12 +883,12 @@ BOOL DumpChrRawStatusUnicode(LPCWSTR FileName)
     {
         p = Buffer;
         p += swprintf(p, L"%s\r\n", lpwChrNameChs[i]);
-        p += swprintf(p, L"Level\tHP\tSTR\tDEF\tATS\tADF\tDEX\tAGL\tMOV\tSPD\tDEXRate\tAGLRate\tRNG\r\n");
+        p += swprintf(p, L"Level\tHP\tEP\tSTR\tDEF\tATS\tADF\tDEX\tAGL\tMOV\tSPD\tDEXRate\tAGLRate\tRNG\r\n");
         for (int Level=45; Level<=150; Level++)
         {
             EDAO::CalcChrT_StatusNew(&Status, i, Level);
-            p+= swprintf(p, L"%u\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\r\n",
-                Level, (UINT)Status.HP, 
+            p+= swprintf(p, L"%u\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\r\n",
+                Level, (UINT)Status.HP, (USHORT)Status.EP,
                 (SHORT)Status.STR, (SHORT)Status.DEF, 
                 (SHORT)Status.ATS, (SHORT)Status.ADF, 
                 (SHORT)Status.DEX, (SHORT)Status.AGL, 
@@ -927,12 +928,12 @@ BOOL DumpChrRawStatusAnsi(LPCWSTR FileName)
     {
         p = Buffer;
         p += sprintf(p, "%s\r\n", lpChrNameChs[i]);
-        p += sprintf(p, "Level\tHP\tSTR\tDEF\tATS\tADF\tDEX\tAGL\tMOV\tSPD\tDEXRate\tAGLRate\tRNG\r\n");
+        p += sprintf(p, "Level\tHP\tEP\tSTR\tDEF\tATS\tADF\tDEX\tAGL\tMOV\tSPD\tDEXRate\tAGLRate\tRNG\r\n");
         for (int Level=45; Level<=150; Level++)
         {
             EDAO::CalcChrT_StatusNew(&Status, i, Level);
-            p+= sprintf(p, "%u\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\r\n",
-                Level, (UINT)Status.HP, 
+            p+= sprintf(p, "%u\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\r\n",
+                Level, (UINT)Status.HP, (USHORT)Status.EP,
                 (SHORT)Status.STR, (SHORT)Status.DEF, 
                 (SHORT)Status.ATS, (SHORT)Status.ADF, 
                 (SHORT)Status.DEX, (SHORT)Status.AGL, 
@@ -979,7 +980,7 @@ BOOL CHAR_T_STATUS_Ratio_To_Json(const char *filename)
             json_object_array_add(status_object, json_object_new_double( ((PFLOAT)&RatioX[i].HP)[j] ));
             json_object_array_add(status_object, json_object_new_int( ((PINT)&RatioY[i].HP)[j] ));
         }
-        json_object_object_del(chr_object, "EP");
+        //json_object_object_del(chr_object, "EP");
     }
     //PrintConsoleA("%s\n", json_object_to_json_string(root_object));
     Ret = json_object_to_file_ext((char*)filename, root_object, JSON_C_TO_STRING_SPACED | JSON_C_TO_STRING_PRETTY | JSON_C_TO_STRING_NOZERO);

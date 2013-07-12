@@ -266,10 +266,10 @@ typedef union
 
 typedef struct _CHAR_T_STATUS
 {
-    USHORT      Level;
-    //USHORT      HP;
-    //USHORT      EP;
+    //USHORT      Level;
     UINT        HP;
+    //USHORT      HP;
+    USHORT      EP;
     SHORT       STR;
     SHORT       DEF;
     SHORT       ATS;
