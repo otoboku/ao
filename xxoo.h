@@ -3,6 +3,23 @@
 
 #pragma warning (disable: 4996)
 
+#define L1(x)               L ## x
+#define L(x)                L1(x)
+#define TO_STRING1(x)       #x
+#define TO_STRING(x)        TO_STRING1(x)  
+/*
+#define EX_DIR              "Arianrhod"
+#define STATUS_CONFIG_PATH  EX_DIR"\\status.config.txt"
+#define STATUS_RESULT_PATH  EX_DIR"\\status.config.result.txt"
+#define STATUS_DUMP_PATH    EX_DIR"\\status.dump.txt"
+*/
+#define EX_DIR_             Aki
+#define EX_DIR              TO_STRING(EX_DIR_)
+#define STATUS_CONFIG_PATH  TO_STRING(EX_DIR_##\\status.config.txt)
+#define STATUS_RESULT_PATH  TO_STRING(EX_DIR_##\\status.config.result.txt)
+#define STATUS_DUMP_PATH    TO_STRING(EX_DIR_##\\status.dump.txt)
+
+
 #if CONSOLE_DEBUG
 LARGE_INTEGER lFrequency, lStopCounter, lStartCounter;
 #endif
@@ -79,7 +96,8 @@ INT nFastFish;
 BOOL bRoyalFlush;
 BOOL bAutoHorrorCoaster;
 
-BOOL bCustomizeStatus;
+BOOL bConfigStatus;
+BOOL bOutputStatusConfigResult;
 BOOL bDumpStatus;
 INT nYin_no_AGLRate;
 
@@ -252,11 +270,12 @@ VOID ConfigInit()
         
         { (INT*)&nAutoFish, 'i', L"DT", L"AutoFish", 0, },
         { (INT*)&nFastFish, 'i', L"DT", L"FastFish", 0, },
-        { (BOOL*)&bRoyalFlush, 'b', L"DT", L"RoyalFlush", 0, },
-        { (BOOL*)&bAutoHorrorCoaster, 'b', L"DT", L"AutoHorrorCoaster", 0, },
+        { (BOOL*)&bRoyalFlush, 'b', L"DT", L"RoyalFlush", FALSE, },
+        { (BOOL*)&bAutoHorrorCoaster, 'b', L"DT", L"AutoHorrorCoaster", FALSE, },
 
-        { (BOOL*)&bCustomizeStatus, 'b', L"Status", L"CustomizeStatus", 0, },
-        { (BOOL*)&bDumpStatus, 'b', L"Status", L"DumpStatus", 0, },
+        { (BOOL*)&bConfigStatus, 'b', L"Status", L"ConfigStatus", FALSE, },
+        { (BOOL*)&bOutputStatusConfigResult, 'b', L"Status", L"OutputStatusConfigResult", TRUE, },
+        { (BOOL*)&bDumpStatus, 'b', L"Status", L"DumpStatus", FALSE, },
         { (INT*)&nYin_no_AGLRate, 'i', L"Status", L"Yin_no_AGLRate", 0, },
     };
  
@@ -625,8 +644,8 @@ VOID THISCALL CBattle::SetBattleStatusFinalByDifficulty(PMONSTER_STATUS MSData)
         (this->*StubSetBattleStatusFinalByDifficulty)(MSData);
     }
 
-    SaturateConvertEx(&MSData->ChrStatus[1].DEXRate, (INT64)MSData->ChrStatus[1].DEXRate + statusRateUserDefined.DEXRate, (SHORT)100, (SHORT)-100);
-    SaturateConvertEx(&MSData->ChrStatus[1].AGLRate, (INT64)MSData->ChrStatus[1].AGLRate + statusRateUserDefined.AGLRate, (SHORT)100, (SHORT)-100);
+    SaturateConvertEx(&MSData->ChrStatus[1].DEXRate, (INT64)MSData->ChrStatus[1].DEXRate + statusRateUserDefined.DEXRate, (SHORT)999, (SHORT)-999);
+    SaturateConvertEx(&MSData->ChrStatus[1].AGLRate, (INT64)MSData->ChrStatus[1].AGLRate + statusRateUserDefined.AGLRate, (SHORT)999, (SHORT)-999);
 
     ULONG   conditionAbnormal = 0x40008FFF;
     ULONG   conditionDown = 0x00FF0000;
@@ -759,18 +778,18 @@ PCHAR_T_STATUS EDAO::CalcChrT_StatusNew(PCHAR_T_STATUS pStatus, INT ChrNo, INT L
     pStatus->Level      = 0;
     //pStatus->HP         = (USHORT)Status.HP;
     //pStatus->EP         = 0;
-    pStatus->HP         = (UINT)Status.HP;
-    pStatus->STR        = (USHORT)Status.STR;
-    pStatus->DEF        = (USHORT)Status.DEF;
-    pStatus->ATS        = (USHORT)Status.ATS;
-    pStatus->ADF        = (USHORT)Status.ADF;
-    pStatus->DEX        = (USHORT)Status.DEX;
-    pStatus->AGL        = (USHORT)Status.AGL;
-    pStatus->MOV        = (USHORT)Status.MOV;
-    pStatus->SPD        = (USHORT)Status.SPD;
-    pStatus->DEXRate    = (USHORT)Status.DEXRate;
-    pStatus->AGLRate    = (USHORT)Status.AGLRate;
-    pStatus->RNG        = (USHORT)Status.RNG;
+    SaturateConvertEx(&pStatus->HP, Status.HP, (UINT)99999999);
+    SaturateConvertEx(&pStatus->STR, Status.STR, (SHORT)20000);
+    SaturateConvertEx(&pStatus->DEF, Status.DEF, (SHORT)20000);
+    SaturateConvertEx(&pStatus->ATS, Status.ATS, (SHORT)20000);
+    SaturateConvertEx(&pStatus->ADF, Status.ADF, (SHORT)20000);
+    SaturateConvertEx(&pStatus->DEX, Status.DEX, (SHORT)0xCCC);
+    SaturateConvertEx(&pStatus->AGL, Status.AGL, (SHORT)0xCCC);
+    SaturateConvertEx(&pStatus->MOV, Status.MOV, (SHORT)20000);
+    SaturateConvertEx(&pStatus->SPD, Status.SPD, (SHORT)20000);
+    SaturateConvertEx(&pStatus->DEXRate, Status.DEXRate, (SHORT)20000);
+    SaturateConvertEx(&pStatus->AGLRate, Status.AGLRate, (SHORT)20000);
+    SaturateConvertEx(&pStatus->RNG, Status.RNG, (USHORT)0x64);
     return pStatus;
 }
 
@@ -842,13 +861,12 @@ PCHAR_T_STATUS THISCALL EDAO::CalcChrT_Status(INT ChrNo, INT Level)
     return CalcChrT_StatusNew(&EDAO::ChrT_Status, ChrNo, Level);
 }
 
-BOOL DumpChrRawStatus(LPCWSTR FileName)
+BOOL DumpChrRawStatusUnicode(LPCWSTR FileName)
 {
     CHAR_T_STATUS   Status;
     NtFileDisk file;
-    CHAR Buffer[16<<10];
-    CHAR* p;
-    //ULONG nWriten;
+    WCHAR Buffer[16<<10];
+    WCHAR* p;
 
     if (!FileName)
         return FALSE;
@@ -857,10 +875,58 @@ BOOL DumpChrRawStatus(LPCWSTR FileName)
         return FALSE;
 
     using namespace T_NAME;
+
+    ULONG BOM = BOM_UTF16_LE;
+    file.Write(&BOM, 2);
     for (int i=0; i<CHR_COUNT; i++)
     {
         p = Buffer;
-        p += sprintf(p, "%s\r\n", ChrNameChs[i]);
+        p += swprintf(p, L"%s\r\n", lpwChrNameChs[i]);
+        p += swprintf(p, L"Level\tHP\tSTR\tDEF\tATS\tADF\tDEX\tAGL\tMOV\tSPD\tDEXRate\tAGLRate\tRNG\r\n");
+        for (int Level=45; Level<=150; Level++)
+        {
+            EDAO::CalcChrT_StatusNew(&Status, i, Level);
+            p+= swprintf(p, L"%u\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\r\n",
+                Level, (UINT)Status.HP, 
+                (SHORT)Status.STR, (SHORT)Status.DEF, 
+                (SHORT)Status.ATS, (SHORT)Status.ADF, 
+                (SHORT)Status.DEX, (SHORT)Status.AGL, 
+                (SHORT)Status.MOV, (SHORT)Status.SPD, 
+                (SHORT)Status.DEXRate, (SHORT)Status.AGLRate,
+                (USHORT)Status.RNG);
+        }
+        p+= swprintf(p, L"\r\n");
+
+        file.Seek(0, SEEK_END);
+        file.Write(Buffer, (char*)p - (char*)Buffer);
+    }
+    file.Seek(-4, SEEK_CUR);
+    file.SetEndOfFile();
+    file.Close();
+
+    return TRUE;
+}
+
+//...
+BOOL DumpChrRawStatusAnsi(LPCWSTR FileName)
+{
+    CHAR_T_STATUS   Status;
+    NtFileDisk file;
+    CHAR Buffer[16<<10];
+    CHAR* p;
+    
+    if (!FileName)
+        return FALSE;
+    
+    if (!NT_SUCCESS(file.Create(FileName)))
+        return FALSE;
+    
+    using namespace T_NAME;
+    
+    for (int i=0; i<CHR_COUNT; i++)
+    {
+        p = Buffer;
+        p += sprintf(p, "%s\r\n", lpChrNameChs[i]);
         p += sprintf(p, "Level\tHP\tSTR\tDEF\tATS\tADF\tDEX\tAGL\tMOV\tSPD\tDEXRate\tAGLRate\tRNG\r\n");
         for (int Level=45; Level<=150; Level++)
         {
@@ -871,16 +937,18 @@ BOOL DumpChrRawStatus(LPCWSTR FileName)
                 (SHORT)Status.ATS, (SHORT)Status.ADF, 
                 (SHORT)Status.DEX, (SHORT)Status.AGL, 
                 (SHORT)Status.MOV, (SHORT)Status.SPD, 
-                (SHORT)RatioY[i].DEXRate, (SHORT)Status.AGLRate, 
-                (USHORT)RatioY[i].RNG);
+                (SHORT)Status.DEXRate, (SHORT)Status.AGLRate,
+                (USHORT)Status.RNG);
         }
         p+= sprintf(p, "\r\n");
-
+        
         file.Seek(0, SEEK_END);
-        file.Write(Buffer, p - Buffer);     
+        file.Write(Buffer, (char*)p - (char*)Buffer);
     }
+    file.Seek(-2, SEEK_CUR);
+    file.SetEndOfFile();
     file.Close();
-
+    
     return TRUE;
 }
 
@@ -892,10 +960,18 @@ BOOL CHAR_T_STATUS_Ratio_To_Json(const char *filename)
     json_object *root_object = json_object_new_object();
     json_object *chr_object;
     json_object *status_object;
+
+    //if(0)
+    {
+        Ret = json_object_to_file_ext((char*)filename, root_object, JSON_C_TO_STRING_SPACED | JSON_C_TO_STRING_PRETTY | JSON_C_TO_STRING_NOZERO);
+        if (Ret == -1)
+            return FALSE;
+    }
+    //AllocConsole();
     
     for (int i=0; i<CHR_COUNT; i++)
     {
-        json_object_object_add(root_object, ChrNameChs[i], chr_object = json_object_new_object());
+        json_object_object_add(root_object, lpChrNameChs[i], chr_object = json_object_new_object());
 
         for (int j=0; j<countof(StatusName); j++)
         {
@@ -934,7 +1010,7 @@ BOOL CHAR_T_STATUS_Ratio_From_Json(const char *filename)
 
     for (int i=0; i<CHR_COUNT; i++)
     {
-        if (!json_object_object_get_ex(root_object, ChrNameChs[i], &chr_object))
+        if (!json_object_object_get_ex(root_object, lpChrNameChs[i], &chr_object))
             continue;
 
         for (int j=0; j<countof(StatusName); j++)

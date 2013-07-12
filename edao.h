@@ -153,9 +153,11 @@ enum
 };
 
 DECL_SELECTANY
-char* ChrName[] = {"Lloyd", "Elie", "Tio", "Randy", "Lazy", "Yin", "Zeit", "Arios", "Noel", "Dudley", "Garcia", "ReserveB"};
+char* lpChrName[] = {"Lloyd", "Elie", "Tio", "Randy", "Lazy", "Yin", "Zeit", "Arios", "Noel", "Dudley", "Garcia", "ReserveB"};
 DECL_SELECTANY
-char* ChrNameChs[] = {"罗伊德", "艾莉", "缇欧", "兰迪", "瓦吉", "银", "神狼蔡特", "亚里欧斯", "诺艾尔上士", "达德利搜查官", "加尔西亚", "保留B"};
+char* lpChrNameChs[] = {"罗伊德", "艾莉", "缇欧", "兰迪", "瓦吉", "银", "神狼蔡特", "亚里欧斯", "诺艾尔上士", "达德利搜查官", "加尔西亚", "保留B"};
+DECL_SELECTANY
+WCHAR* lpwChrNameChs[] = {L"罗伊德", L"艾莉", L"缇欧", L"兰迪", L"瓦吉", L"银", L"神狼蔡特", L"亚里欧斯", L"诺艾尔上士", L"达德利搜查官", L"加尔西亚", L"保留B"};
 
 ML_NAMESPACE_END
 
@@ -268,16 +270,16 @@ typedef struct _CHAR_T_STATUS
     //USHORT      HP;
     //USHORT      EP;
     UINT        HP;
-    USHORT      STR;
-    USHORT      DEF;
-    USHORT      ATS;
-    USHORT      ADF;
-    USHORT      DEX;
-    USHORT      AGL;
-    USHORT      AGLRate;
-    USHORT      MOV;
-    USHORT      SPD;
-    USHORT      DEXRate;
+    SHORT       STR;
+    SHORT       DEF;
+    SHORT       ATS;
+    SHORT       ADF;
+    SHORT       DEX;
+    SHORT       AGL;
+    SHORT       AGLRate;
+    SHORT       MOV;
+    SHORT       SPD;
+    SHORT       DEXRate;
     USHORT      RNG;
 } CHAR_T_STATUS, *PCHAR_T_STATUS;
 

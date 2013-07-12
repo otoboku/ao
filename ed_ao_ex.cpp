@@ -29,6 +29,50 @@ VOID Test()
     //DumpChrRawStatus(L"ed_ao_ex.status.dump.txt");
 }
 
+VOID LoadStatusConfig()
+{
+    if (!Nt_IsPathExistsW(L(EX_DIR)))
+    {
+        NtFileDisk file;
+        file.CreateDirectory(L(EX_DIR));
+        file.Close();
+    }
+    
+    if (bConfigStatus)
+    {
+        if (!Nt_IsPathExistsA(STATUS_CONFIG_PATH))
+        {
+            CHAR_T_STATUS_Ratio_To_Json(STATUS_CONFIG_PATH);
+            if (bOutputStatusConfigResult)
+            {
+                NFILE::WriteFileW(L(STATUS_RESULT_PATH), "配置文件不存在，已重新生成", sizeof("配置文件不存在，已重新生成")-sizeof(CHAR));
+            }
+        }
+        else
+        {
+            if (CHAR_T_STATUS_Ratio_From_Json(STATUS_CONFIG_PATH))
+            {
+                if (bOutputStatusConfigResult)
+                    CHAR_T_STATUS_Ratio_To_Json(STATUS_RESULT_PATH);
+            }
+            else if (bOutputStatusConfigResult)
+            {
+                NFILE::WriteFileW(L(STATUS_RESULT_PATH), "配置文件解析失败", sizeof("配置文件解析失败")-sizeof(CHAR));
+            }
+        }
+    }
+    else if (nYin_no_AGLRate)
+    {
+        T_NAME::RatioY[T_NAME::Rixia].AGLRate = nYin_no_AGLRate;
+    }
+    
+    if (bDumpStatus)
+    {
+        DumpChrRawStatusAnsi(L(STATUS_DUMP_PATH));
+        //DumpChrRawStatusUnicode(L(STATUS_DUMP_PATH)L"1");
+    }
+}
+
 BOOL Initialize(PVOID BaseAddress)
 {
     ml::MlInitialize();
@@ -73,8 +117,8 @@ BOOL Initialize(PVOID BaseAddress)
         PATCH_MEMORY(0x0090D233,    3,  0x006C1692-0x400000),   // EP 0
         PATCH_MEMORY(0x9002488B,    4,  0x0072E778-0x400000),   // HP SHORT-INT
         PATCH_MEMORY(0x9002488B,    4,  0x0072E782-0x400000),   // HP SHORT-INT
-        PATCH_MEMORY(0x0090C933,    3,  0x0072E78C-0x400000),   // EP 0
-        PATCH_MEMORY(0x0090C933,    3,  0x0072E797-0x400000),   // EP 0
+        PATCH_MEMORY(0x0090C933,    3,  0x0072E78D-0x400000),   // EP 0
+        PATCH_MEMORY(0x0090C933,    3,  0x0072E798-0x400000),   // EP 0
         PATCH_MEMORY(0x9002518B,    4,  0x0086F297-0x400000),   // HP SHORT-INT
         PATCH_MEMORY(0x9002518B,    4,  0x0088C0C3-0x400000),   // HP SHORT-INT
     };
@@ -181,6 +225,7 @@ BOOL Initialize(PVOID BaseAddress)
     Nt_PatchMemory(p, countof(p), f, countof(f), hModule);
 
     ConfigInit();
+    LoadStatusConfig();
 
     if (bArianrhodLimitKaijo)
     {
@@ -462,23 +507,6 @@ BOOL Initialize(PVOID BaseAddress)
             PATCH_MEMORY(0x00,      1,  0x6AABC6),
         };
         Nt_PatchMemory(p, countof(p), NULL, 0, hModule);
-    }
-
-    if (bCustomizeStatus)
-    {
-        if (!Nt_IsPathExists(L"ed_ao_ex.status.config.txt"))
-            CHAR_T_STATUS_Ratio_To_Json("ed_ao_ex.status.config.txt");
-        else
-            CHAR_T_STATUS_Ratio_From_Json("ed_ao_ex.status.config.txt");
-    }
-    else if (nYin_no_AGLRate)
-    {
-        T_NAME::RatioY[T_NAME::Rixia].AGLRate = nYin_no_AGLRate;
-    }
-
-    if (bDumpStatus)
-    {
-        DumpChrRawStatus(L"ed_ao_ex.status.dump.txt");
     }
 
     return TRUE;
