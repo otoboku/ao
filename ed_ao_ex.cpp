@@ -9,7 +9,7 @@
 #include "edao_vm.h"
 
 
-#define CONSOLE_DEBUG   0
+#define CONSOLE_DEBUG   1
 
 BOOL UnInitialize(PVOID BaseAddress)
 {
@@ -113,14 +113,14 @@ BOOL Initialize(PVOID BaseAddress)
         //PATCH_MEMORY(p0086B6A0, 9, 0x0086B6A0-0x400000),
 
         // CHAR_T_STATUS.HP SHORT->INT
-        PATCH_MEMORY(0x9000488B,    4,  0x006C1682-0x400000),   // HP SHORT-INT
+        PATCH_MEMORY(0x901C488B,    4,  0x006C1682-0x400000),   // HP SHORT-INT
         //PATCH_MEMORY(0x0090D233,    3,  0x006C1692-0x400000),   // EP 0
-        PATCH_MEMORY(0x9000488B,    4,  0x0072E778-0x400000),   // HP SHORT-INT
-        PATCH_MEMORY(0x9000488B,    4,  0x0072E782-0x400000),   // HP SHORT-INT
+        PATCH_MEMORY(0x901C488B,    4,  0x0072E778-0x400000),   // HP SHORT-INT
+        PATCH_MEMORY(0x901C488B,    4,  0x0072E782-0x400000),   // HP SHORT-INT
         //PATCH_MEMORY(0x0090C933,    3,  0x0072E78D-0x400000),   // EP 0
         //PATCH_MEMORY(0x0090C933,    3,  0x0072E798-0x400000),   // EP 0
-        PATCH_MEMORY(0x9000518B,    4,  0x0086F297-0x400000),   // HP SHORT-INT
-        PATCH_MEMORY(0x9000518B,    4,  0x0088C0C3-0x400000),   // HP SHORT-INT
+        PATCH_MEMORY(0x901C518B,    4,  0x0086F297-0x400000),   // HP SHORT-INT
+        PATCH_MEMORY(0x901C518B,    4,  0x0088C0C3-0x400000),   // HP SHORT-INT
         PATCH_MEMORY(0x1,           1,  0x006C1BA3-0x400000),   // EP add
     };
 
@@ -220,6 +220,7 @@ BOOL Initialize(PVOID BaseAddress)
     PrintConsoleW(L"%x\r\n", FIELD_OFFSET(AT_BAR_ENTRY, IconAT));
     PrintConsoleW(L"%x\r\n", FIELD_OFFSET(AT_BAR_ENTRY, Pri));
     PrintConsoleW(L"%x\r\n", FIELD_OFFSET(CSSaveData, ChrStatus));
+    PrintConsoleW(L"%x\r\n", FIELD_OFFSET(CHAR_T_STATUS, HP));
     Test();
 #endif
 
