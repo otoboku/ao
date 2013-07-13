@@ -41,7 +41,10 @@ class CDebug;
 #define MINIMUM_CUSTOM_CRAFT_INDEX      0x3E8
 #define MAXIMUM_CHR_NUMBER_IN_BATTLE    0x16
 #define MAXIMUM_CHR_NUMBER_WITH_STATUS  0xC
-#define SCENA_FLAG_COUNT                0x220
+#define SCENA_FLAG_SIZE                 0x220
+
+#define STATUS_LEVEL_MIN       45
+#define STATUS_LEVEL_MAX       150
 
 #define PSP_WIDTH_F                       480.f
 #define PSP_HEIGHT_F                      272.f
@@ -264,6 +267,22 @@ typedef union
 
 } CHAR_STATUS, *PCHAR_STATUS;
 
+typedef struct _CHAR_T_STATUS_ORG   // 0x18
+{
+    USHORT      Level;
+    USHORT      HP;
+    USHORT      EP;
+    SHORT       STR;
+    SHORT       DEF;
+    SHORT       ATS;
+    SHORT       ADF;
+    SHORT       DEX;
+    SHORT       AGL;
+    SHORT       AGLRate;
+    SHORT       MOV;
+    SHORT       SPD;
+} CHAR_T_STATUS_ORG, *PCHAR_T_STATUS_ORG;
+
 typedef struct _CHAR_T_STATUS
 {
     //USHORT      Level;
@@ -281,6 +300,7 @@ typedef struct _CHAR_T_STATUS
     SHORT       SPD;
     SHORT       DEXRate;
     USHORT      RNG;
+    USHORT      Level;
 } CHAR_T_STATUS, *PCHAR_T_STATUS;
 
 typedef struct _CHAR_T_STATUS_RatioX
@@ -667,7 +687,7 @@ public:
     BOOL IsCustomChar(ULONG_PTR ChrId)
     {
         //mark
-        if (ChrId >= 0xC)
+        if (ChrId >= MAXIMUM_CHR_NUMBER_WITH_STATUS)
             return FALSE;
         return GetPartyChipMap()[ChrId] >= MINIMUM_CUSTOM_CHAR_ID;
     }
@@ -703,7 +723,7 @@ public:
 
 public:
     DUMMY_STRUCT(0x9C);
-    BYTE        Flag[SCENA_FLAG_COUNT];     // 0x9C
+    BYTE        Flag[SCENA_FLAG_SIZE];      // 0x9C
     PVOID       pScenaCharacterInf[2];
     ULONG       ScenaCharacterCount[2];
     USHORT      PartyList[8];               // 0x2CC

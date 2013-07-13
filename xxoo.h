@@ -729,17 +729,23 @@ PCHAR_T_STATUS EDAO::CalcChrT_StatusNew(PCHAR_T_STATUS pStatus, INT ChrNo, INT L
     if (ChrNo >= MAXIMUM_CHR_NUMBER_WITH_STATUS)
         return NULL;
 
-    if (Level > 150)
+    if (Level > STATUS_LEVEL_MAX)
     {
-        Level = 150;
+        Level = STATUS_LEVEL_MAX;
     }
-    else if (Level < 45)
+    else if (Level < STATUS_LEVEL_MIN)
     {
-        Level = 45;
+        Level = STATUS_LEVEL_MIN;
     }
 
     using namespace T_NAME;
 
+#if 0 //slow
+    for (int j=0; j<countof(StatusName); j++)
+    {
+        ((PFLOAT)&Status.HP)[j] = (float)((PINT)&RatioY[ChrNo].HP)[j];
+    }
+#else
     Status.HP   = (float)RatioY[ChrNo].HP;
     Status.EP   = (float)RatioY[ChrNo].EP;
     Status.STR  = (float)RatioY[ChrNo].STR;
@@ -753,8 +759,10 @@ PCHAR_T_STATUS EDAO::CalcChrT_StatusNew(PCHAR_T_STATUS pStatus, INT ChrNo, INT L
     Status.DEXRate  = (float)RatioY[ChrNo].DEXRate;
     Status.AGLRate  = (float)RatioY[ChrNo].AGLRate;
     Status.RNG      = (float)RatioY[ChrNo].RNG;
+#endif
 
     for (int i = 1; i < Level + 16; ++i )
+    //int i = (Level + 15) * (Level + 16) / 2;
     {
         Status.HP   += (float)i * RatioX[ChrNo].HP;
         Status.STR  += (float)i * RatioX[ChrNo].STR;
@@ -776,7 +784,7 @@ PCHAR_T_STATUS EDAO::CalcChrT_StatusNew(PCHAR_T_STATUS pStatus, INT ChrNo, INT L
 
     //pStatus = *(PCHAR_T_STATUS*)PtrAdd(this, 0xA2FA4);
     //ZeroMemory(pStatus, sizeof(*pStatus));
-    //pStatus->Level      = 0;
+    pStatus->Level      = 0;
     //pStatus->EP         = 0;
     SaturateConvertEx(&pStatus->HP, Status.HP, (UINT)99999999);
     SaturateConvertEx(&pStatus->EP, Status.EP, (USHORT)20000);
@@ -815,26 +823,26 @@ PCHAR_STATUS THISCALL EDAO::CalcChrRawStatusByFinalStatus(PCHAR_STATUS RawStatus
 PCHAR_T_STATUS THISCALL EDAO::CalcChrT_Status(INT ChrNo, INT Level)
 {
     //PCHAR_T_STATUS pStatus = *(PCHAR_T_STATUS*)PtrAdd(this, 0xA2FA4);
-    //PCHAR_T_STATUS pStatus = &EDAO::ChrT_Status;
+    PCHAR_T_STATUS pStatus = &EDAO::ChrT_Status;
 
 #if CONSOLE_DEBUG
-    static ULONG TestCount = 6;
+    static ULONG TestCount = 11;
     if (TestCount)
     {
         QueryPerformanceCounter(&lStartCounter);
-        for (int i=0; i<12; i++)
+        for (int i=0; i<11; i++)
         {
-            for (int j=45; j<=150; j++)
-                (this->*StubCalcChrT_Status)(i, j);
+            for (int j=STATUS_LEVEL_MIN; j<=STATUS_LEVEL_MAX; j++)
+                (this->*StubCalcChrT_Status)(i%(MAXIMUM_CHR_NUMBER_WITH_STATUS-1), j);
         }
         QueryPerformanceCounter(&lStopCounter);
-        PrintConsoleW(L"Elapsed time pre: %lf ms\n", (lStopCounter.QuadPart - lStartCounter.QuadPart) * 1000.0 / lFrequency.QuadPart);
+        //PrintConsoleW(L"Elapsed time pre: %lf ms\n", (lStopCounter.QuadPart - lStartCounter.QuadPart) * 1000.0 / lFrequency.QuadPart);
 
         QueryPerformanceCounter(&lStartCounter);
-        for (int i=0; i<12; i++)
+        for (int i=0; i<11; i++)
         {
-            for (int j=45; j<=150; j++)
-                CalcChrT_StatusNew(pStatus, i, j);
+            for (int j=STATUS_LEVEL_MIN; j<=STATUS_LEVEL_MAX; j++)
+                CalcChrT_StatusNew(pStatus, i%(MAXIMUM_CHR_NUMBER_WITH_STATUS-1), j);
         }
         QueryPerformanceCounter(&lStopCounter);
         PrintConsoleW(L"Elapsed time new: %lf ms\n", (lStopCounter.QuadPart - lStartCounter.QuadPart) * 1000.0 / lFrequency.QuadPart);
@@ -842,24 +850,35 @@ PCHAR_T_STATUS THISCALL EDAO::CalcChrT_Status(INT ChrNo, INT Level)
     }
 
 #if 0
-    CHAR_T_STATUS status;
-    PCHAR_T_STATUS pStatusOld = (this->*StubCalcChrT_Status)(ChrNo, Level);
-    CopyMemory(&status, pStatusOld, sizeof(status) - 0x4);
-    pStatus = CalcChrT_StatusNew(pStatus, ChrNo, Level);
-    if (ChrNo < 11)
+    //CHAR_T_STATUS       Status;
+    CHAR_T_STATUS_ORG   StatusOld;
+    PCHAR_T_STATUS      pStatusOld;
+    static BOOL IsCompared = FALSE;
+    if (!IsCompared)
     {
-        // arch:SSE2下完全相同
-        if(RtlCompareMemory(&status, pStatus, sizeof(status) - 0x4) != sizeof(status) - 0x4)
+        IsCompared = TRUE;
+        for (int i=0; i<11; i++)
         {
-            AllocConsole();
-            PrintConsoleW(L"Not Same: Chr:%d Level%d\n", ChrNo, Level);
+            for (int j=STATUS_LEVEL_MIN; j<=STATUS_LEVEL_MAX; j++)
+            {
+                pStatusOld = (this->*StubCalcChrT_Status)(i, j);
+                CopyMemory(&StatusOld, pStatusOld, sizeof(CHAR_T_STATUS_ORG));
+                ((CHAR_T_STATUS&)StatusOld).HP = StatusOld.HP;
+                pStatus = CalcChrT_StatusNew(pStatus, i, j);
+
+                // arch:SSE2下完全相同
+                if(RtlCompareMemory(&StatusOld, pStatus, sizeof(CHAR_T_STATUS_ORG)) != sizeof(CHAR_T_STATUS_ORG))
+                {
+                    AllocConsole();
+                    PrintConsoleW(L"Not Same: Chr:%d Level:%d\n", i, j);
+                }
+            }
         }
     }
-    //return pStatus;
 #endif
 #endif
 
-    return CalcChrT_StatusNew(&EDAO::ChrT_Status, ChrNo, Level);
+    return CalcChrT_StatusNew(pStatus, ChrNo, Level);
 }
 
 BOOL DumpChrRawStatusUnicode(LPCWSTR FileName)
@@ -884,7 +903,7 @@ BOOL DumpChrRawStatusUnicode(LPCWSTR FileName)
         p = Buffer;
         p += swprintf(p, L"%s\r\n", lpwChrNameChs[i]);
         p += swprintf(p, L"Level\tHP\tEP\tSTR\tDEF\tATS\tADF\tDEX\tAGL\tMOV\tSPD\tDEXRate\tAGLRate\tRNG\r\n");
-        for (int Level=45; Level<=150; Level++)
+        for (int Level=STATUS_LEVEL_MIN; Level<=STATUS_LEVEL_MAX; Level++)
         {
             EDAO::CalcChrT_StatusNew(&Status, i, Level);
             p+= swprintf(p, L"%u\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\r\n",
@@ -929,7 +948,7 @@ BOOL DumpChrRawStatusAnsi(LPCWSTR FileName)
         p = Buffer;
         p += sprintf(p, "%s\r\n", lpChrNameChs[i]);
         p += sprintf(p, "Level\tHP\tEP\tSTR\tDEF\tATS\tADF\tDEX\tAGL\tMOV\tSPD\tDEXRate\tAGLRate\tRNG\r\n");
-        for (int Level=45; Level<=150; Level++)
+        for (int Level=STATUS_LEVEL_MIN; Level<=STATUS_LEVEL_MAX; Level++)
         {
             EDAO::CalcChrT_StatusNew(&Status, i, Level);
             p+= sprintf(p, "%u\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\r\n",
@@ -1036,11 +1055,11 @@ BOOL CHAR_T_STATUS_Ratio_From_Json(const char *filename)
     {
         if (RtlCompareMemory(&RatioX[i], &RatioX1[i], sizeof(RatioX[i])) != sizeof(RatioX[i]))
         {
-            PrintConsoleA("RatioX Not Same: %s\n", ChrNameChs[i]);
+            PrintConsoleA("RatioX Not Same: %s\n", lpChrNameChs[i]);
         }
         if (RtlCompareMemory(&RatioY[i], &RatioY1[i], sizeof(RatioY[i])) != sizeof(RatioY[i]))
         {
-            PrintConsoleA("RatioY Not Same: %s\n", ChrNameChs[i]);
+            PrintConsoleA("RatioY Not Same: %s\n", lpChrNameChs[i]);
         }
     }
 #endif
