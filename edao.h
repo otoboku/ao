@@ -266,8 +266,9 @@ typedef union
 
 typedef struct _CHAR_T_STATUS
 {
-    USHORT      Level;
-    USHORT      HPOrg;
+    //USHORT      Level;
+    UINT        HP;
+    //USHORT      HP;
     USHORT      EP;
     SHORT       STR;
     SHORT       DEF;
@@ -278,9 +279,8 @@ typedef struct _CHAR_T_STATUS
     SHORT       AGLRate;
     SHORT       MOV;
     SHORT       SPD;
-    SHORT       DEXRate;    // 0x18
-    USHORT      RNG;        // 0x1A
-    UINT        HP;         // 0x1C
+    SHORT       DEXRate;
+    USHORT      RNG;
 } CHAR_T_STATUS, *PCHAR_T_STATUS;
 
 typedef struct _CHAR_T_STATUS_RatioX

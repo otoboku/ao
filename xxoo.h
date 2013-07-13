@@ -776,7 +776,7 @@ PCHAR_T_STATUS EDAO::CalcChrT_StatusNew(PCHAR_T_STATUS pStatus, INT ChrNo, INT L
 
     //pStatus = *(PCHAR_T_STATUS*)PtrAdd(this, 0xA2FA4);
     //ZeroMemory(pStatus, sizeof(*pStatus));
-    pStatus->Level      = 0;
+    //pStatus->Level      = 0;
     //pStatus->EP         = 0;
     SaturateConvertEx(&pStatus->HP, Status.HP, (UINT)99999999);
     SaturateConvertEx(&pStatus->EP, Status.EP, (USHORT)20000);
@@ -791,8 +791,6 @@ PCHAR_T_STATUS EDAO::CalcChrT_StatusNew(PCHAR_T_STATUS pStatus, INT ChrNo, INT L
     SaturateConvertEx(&pStatus->DEXRate, Status.DEXRate, (SHORT)20000);
     SaturateConvertEx(&pStatus->AGLRate, Status.AGLRate, (SHORT)20000);
     SaturateConvertEx(&pStatus->RNG, Status.RNG, (USHORT)0x64);
-    
-    SaturateConvert(&pStatus->HPOrg, Status.HP);
     return pStatus;
 }
 
@@ -817,9 +815,9 @@ PCHAR_STATUS THISCALL EDAO::CalcChrRawStatusByFinalStatus(PCHAR_STATUS RawStatus
 PCHAR_T_STATUS THISCALL EDAO::CalcChrT_Status(INT ChrNo, INT Level)
 {
     //PCHAR_T_STATUS pStatus = *(PCHAR_T_STATUS*)PtrAdd(this, 0xA2FA4);
+    //PCHAR_T_STATUS pStatus = &EDAO::ChrT_Status;
 
 #if CONSOLE_DEBUG
-    PCHAR_T_STATUS pStatus = &EDAO::ChrT_Status;
     static ULONG TestCount = 6;
     if (TestCount)
     {
@@ -843,15 +841,15 @@ PCHAR_T_STATUS THISCALL EDAO::CalcChrT_Status(INT ChrNo, INT Level)
         TestCount--;
     }
 
-#if 1
+#if 0
     CHAR_T_STATUS status;
     PCHAR_T_STATUS pStatusOld = (this->*StubCalcChrT_Status)(ChrNo, Level);
-    CopyMemory(&status, pStatusOld, 0x18);
+    CopyMemory(&status, pStatusOld, sizeof(status) - 0x4);
     pStatus = CalcChrT_StatusNew(pStatus, ChrNo, Level);
     if (ChrNo < 11)
     {
         // arch:SSE2下完全相同
-        if(RtlCompareMemory(&status, pStatus, 0x18) != 0x18)
+        if(RtlCompareMemory(&status, pStatus, sizeof(status) - 0x4) != sizeof(status) - 0x4)
         {
             AllocConsole();
             PrintConsoleW(L"Not Same: Chr:%d Level%d\n", ChrNo, Level);
@@ -1032,17 +1030,17 @@ BOOL CHAR_T_STATUS_Ratio_From_Json(const char *filename)
     json_object_put(root_object);
 
 #if CONSOLE_DEBUG
-#if 1
+#if 0
     PrintConsoleA("\nCHAR_T_STATUS_Ratio_From_Json Succeed!\n\n");
     for (int i=0; i<CHR_COUNT; i++)
     {
         if (RtlCompareMemory(&RatioX[i], &RatioX1[i], sizeof(RatioX[i])) != sizeof(RatioX[i]))
         {
-            PrintConsoleA("RatioX Not Same: %s\n", lpChrNameChs[i]);
+            PrintConsoleA("RatioX Not Same: %s\n", ChrNameChs[i]);
         }
         if (RtlCompareMemory(&RatioY[i], &RatioY1[i], sizeof(RatioY[i])) != sizeof(RatioY[i]))
         {
-            PrintConsoleA("RatioY Not Same: %s\n", lpChrNameChs[i]);
+            PrintConsoleA("RatioY Not Same: %s\n", ChrNameChs[i]);
         }
     }
 #endif
