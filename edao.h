@@ -156,11 +156,11 @@ enum
 };
 
 DECL_SELECTANY
-char* lpChrName[] = {"Lloyd", "Elie", "Tio", "Randy", "Lazy", "Yin", "Zeit", "Arios", "Noel", "Dudley", "Garcia", "ReserveB"};
+char* lpChrName[] = {"Lloyd", "Elie", "Tio", "Randy", "Lazy", "Yin/Rixia", "Zeit", "Arios", "Noel", "Dudley", "Garcia", "ReserveB"};
 DECL_SELECTANY
-char* lpChrNameChs[] = {"罗伊德", "艾莉", "缇欧", "兰迪", "瓦吉", "银", "神狼蔡特", "亚里欧斯", "诺艾尔上士", "达德利搜查官", "加尔西亚", "保留B"};
+char* lpChrNameChs[] = {"罗伊德", "艾莉", "缇欧", "兰迪", "瓦吉", "银/莉夏", "神狼蔡特", "亚里欧斯", "诺艾尔上士", "达德利搜查官", "加尔西亚", "保留B"};
 DECL_SELECTANY
-WCHAR* lpwChrNameChs[] = {L"罗伊德", L"艾莉", L"缇欧", L"兰迪", L"瓦吉", L"银", L"神狼蔡特", L"亚里欧斯", L"诺艾尔上士", L"达德利搜查官", L"加尔西亚", L"保留B"};
+WCHAR* lpwChrNameChs[] = {L"罗伊德", L"艾莉", L"缇欧", L"兰迪", L"瓦吉", L"银/莉夏", L"神狼蔡特", L"亚里欧斯", L"诺艾尔上士", L"达德利搜查官", L"加尔西亚", L"保留B"};
 
 ML_NAMESPACE_END
 

@@ -53,7 +53,11 @@ VOID LoadStatusConfig()
             if (CHAR_T_STATUS_Ratio_From_Json(STATUS_CONFIG_PATH))
             {
                 if (bOutputStatusConfigResult)
+                {
                     CHAR_T_STATUS_Ratio_To_Json(STATUS_RESULT_PATH);
+                    CHAR_T_STATUS_Ratio_To_Formula_Ansi(L(STATUS_FORMULA_PATH));
+                    CHAR_T_STATUS_Ratio_To_Formula_HTML(L(STATUS_FORMULA_HTML_PATH));
+                }
             }
             else if (bOutputStatusConfigResult)
             {
@@ -69,7 +73,7 @@ VOID LoadStatusConfig()
     if (bDumpStatus)
     {
         DumpChrRawStatusAnsi(L(STATUS_DUMP_PATH));
-        //DumpChrRawStatusUnicode(L(STATUS_DUMP_PATH)L"1");
+        //DumpChrRawStatusUnicode(L(STATUS_DUMP_PATH)L".UNICODE");
     }
 }
 

@@ -13,11 +13,13 @@
 #define STATUS_RESULT_PATH  EX_DIR"\\status.config.result.txt"
 #define STATUS_DUMP_PATH    EX_DIR"\\status.dump.txt"
 */
-#define EX_DIR_             Aki
-#define EX_DIR              TO_STRING(EX_DIR_)
-#define STATUS_CONFIG_PATH  TO_STRING(EX_DIR_##\\status.config.txt)
-#define STATUS_RESULT_PATH  TO_STRING(EX_DIR_##\\status.config.result.txt)
-#define STATUS_DUMP_PATH    TO_STRING(EX_DIR_##\\status.dump.txt)
+#define EX_DIR_                     Aki
+#define EX_DIR                      TO_STRING(EX_DIR_)
+#define STATUS_CONFIG_PATH          TO_STRING(EX_DIR_##\\status.config.txt)
+#define STATUS_RESULT_PATH          TO_STRING(EX_DIR_##\\status.config.result.txt)
+#define STATUS_FORMULA_PATH         TO_STRING(EX_DIR_##\\status.config.result.formula.txt)
+#define STATUS_FORMULA_HTML_PATH    TO_STRING(EX_DIR_##\\status.config.result.formula.html)
+#define STATUS_DUMP_PATH            TO_STRING(EX_DIR_##\\status.dump.txt)
 
 
 #if CONSOLE_DEBUG
@@ -148,6 +150,67 @@ public:
 };
 INIT_STATIC_MEMBER(CClass::StubShowHorrorCoasterText);
 INIT_STATIC_MEMBER(CClass::StubHorrorCoasterEvaluationPositionRestore);
+
+/************************************************************************
+    C Start
+************************************************************************/
+
+// trailing .0
+int sprintfDoubleNoZero(char * str, double num)
+{
+    if (str == NULL) return 0;
+    char* p;
+    int nWriten = sprintf(str, "%g", num);
+    if (strchr(str, '.') == NULL)
+    {
+        p = str + nWriten;
+        *p++ = '.';
+        *p++ = '0';
+        *p = 0;
+        nWriten += 2;
+    }
+    return nWriten;
+}
+
+// data : num 0 mum
+// char : len 1 len
+// wchar: len 2 len 
+inline size_t nmemcpy( void * dst, const void * src, size_t count ,size_t typesize = 0)
+{
+    if (src == NULL || dst == NULL)
+        return 0;
+
+    if (typesize == 0)
+    {
+        memcpy(dst, src, count);
+        return count;
+    }
+    else
+    {    
+        memcpy(dst, src, count*typesize + typesize);
+        return count;
+    }
+}
+
+size_t nstrcpy(char * dst, const char * src)
+{
+    return nmemcpy(dst, src, strlen(src), sizeof(*src));
+}
+
+size_t nwcscpy(wchar_t* dst, const wchar_t* src)
+{
+    return nmemcpy(dst, src, wcslen(src), sizeof(*src));
+}
+#define nstrcpyA nstrcpy
+#define nstrcpyW nwcscpy
+//#define NCSTRCPYA NCSTRCPY
+//#define NCSTRCPYW NCSTRCPY
+#define NCSTRCPY(dst, src) nmemcpy(dst, src, CONST_STRLEN(src), sizeof(*(src)))
+
+
+/************************************************************************
+    C End
+************************************************************************/
 
 #if 0
 VOID ConfigInit()
@@ -902,7 +965,8 @@ BOOL DumpChrRawStatusUnicode(LPCWSTR FileName)
     {
         p = Buffer;
         p += swprintf(p, L"%s\r\n", lpwChrNameChs[i]);
-        p += swprintf(p, L"Level\tHP\tEP\tSTR\tDEF\tATS\tADF\tDEX\tAGL\tMOV\tSPD\tDEXRate\tAGLRate\tRNG\r\n");
+        p += NCSTRCPY(p, L"Level\t");
+        p += NCSTRCPY(p, L"HP\tEP\tSTR\tDEF\tATS\tADF\tDEX\tAGL\tMOV\tSPD\tDEXRate\tAGLRate\tRNG\r\n");
         for (int Level=STATUS_LEVEL_MIN; Level<=STATUS_LEVEL_MAX; Level++)
         {
             EDAO::CalcChrT_StatusNew(&Status, i, Level);
@@ -915,7 +979,7 @@ BOOL DumpChrRawStatusUnicode(LPCWSTR FileName)
                 (SHORT)Status.DEXRate, (SHORT)Status.AGLRate,
                 (USHORT)Status.RNG);
         }
-        p+= swprintf(p, L"\r\n");
+        p+= NCSTRCPY(p, L"\r\n");
 
         file.Seek(0, SEEK_END);
         file.Write(Buffer, (char*)p - (char*)Buffer);
@@ -947,7 +1011,8 @@ BOOL DumpChrRawStatusAnsi(LPCWSTR FileName)
     {
         p = Buffer;
         p += sprintf(p, "%s\r\n", lpChrNameChs[i]);
-        p += sprintf(p, "Level\tHP\tEP\tSTR\tDEF\tATS\tADF\tDEX\tAGL\tMOV\tSPD\tDEXRate\tAGLRate\tRNG\r\n");
+        p += NCSTRCPY(p, "Level\t");
+        p += NCSTRCPY(p, "HP\tEP\tSTR\tDEF\tATS\tADF\tDEX\tAGL\tMOV\tSPD\tDEXRate\tAGLRate\tRNG\r\n");
         for (int Level=STATUS_LEVEL_MIN; Level<=STATUS_LEVEL_MAX; Level++)
         {
             EDAO::CalcChrT_StatusNew(&Status, i, Level);
@@ -960,13 +1025,173 @@ BOOL DumpChrRawStatusAnsi(LPCWSTR FileName)
                 (SHORT)Status.DEXRate, (SHORT)Status.AGLRate,
                 (USHORT)Status.RNG);
         }
-        p+= sprintf(p, "\r\n");
+        p+= NCSTRCPY(p, "\r\n");
         
         file.Seek(0, SEEK_END);
         file.Write(Buffer, (char*)p - (char*)Buffer);
     }
     file.Seek(-2, SEEK_CUR);
     file.SetEndOfFile();
+    file.Close();
+    
+    return TRUE;
+}
+
+BOOL CHAR_T_STATUS_Ratio_To_Formula_Ansi(LPCWSTR FileName)
+{
+    CHAR_T_STATUS   Status;
+    NtFileDisk file;
+    CHAR Buffer[16<<10];
+    CHAR* p;
+    
+    if (!FileName)
+        return FALSE;
+    
+    if (!NT_SUCCESS(file.Create(FileName)))
+        return FALSE;
+    
+    using namespace T_NAME;
+
+    p = Buffer;
+    p += NCSTRCPY(p, "碧之轨迹 角色能力值 计算公式\r\n\r\nLv = 角色等级\r\na = (Lv+15)(Lv+16)/2\r\n\r\n");
+    p += NCSTRCPY(p, "Name\t");
+    p += NCSTRCPY(p, "HP\tEP\tSTR\tDEF\tATS\tADF\tDEX\tAGL\tMOV\tSPD\tDEXRate\tAGLRate\tRNG\r\n");
+    
+    for (int i=0; i<CHR_COUNT; i++)
+    {
+        /*
+        p += sprintf(p, "%s\t%ga+%d\t%ga+%d\t%ga+%d\t%ga+%d\t%ga+%d\t%ga+%d\t%ga+%d\t%ga+%d\t%ga+%d\t%ga+%d\t%ga+%d\t%ga+%d\t%ga+%d\r\n",
+            lpChrNameChs[i], 
+            RatioX[i].HP, RatioY[i].HP,
+            RatioX[i].EP, RatioY[i].EP,
+            RatioX[i].STR, RatioY[i].STR,
+            RatioX[i].DEF, RatioY[i].DEF,
+            RatioX[i].ATS, RatioY[i].ATS,
+            RatioX[i].ADF, RatioY[i].ADF,
+            RatioX[i].DEX, RatioY[i].DEX,
+            RatioX[i].AGL, RatioY[i].AGL,
+            RatioX[i].MOV, RatioY[i].MOV,
+            RatioX[i].SPD, RatioY[i].SPD,
+            RatioX[i].DEXRate, RatioY[i].DEXRate,
+            RatioX[i].AGLRate, RatioY[i].AGLRate,
+            RatioX[i].RNG, RatioY[i].RNG
+            );*/
+        p += sprintf(p, "%s", lpChrNameChs[i]);
+        for (int j=0; j<countof(StatusName); j++)
+        {
+            p += NCSTRCPY(p, "\t");
+            p += sprintfDoubleNoZero(p, (double)((PFLOAT)&RatioX[i].HP)[j]);
+            p += sprintf(p, "a+%d", ((PINT)&RatioY[i].HP)[j]);
+        }
+        p += NCSTRCPY(p, "\r\n");
+    }
+    file.Write(Buffer, (char*)p - (char*)Buffer);
+    file.Close();
+    
+    return TRUE;
+}
+
+//...ugly
+BOOL CHAR_T_STATUS_Ratio_To_Formula_HTML(LPCWSTR FileName)
+{
+    CHAR_T_STATUS   Status;
+    NtFileDisk file;
+    CHAR Buffer[16<<10];
+    CHAR* p;
+    
+    if (!FileName)
+        return FALSE;
+    
+    if (!NT_SUCCESS(file.Create(FileName)))
+        return FALSE;
+    
+    using namespace T_NAME;
+
+    static
+    CHAR HtmlHead[] = "<html>\r\n<head>\r\n<title>碧之轨迹 角色能力值 计算公式</title>\r\n\r\n"
+        "<style type=\"text/css\">\r\n"
+        ".table1 {background:#585858;}\r\n"
+        ".table1 td, .table1 th {background:#FFFFFF;}\r\n"
+        "</style>\r\n</head>\r\n\r\n"
+        "<body>\r\nLv = 角色等级<br>a = (Lv+15)(Lv+16)/2<br>\r\n";
+    
+    file.Write(HtmlHead, CONST_STRLEN(HtmlHead));
+
+    p = Buffer;
+
+    // table start
+    p += NCSTRCPY(p, "<table cellpadding=\"2\" cellspacing=\"1\" border=\"0\" class=\"table1\">\r\n<caption>碧之轨迹 角色能力值 计算公式</caption>\r\n");
+    p += NCSTRCPY(p, "<tr>");
+    p += sprintf(p, "<th>%s</th>", "Name");
+    for (int j=0; j<countof(StatusName); j++)
+    {
+        p += sprintf(p, "<th>%s</th>", StatusName[j]);
+    }
+    p += NCSTRCPY(p, "</tr>\r\n");
+
+    for (int i=0; i<CHR_COUNT; i++)
+    {
+        p += NCSTRCPY(p, "<tr>");
+        p += sprintf(p, "<td>%s</td>", lpChrNameChs[i]);
+        for (int j=0; j<countof(StatusName); j++)
+        {
+            p += NCSTRCPY(p, "<td>");
+            p += sprintfDoubleNoZero(p, (double)((PFLOAT)&RatioX[i].HP)[j]);
+            p += sprintf(p, "a+%d", ((PINT)&RatioY[i].HP)[j]);
+            p += NCSTRCPY(p, "</td>");
+        }
+        p += NCSTRCPY(p, "</tr>\r\n");
+    }
+    p += NCSTRCPY(p, "</table>\r\n\r\n");
+    // table end
+
+    p += NCSTRCPY(p, "<br><br>\r\n");
+    p += NCSTRCPY(p, "<table cellpadding=\"1\" cellspacing=\"1\" border=\"1\" class=\"table_\">\r\n"
+        "<tr><th>Lv</th><td>角色等级</td></tr>\r\n"
+        "<tr><th>a</th><td>(Lv+15)(Lv+16)/2</td></tr>\r\n"
+        "<tr><th>能力值</th><td>x·a + y</td></tr>\r\n"
+        "</table>\r\n\r\n");
+
+    // table start
+    p += NCSTRCPY(p, "<table cellpadding=\"4\" cellspacing=\"1\" border=\"1\" class=\"table_\">\r\n<caption>碧之轨迹 角色能力值 计算公式</caption>\r\n");
+    p += NCSTRCPY(p, "<tr>");
+    p += sprintf(p, "<th rowspan=\"2\">%s</th>", "Name");
+    for (int j=0; j<countof(StatusName); j++)
+    {
+        p += sprintf(p, "<th colspan=\"2\">%s</th>", StatusName[j]);
+    }
+    p += NCSTRCPY(p, "</tr>\r\n");
+
+    p += NCSTRCPY(p, "<tr>");
+    for (int j=0; j<countof(StatusName); j++)
+    {
+        p += NCSTRCPY(p, "<th>x</th><th>y</th>");
+    }
+    p += NCSTRCPY(p, "</tr>\r\n");
+    
+    for (int i=0; i<CHR_COUNT; i++)
+    {
+        p += NCSTRCPY(p, "<tr>");
+        p += sprintf(p, "<td>%s</td>", lpChrNameChs[i]);
+        for (int j=0; j<countof(StatusName); j++)
+        {
+            p += NCSTRCPY(p, "<td>");
+            p += sprintfDoubleNoZero(p, (double)((PFLOAT)&RatioX[i].HP)[j]);
+            p += NCSTRCPY(p, "</td>");
+
+            p += NCSTRCPY(p, "<td>");
+            p += sprintf(p, "%d", ((PINT)&RatioY[i].HP)[j]);
+            p += NCSTRCPY(p, "</td>");
+        }
+        p += NCSTRCPY(p, "</tr>\r\n");
+    }
+    p += NCSTRCPY(p, "</table>\r\n\r\n");
+    // table end
+
+    p += NCSTRCPY(p, "<br><br>\r\n");
+    p += NCSTRCPY(p, "</body>\r\n</html>");
+
+    file.Write(Buffer, (char*)p - (char*)Buffer);
     file.Close();
     
     return TRUE;
