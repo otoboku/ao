@@ -182,12 +182,12 @@ inline size_t nmemcpy( void * dst, const void * src, size_t count ,size_t typesi
 
     if (typesize == 0)
     {
-        memcpy(dst, src, count);
+        NCRTGlobal::memcpy(dst, src, count);
         return count;
     }
     else
     {    
-        memcpy(dst, src, count*typesize + typesize);
+        NCRTGlobal::memcpy(dst, src, count*typesize + typesize);
         return count;
     }
 }

@@ -510,7 +510,7 @@ typedef union _AS_FILE
     ULONG GetActionCount()
     {
         ULONG Count = 0;
-        PUSHORT ActionList = (PUSHORT)PtrAdd(this, (ULONG)ActionListOffset);
+        PUSHORT ActionList = GetActionList();
         while (ActionList < (PUSHORT)PtrAdd(this, sizeof(*this)) && *ActionList != 0)
         {
             Count++;
@@ -523,10 +523,14 @@ typedef union _AS_FILE
     {
         if (ActionNo >= ActionCount)
             return FALSE;
-        PUSHORT ActionList = (PUSHORT)PtrAdd(this, (ULONG)ActionListOffset);
-        if (ActionList[ActionNo] == BattleActionScript::EMPTY_ACTION)
+        if (GetActionList()[ActionNo] == BattleActionScript::EMPTY_ACTION)
             return FALSE;
         return TRUE;
+    }
+
+    PUSHORT GetActionList()
+    {
+        return (PUSHORT)PtrAdd(this, (ULONG)ActionListOffset);
     }
 
     DUMMY_STRUCT(0x5F00);
@@ -633,7 +637,7 @@ public:
             return;
 
         MemorySystemData* pMemory = GetMemorySystemData();
-        ZeroMemory(pLocal, sizeof(*pLocal));
+        NCRTAki::ZeroMemory(pLocal, sizeof(*pLocal));
 
         pLocal->Config = pMemory->Config;
         pLocal->Record = pMemory->Record;
@@ -722,10 +726,11 @@ public:
     }
 
 public:
-    DUMMY_STRUCT(0x9C);
+    DUMMY_STRUCT(0x94);
+    ULONG       SystemFlag[2];              // 0x94
     BYTE        Flag[SCENA_FLAG_SIZE];      // 0x9C
-    PVOID       pScenaCharacterInf[2];
-    ULONG       ScenaCharacterCount[2];
+    PVOID       pScenaCharacterInf[2];      // 0x2BC    0x2C0
+    ULONG       ScenaCharacterCount[2];     // 0x2C4    0x2C8
     USHORT      PartyList[8];               // 0x2CC
     USHORT      PartyListSaved[8];          // 0x2DC
     CHAR_STATUS ChrStatus[MAXIMUM_CHR_NUMBER_WITH_STATUS]; // 0x2EC
