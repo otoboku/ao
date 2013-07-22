@@ -1708,11 +1708,14 @@ public:
         TYPE_OF(&GetAsyncKeyState) StubGetAsyncKeyState;
         *(PULONG_PTR)&StubGetAsyncKeyState = *(PULONG_PTR)0xDD5A18;
 
-        if (StubGetAsyncKeyState(VK_CONTROL) & 0xF000)
+        if (FLAG_ON(StubGetAsyncKeyState(VK_CONTROL), 0x8000))
         {
-            if (StubGetAsyncKeyState('P') & 0x1)
+            static BOOL IsSelectPartyChr;
+            if (FLAG_ON_ALL(StubGetAsyncKeyState('P'), 0x8001) && !IsSelectPartyChr)
             {
+                IsSelectPartyChr = TRUE;
                 SelectPartyChr();
+                IsSelectPartyChr = FALSE;
                 return;
             }
         }

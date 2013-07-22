@@ -673,8 +673,8 @@ SHORT THISCALL CClass::HorrorCoasterFastExit(int vKey)
         return 0;
     }
 
-    if (StubGetAsyncKeyState('Q') & 0x1 && StubGetAsyncKeyState(VK_CONTROL) & 0xF000)
-        return 1;
+    if (FLAG_ON(StubGetAsyncKeyState(VK_CONTROL), 0x8000) && FLAG_ON_ALL(StubGetAsyncKeyState('Q'), 0x8001))
+        return (SHORT)0x8001;
 
     return 0;
 }
