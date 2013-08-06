@@ -658,6 +658,16 @@ BOOL THISCALL CBattle::IsNeedBattleEvaluationSuperKill(ULONG ChrPosition)
         return FALSE;
 }
 
+BOOL THISCALL CBattle::GetHitResult(PMONSTER_STATUS src, PMONSTER_STATUS dst)
+{
+    DETOUR_METHOD_NO_RET(CBattle, GetHitResult, 0x6799F4);
+    if (src == dst && src != nullptr)
+    {
+        src->IsHitJudged[src->CharPosition] = FALSE;
+    }
+    return (this->*StubGetHitResult)(src, dst);
+}
+
 // ¹íÎÝ°´¼ü
 SHORT THISCALL CClass::HorrorCoasterFastExit(int vKey)
 {

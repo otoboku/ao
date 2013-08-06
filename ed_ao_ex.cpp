@@ -173,6 +173,8 @@ BOOL Initialize(PVOID BaseAddress)
         INLINE_HOOK_CALL_RVA_NULL(0x5837EE, METHOD_PTR(&CBattle::NakedHandleConditionBeforeMasterQuartzKipaTakeEffect)),
         INLINE_HOOK_CALL_RVA_NULL(0x5838EA, METHOD_PTR(&CBattle::IsNeedBattleEvaluationSuperKill)),
 
+        INLINE_HOOK_CALL_RVA_NULL(0x5B3FD2, METHOD_PTR(&CBattle::GetHitResult)),    // 灵猫多次魔反仅吸收第一次fix
+
         INLINE_HOOK_CALL_RVA_NULL(0x6A4244, METHOD_PTR(&CClass::HorrorCoasterFastExit)),
         //INLINE_HOOK_JUMP_RVA     (0x273888, METHOD_PTR(&CClass::HorrorCoasterEvaluationPositionRestore), CClass::StubHorrorCoasterEvaluationPositionRestore),
         INLINE_HOOK_CALL_RVA_NULL(0x6A58FF, METHOD_PTR(&CClass::PositionPC2PSP)),   // 鬼屋评价显示位置修正

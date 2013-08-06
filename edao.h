@@ -449,7 +449,11 @@ typedef struct _MONSTER_STATUS
         BYTE                    SelectedTargetIndex;        // 0x1CB
         COORD                   SelectedTargetPos;          // 0x1CC
 
-        DUMMY_STRUCT(0x234 - 0x1D0);
+        //DUMMY_STRUCT(0x234 - 0x1D0);
+        DUMMY_STRUCT(0x20C - 0x1D0);
+        BYTE                    IsHitMiss[0x10];            // 0x20C
+        BYTE                    IsHitJudged[0x10];          // 0x21C
+        DUMMY_STRUCT(0x234 - 0x22C);
 
         CHAR_STATUS ChrStatus[2];                           // 0x234
 
@@ -1218,6 +1222,8 @@ public:
 
     BOOL IsChrCanTeamRush(PMONSTER_STATUS MSData, PCRAFT_INFO pCraft);
     DECL_STATIC_METHOD_POINTER(CBattle, IsChrCanTeamRush);
+
+    BOOL GetHitResult(PMONSTER_STATUS src, PMONSTER_STATUS dst);
 
     DECL_STATIC_METHOD_POINTER(CBattle, SetCurrentActionChrInfo);
     DECL_STATIC_METHOD_POINTER(CBattle, ThinkRunaway);
