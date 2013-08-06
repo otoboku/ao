@@ -49,6 +49,8 @@ class CDebug;
 #define PSP_WIDTH_F                       480.f
 #define PSP_HEIGHT_F                      272.f
 
+DECL_SELECTANY TYPE_OF(&GetAsyncKeyState) StubGetAsyncKeyState;
+
 #pragma pack(push, 1)
 
 typedef struct
@@ -1705,8 +1707,8 @@ public:
 
     VOID THISCALL MainControl()
     {
-        TYPE_OF(&GetAsyncKeyState) StubGetAsyncKeyState;
-        *(PULONG_PTR)&StubGetAsyncKeyState = *(PULONG_PTR)0xDD5A18;
+        //TYPE_OF(&GetAsyncKeyState) StubGetAsyncKeyState;
+        //*(PULONG_PTR)&StubGetAsyncKeyState = *(PULONG_PTR)0xDD5A18;
 
         if (FLAG_ON(StubGetAsyncKeyState(VK_CONTROL), 0x8000))
         {

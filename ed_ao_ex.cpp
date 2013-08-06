@@ -85,6 +85,9 @@ BOOL Initialize(PVOID BaseAddress)
 
     SetExeDirectoryAsCurrent();
 
+    //mark
+    *(PULONG_PTR)&StubGetAsyncKeyState = **(PULONG_PTR*)0x00AED232;
+
     HMODULE hModule = GetExeModuleHandle();
 
 #if CONSOLE_DEBUG

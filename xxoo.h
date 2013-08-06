@@ -662,8 +662,8 @@ BOOL THISCALL CBattle::IsNeedBattleEvaluationSuperKill(ULONG ChrPosition)
 SHORT THISCALL CClass::HorrorCoasterFastExit(int vKey)
 {
     UNREFERENCED_PARAMETER(vKey);
-    TYPE_OF(&GetAsyncKeyState) StubGetAsyncKeyState;
-    *(PULONG_PTR)&StubGetAsyncKeyState = *(PULONG_PTR)0xDD5A18;
+    //TYPE_OF(&GetAsyncKeyState) StubGetAsyncKeyState;
+    //*(PULONG_PTR)&StubGetAsyncKeyState = *(PULONG_PTR)0xDD5A18;
 
     PULONG  pVar1 = (PULONG)PtrAdd(this, 0x40);
     //PULONG  pVar2 = (PULONG)PtrAdd(this, 0x54);
