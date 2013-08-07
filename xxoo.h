@@ -1307,6 +1307,15 @@ BOOL CHAR_T_STATUS_Ratio_From_Json(const char *filename)
     Status End
 ************************************************************************/
 
+BOOL THISCALL CGlobal::AddCraft(ULONG ChrId, ULONG Craft)
+{
+    if (ChrId == T_NAME::Yin && Craft == 0x16E && !GetEDAO()->GetSaveData()->IsYinRixia())
+    {
+        return FALSE;
+    }
+    return (this->*StubAddCraft)(ChrId, Craft);
+}
+
 BOOL THISCALL CBattle::IsChrCanTeamRush(PMONSTER_STATUS MSData, PCRAFT_INFO pCraft)
 {
     BOOL Result = (this->*StubIsChrCanTeamRush)(MSData, pCraft);

@@ -115,6 +115,7 @@ BOOL Initialize(PVOID BaseAddress)
     {
         // bug fix
         PATCH_MEMORY(0xEB,  1,  0x60CC8F),      // burst condition
+        PATCH_MEMORY(0xEB,  1,  0x623062),      // inc CP when can't sbreak
 
         // restore
         //PATCH_MEMORY(p0086B6A0, 9, 0x0086B6A0-0x400000),
@@ -193,6 +194,8 @@ BOOL Initialize(PVOID BaseAddress)
         INLINE_HOOK_JUMP_RVA     (0x274E40, METHOD_PTR(&EDAO::GetDifficulty), EDAO::StubGetDifficulty),
         INLINE_HOOK_CALL_RVA_NULL(0x5AA772, METHOD_PTR(&EDAO::SetBattleStatusFinalWhenRecover)),    // 木偶恢复能力值
         INLINE_HOOK_JUMP_RVA     (0x278F68, CalcSpecificStatusByDifficulty, StubCalcSpecificStatusByDifficulty),
+
+        INLINE_HOOK_JUMP_RVA     (0x275471, METHOD_PTR(&CGlobal::AddCraft), CGlobal::StubAddCraft), // 银 不能习得 月舞
 
         // fish
         INLINE_HOOK_CALL_RVA_NULL(0x675BC2, METHOD_PTR(&CFish::IsRodPulled)),

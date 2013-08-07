@@ -976,6 +976,11 @@ public:
         return *(EDAO **)PtrAdd(this, 0x38D24);
     }
 
+    CGlobal* GetGlobal()
+    {
+        return *(CGlobal **)PtrAdd(this, 0x38D30);
+    }
+
     CBattleATBar* GetBattleATBar()
     {
         return (CBattleATBar *)PtrAdd(this, 0x103148);
@@ -1667,6 +1672,10 @@ public:
     PCSTR       THISCALL GetMagicDescription(USHORT MagicId);
     PBYTE       THISCALL GetMagicQueryTable(USHORT MagicId);
 
+    //mark
+    BOOL THISCALL AddCraft(ULONG ChrId, ULONG Craft);
+    DECL_STATIC_METHOD_POINTER(CGlobal, AddCraft);
+
     EDAO* GetEDAO()
     {
         return (EDAO *)PtrSub(this, 0x4D3E8);
@@ -1699,6 +1708,7 @@ public:
 DECL_SELECTANY TYPE_OF(CGlobal::StubGetMagicData)           CGlobal::StubGetMagicData = NULL;
 DECL_SELECTANY TYPE_OF(CGlobal::StubGetMagicDescription)    CGlobal::StubGetMagicDescription = NULL;
 DECL_SELECTANY TYPE_OF(CGlobal::StubGetMagicQueryTable)     CGlobal::StubGetMagicQueryTable = NULL;
+INIT_STATIC_MEMBER(CGlobal::StubAddCraft);
 
 BOOL AoIsFileExist(PCSTR FileName);
 
