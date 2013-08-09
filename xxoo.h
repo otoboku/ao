@@ -104,6 +104,8 @@ BOOL bOutputStatusConfigResult;
 BOOL bDumpStatus;
 INT nYin_no_AGLRate;
 
+BOOL bDisableMouse;
+
 typedef struct _SStatusRate
 {
     INT HP;
@@ -341,6 +343,8 @@ VOID ConfigInit()
         { (BOOL*)&bOutputStatusConfigResult, 'b', L"Status", L"OutputStatusConfigResult", TRUE, },
         { (BOOL*)&bDumpStatus, 'b', L"Status", L"DumpStatus", FALSE, },
         { (INT*)&nYin_no_AGLRate, 'i', L"Status", L"Yin_no_AGLRate", 0, },
+
+        { (BOOL*)&bDisableMouse, 'b', L"DT", L"DisableMouse", FALSE, },
     };
  
     CONFIG_ENTRY *Entry;

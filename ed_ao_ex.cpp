@@ -524,6 +524,20 @@ BOOL Initialize(PVOID BaseAddress)
         Nt_PatchMemory(p, countof(p), NULL, 0, hModule);
     }
 
+    // disable mouse
+    if (bDisableMouse)
+    {
+        //ShowCursor(FALSE);
+        MEMORY_PATCH p[] =
+        {
+            PATCH_MEMORY(0x00,      1,  0x410C60),  // disable key
+            PATCH_MEMORY(0x48C033,  3,  0x406511),  // disable cursor move
+            PATCH_MEMORY(0x48C033,  3,  0x40651C),  // disable cursor move
+        };
+
+        Nt_PatchMemory(p, countof(p), NULL, 0, hModule);
+    }
+
     return TRUE;
 }
 
