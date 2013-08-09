@@ -393,6 +393,7 @@ BOOL Initialize(PVOID BaseAddress)
         MEMORY_PATCH p[] =
         {
             PATCH_MEMORY(0x81,  1,	0x00976162-0x400000),
+            PATCH_MEMORY(0xEB,  1,	0x009B6A54-0x400000),   // MasterArt
         };
         Nt_PatchMemory(p, countof(p), NULL, 0, hModule);
     }
