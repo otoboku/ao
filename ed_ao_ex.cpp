@@ -131,6 +131,9 @@ BOOL Initialize(PVOID BaseAddress)
         PATCH_MEMORY(0x9000518B,    4,  0x0086F297-0x400000),   // HP SHORT-INT
         PATCH_MEMORY(0x9000518B,    4,  0x0088C0C3-0x400000),   // HP SHORT-INT
         PATCH_MEMORY(0x1,           1,  0x006C1BA3-0x400000),   // EP add
+
+        PATCH_MEMORY(0x9BF4,        2,  0x00A27874-0x400000),   // EXP %4d-%5d
+        PATCH_MEMORY(0x70,          1,  0x00A278E3-0x400000),   // EXP pos 76-70
     };
 
     MEMORY_FUNCTION_PATCH f[] =
@@ -143,21 +146,21 @@ BOOL Initialize(PVOID BaseAddress)
         INLINE_HOOK_JUMP_RVA     (0x275DAE, METHOD_PTR(&CBattle::ExecuteActionScript), CBattle::StubExecuteActionScript),
 
         INLINE_HOOK_JUMP_RVA     (0x550C90, METHOD_PTR(&CScript::ScpSaveRestoreParty), CScript::StubScpSaveRestoreParty),
-*/
+
         // hack for boss
 
         INLINE_HOOK_CALL_RVA_NULL(0x5DFA21, NakedGetUnderAttackVoiceChrIdRestore),
         INLINE_HOOK_CALL_RVA_NULL(0x5DFA1B, METHOD_PTR(&CBattle::NakedGetUnderAttackVoiceChrId)),  // boss挨打语音修复
-
+*/
         INLINE_HOOK_CALL_RVA_NULL(0x5A3814, METHOD_PTR(&CBattle::NakedOverWriteBattleStatusWithChrStatus)),
 
         INLINE_HOOK_JUMP_RVA     (0x275061, METHOD_PTR(&CBattle::IsChrCanTeamRush), CBattle::StubIsChrCanTeamRush),
-        //INLINE_HOOK_CALL_RVA_NULL(0x5F690B, CBattle::FormatBattleChrAT),
+
         // monster info box
 
         //INLINE_HOOK_CALL_RVA_NULL(0x626AEA, METHOD_PTR(&CBattleInfoBox::SetMonsterInfoBoxSize)),
-        INLINE_HOOK_JUMP_RVA_NULL(0x27AC8C, (PVOID)0xA26D50),
-        INLINE_HOOK_JUMP_RVA     (0x27AC8C, METHOD_PTR(&CBattleInfoBox::DrawMonsterStatus), CBattleInfoBox::StubDrawMonsterStatus), // USHORT->SHORT
+        //INLINE_HOOK_JUMP_RVA_NULL(0x27AC8C, (PVOID)0xA26D50),
+        //INLINE_HOOK_JUMP_RVA     (0x27AC8C, METHOD_PTR(&CBattleInfoBox::DrawMonsterStatus), CBattleInfoBox::StubDrawMonsterStatus), // USHORT->SHORT
 
         // bug fix
         INLINE_HOOK_CALL_RVA_NULL(0x2A2E2C, FurnitureCompletionRate),
@@ -197,7 +200,7 @@ BOOL Initialize(PVOID BaseAddress)
         INLINE_HOOK_JUMP_RVA     (0x278F68, CalcSpecificStatusByDifficulty, StubCalcSpecificStatusByDifficulty),
 
         INLINE_HOOK_JUMP_RVA     (0x275471, METHOD_PTR(&CGlobal::AddCraft), CGlobal::StubAddCraft), // 银 不能习得 月舞
-        INLINE_HOOK_JUMP_RVA_NULL(0x277A55, METHOD_PTR(&CGlobal::UseItemDouguFix)),
+        INLINE_HOOK_JUMP_RVA_NULL(0x277A55, METHOD_PTR(&CGlobal::UseItemDouguFix)),                 // 非战斗使用物品无效果3
 
         // fish
         INLINE_HOOK_CALL_RVA_NULL(0x675BC2, METHOD_PTR(&CFish::IsRodPulled)),
