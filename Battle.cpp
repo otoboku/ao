@@ -69,7 +69,7 @@ PMONSTER_STATUS FASTCALL CBattle::OverWriteBattleStatusWithChrStatus(PMONSTER_ST
         return MSData;
 
     //mark
-    if (CBattle::pChrStatusBackup == NULL)
+    if (CBattle::pChrStatusBackup == nullptr)
         CBattle::pChrStatusBackup = new CHAR_STATUS[MAXIMUM_CHR_NUMBER_IN_BATTLE];
     pChrStatusBackup[MSData->CharPosition] = *Raw;
 
@@ -85,6 +85,7 @@ PMONSTER_STATUS FASTCALL CBattle::OverWriteBattleStatusWithChrStatus(PMONSTER_ST
     Final->AGL          += Raw->AGL         * 2 / 3;
     Final->MOV          += Raw->MOV         * 2 / 3;
     Final->SPD          += Raw->SPD         * 2 / 3;
+    Final->RNG           = Raw->RNG + 1;
 
     return MSData;
 }
@@ -103,7 +104,7 @@ NAKED VOID CBattle::NakedIsChrStatusNeedRefresh()
     }
 }
 
-BOOL FASTCALL CBattle::IsChrStatusNeedRefresh(ULONG_PTR ChrPosition, PCHAR_STATUS CurrentStatus, ULONG_PTR PrevLevel)
+BOOL FASTCALL CBattle::IsChrStatusNeedRefresh(ULONG_PTR ChrPosition, PCHAR_STATUS CurrentStatus, LONG_PTR PrevLevel)
 {
     PMONSTER_STATUS MSData;
 
@@ -241,7 +242,7 @@ VOID FASTCALL CBattle::HandleBattleState(ULONG_PTR CurrentState)
     FOR_EACH(Entry, GetBattleATBar()->EntryPointer, countof(GetBattleATBar()->EntryPointer))
     {
         MSData = Entry[0]->MSData;
-        if (MSData == NULL)
+        if (MSData == nullptr)
             continue;
 
         if (Entry[0]->IsSBreaking && !MSData->IsChrEnemy())
@@ -305,7 +306,7 @@ VOID THISCALL CBattle::SetCurrentActionChrInfo(USHORT Type, PMONSTER_STATUS MSDa
 
     Frame = FindThreadFrame(THINK_SBREAK_FILTER);
 
-    if (Frame != NULL && Frame->Data == (ULONG_PTR)MSData)
+    if (Frame != nullptr && Frame->Data == (ULONG_PTR)MSData)
         return;
 
     return (this->*StubSetCurrentActionChrInfo)(Type, MSData);
@@ -319,7 +320,7 @@ BOOL FASTCALL CBattle::EnemyThinkAction(PMONSTER_STATUS MSData)
     Entry = GetBattleATBar()->EntryPointer[0];
 
     if (!MSData->IsChrEnemy() ||
-        Entry == NULL ||
+        Entry == nullptr ||
         Entry->MSData != MSData ||
         !Entry->IsSBreaking)
     {
@@ -404,7 +405,7 @@ BOOL CBattle::ThinkSBreak(PMONSTER_STATUS MSData, PAT_BAR_ENTRY Entry)
                             CraftConditions::Reserve_3      |
                             CraftConditions::Dead;
 
-    if (FindEffectInfoByCondition(MSData, Conditions) != NULL)
+    if (FindEffectInfoByCondition(MSData, Conditions) != nullptr)
         return FALSE;
 
     struct
@@ -441,9 +442,9 @@ BOOL CBattle::ThinkSBreak(PMONSTER_STATUS MSData, PAT_BAR_ENTRY Entry)
         return FALSE;
     }
 
-    if (MSData->CurrentActionType == ACTION_ARIA_MAGIC ||
+    if (MSData->CurrentActionType == ACTION_ARIA_ARTS ||
         MSData->CurrentActionType == ACTION_ARIA_CRAFT ||
-        MSData->PreviousActionType == ACTION_ARIA_MAGIC ||
+        MSData->PreviousActionType == ACTION_ARIA_ARTS ||
         MSData->PreviousActionType == ACTION_ARIA_CRAFT)
     {
         CancelAria(MSData, TRUE);
@@ -497,7 +498,7 @@ NAKED VOID CBattle::NakedAS8DDispatcher()
 
 VOID FASTCALL CBattle::AS8DDispatcher(PMONSTER_STATUS MSData, PAS_8D_PARAM Parameter)
 {
-    if (MSData == NULL)
+    if (MSData == nullptr)
         return;
 
     if (Parameter->Function < AS_8D_FUNCTION_MINIMUM)
@@ -531,7 +532,7 @@ VOID FASTCALL CBattle::AS8DDispatcher(PMONSTER_STATUS MSData, PAS_8D_PARAM Param
 }
 
 NAKED VOID CBattle::NakedNoResistConditionUp()
-{    
+{
     enum
     {
         Conditions =    CraftConditions::StrUp |
@@ -648,7 +649,22 @@ PBYTE CGlobal::GetMagicQueryTable(USHORT MagicId)
     return StaticMagicQueryTable;
 }
 
+PBYTE THISCALL CGlobal::FixWeaponShapeAndRange(USHORT ItemId)
+{
+    PMONSTER_STATUS MSData;
 
+    AllocStack(16);
+
+    MSData = *(PMONSTER_STATUS *)PtrAdd(*(PVOID *)PtrSub(_AddressOfReturnAddress(), sizeof(PVOID)), 8);
+
+    if (IsCustomChar(MSData->CharID))
+    {
+        ItemId = 0;
+        MSData->ChrStatus[BattleStatusRaw].RNG = MSData->ChrStatus[BattleStatusFinal].RNG;
+    }
+
+    return (this->*StubFixWeaponShapeAndRange)(ItemId);
+}
 
 /************************************************************************
   info box
@@ -709,7 +725,7 @@ VOID THISCALL CBattleInfoBox::DrawMonsterStatus()
     typedef struct
     {
         PCSTR Text;
-        ULONG Value;
+        LONG Value;
 
         ULONG_PTR (*Format)(PMONSTER_STATUS MSData, PSTR Buffer);
 
@@ -757,7 +773,7 @@ VOID THISCALL CBattleInfoBox::DrawMonsterStatus()
 
         if (ShowInfo)
         {
-            Length = Entry->Format == NULL ? sprintf(Buffer, "%d", Entry->Value) : Entry->Format(MSData, Buffer);
+            Length = Entry->Format == nullptr ? sprintf(Buffer, "%d", Entry->Value) : Entry->Format(MSData, Buffer);
             edao->DrawNumber(X + 69, ValueY, Buffer, ValueColor);
             if (Entry == Status)
             {
@@ -799,30 +815,30 @@ LONG CDECL CBattle::FormatBattleChrAT(PSTR Buffer, PCSTR Format, LONG Index, LON
     //CBattleATBar* BattleATBar = Battle->GetBattleATBar();
     //PMONSTER_STATUS MSData = Battle->GetMonsterStatus() + Index;
     /*
-    if (BattleATBar->EntryPointer[0] != NULL && BattleATBar->EntryPointer[0]->MSData != NULL)
+    if (BattleATBar->EntryPointer[0] != nullptr && BattleATBar->EntryPointer[0]->MSData != nullptr)
     {
         PAT_BAR_ENTRY SecondEntry = BattleATBar->FindATBarEntry0NoSecond();
         if (!FLAG_ON(BattleATBar->EntryPointer[0]->Flags, 0x40) || SecondEntry->sequence <= 7)
         {
             if (Pri > 7)
-                return Buffer[0] = NULL;
+                return Buffer[0] = nullptr;
         }
         else if (Pri > 6 && BattleATBar->EntryPointer[Pri] != SecondEntry)
         {
             //CHAR dummy[] = "     ";
             //sprintf(Buffer, "%s", dummy);
             //Buffer += CONST_STRLEN(dummy);
-            return Buffer[0] = NULL;
+            return Buffer[0] = nullptr;
         }
     }*/
-    
+
     if (Pri > 7)
     {/*
         if (FLAG_ON(BattleATBar->EntryPointer[Pri]->Flags, 0x04))
             return sprintf(Buffer, "     %d", IcoAT);
         else
         */
-            return Buffer[0] = NULL;
+            return Buffer[0] = '\0';
     }
     return sprintf(Buffer, "%d", IcoAT);
 }
@@ -853,7 +869,7 @@ PAT_BAR_ENTRY THISCALL CBattleATBar::LookupReplaceAtBarEntry(PMONSTER_STATUS MSD
 
     NewMSData = *(PMONSTER_STATUS *)(*(PULONG_PTR)PtrSub(_AddressOfReturnAddress(), sizeof(PVOID)) - 0x44);
 
-    FirstEntry = NULL;
+    FirstEntry = nullptr;
     FOR_EACH(Entry, EntryPointer, countof(EntryPointer))
     {
         if (!FLAG_ON(Entry[0]->Flags, 0x20))
@@ -862,7 +878,7 @@ PAT_BAR_ENTRY THISCALL CBattleATBar::LookupReplaceAtBarEntry(PMONSTER_STATUS MSD
         if (Entry[0]->MSData != MSData)
             continue;
 
-        if (FirstEntry == NULL)
+        if (FirstEntry == nullptr)
             FirstEntry = *Entry;
 
         Entry[0]->MSData = NewMSData;

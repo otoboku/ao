@@ -11,6 +11,11 @@
     #define NtGetTickCount (ULONG64)GetTickCount
 #endif
 
+#if 0
+    #undef DebugPrint
+    #define DebugPrint(...) { AllocConsole(); PrintConsoleW(__VA_ARGS__); PrintConsoleW(L"\n"); }
+#endif
+
 #pragma warning (disable: 4201)
 #pragma warning (disable: 4996)
 
@@ -31,7 +36,7 @@ class CDebug;
 
 #define CActor CSSaveData
 
-#define INIT_STATIC_MEMBER(x) DECL_SELECTANY TYPE_OF(x) x = NULL
+#define INIT_STATIC_MEMBER(x) DECL_SELECTANY TYPE_OF(x) x = nullptr
 #define DECL_STATIC_METHOD_POINTER(cls, method) static TYPE_OF(&cls::method) Stub##method
 #define DETOUR_METHOD(cls, method, addr, ...) TYPE_OF(&cls::method) (method); *(PULONG_PTR)&(method) = addr; return (this->*method)(__VA_ARGS__)
 #define DETOUR_METHOD_NO_RET(cls, method, addr) TYPE_OF(&cls::method) Stub##method; *(PULONG_PTR)&(Stub##method) = addr
@@ -214,12 +219,12 @@ enum
 {
     ACTION_ATTACK       = 0,
     ACTION_MOVE         = 1,
-    ACTION_MAGIC        = 2,
+    ACTION_ARTS         = 2,
     ACTION_CRAFT        = 3,
     ACTION_SCRAFT       = 4,
     ACTION_ITEM         = 5,
-    ACTION_ARIA_MAGIC   = 6,
-    ACTION_CAST_MAGIC   = 7,
+    ACTION_ARIA_ARTS    = 6,
+    ACTION_CAST_ARTS    = 7,
     ACTION_ARIA_CRAFT   = 8,
     ACTION_CAST_CRAFT   = 9,
 };
@@ -424,7 +429,7 @@ typedef struct _MONSTER_STATUS
         DUMMY_STRUCT(1);                                    // 0x1C
         BYTE                    TeamRushAddition;           // 0x1D
         USHORT                  MasterQuartzUsedFlag;       // 0x1E
-        
+
         DUMMY_STRUCT(0x16C - 0x20);
 
         USHORT                  CurrentActionType;          // 0x16C
@@ -603,9 +608,9 @@ class CSSaveData
             INT     Mode;
             INT     WindowWidth;    // 0x10
             INT     WindowHeight;   // 0x14
-            DUMMY_STRUCT(0x475-0x18); 
+            DUMMY_STRUCT(0x475-0x18);
             BYTE    WindowMode;     // 0x475
-            DUMMY_STRUCT(0x484-0x476); 
+            DUMMY_STRUCT(0x484-0x476);
             BYTE    BgmVolumeIni;   // 0x484    ini
             BYTE    SeVolumeIni;    // 0x485
             BYTE    BgmOff;         // 0x486    ini invalid
@@ -615,18 +620,18 @@ class CSSaveData
             BYTE    SeVolume;       // 0x4BD    81C69
             DUMMY_STRUCT(0x2);
             ULONG   Option;         // 0x4C0
-            
+
         } ;
-        
+
     } SystemConfigData;
-    
-    typedef struct 
+
+    typedef struct
     {
         DUMMY_STRUCT(0x7EDD6);
         USHORT  TitleVisualCount1;  // 0x7EDD6
-        DUMMY_STRUCT(0x817AC - 0x7EDD6 - 2);   
+        DUMMY_STRUCT(0x817AC - 0x7EDD6 - 2);
         //DUMMY_STRUCT(0x817AC);
-        SystemConfigData Config;    // 0x817AC                             
+        SystemConfigData Config;    // 0x817AC
         DUMMY_STRUCT(0xC);
         UINT64  Record;             // 0x81C7C
         ULONG   Tokuten;            // 0x81C84
@@ -638,10 +643,10 @@ class CSSaveData
         ULONG   ExtraMode;          // 0xA70C4
         DUMMY_STRUCT(0x4);
         ULONG   Unknown_4D4;        // 0xA70CC
-        
+
     } MemorySystemData;
-    
-    
+
+
     typedef union  // 0x504
     {
         DUMMY_STRUCT(0x504);
@@ -656,7 +661,7 @@ class CSSaveData
             ULONG   TitleVisualCount;   // 0x4DC
             ULONG   GameAccount;        // 0x4E0
         };
-        
+
     } LocalSystemData;
 #pragma pack(pop)
 
@@ -677,7 +682,7 @@ public:
     // SaveData2SystemData()
     VOID THISCALL SaveSystemData(LocalSystemData* pLocal)
     {
-        if (pLocal == NULL)
+        if (pLocal == nullptr)
             return;
 
         MemorySystemData* pMemory = GetMemorySystemData();
@@ -697,7 +702,7 @@ public:
     // SystemData2SaveData()
     VOID THISCALL LoadSystemData(LocalSystemData* pLocal)
     {
-        if (pLocal == NULL)
+        if (pLocal == nullptr)
             return;
 
         MemorySystemData* pMemory = GetMemorySystemData();
@@ -712,7 +717,7 @@ public:
         pMemory->Unknown_4D4 = pLocal->Unknown_4D4;
         pMemory->Medal = pLocal->Medal;
         pMemory->TitleVisualCount = pLocal->TitleVisualCount;
-        pMemory->GameAccount = pLocal->GameAccount;       
+        pMemory->GameAccount = pLocal->GameAccount;
     }
 
 public:
@@ -735,9 +740,7 @@ public:
     BOOL IsCustomChar(ULONG_PTR ChrId)
     {
         //mark
-        if (ChrId >= MAXIMUM_CHR_NUMBER_WITH_STATUS)
-            return FALSE;
-        return GetPartyChipMap()[ChrId] >= MINIMUM_CUSTOM_CHAR_ID;
+        return ChrId >= MAXIMUM_CHR_NUMBER_WITH_STATUS ? FALSE : GetPartyChipMap()[ChrId] >= MINIMUM_CUSTOM_CHAR_ID;
     }
 
     PUSHORT GetChrMagicList()
@@ -959,7 +962,7 @@ public:
                 return Entry[0];
         }
 
-        return NULL;
+        return nullptr;
     }
 /*
     NoInline PAT_BAR_ENTRY FindATBarEntry0NoSecond()
@@ -969,10 +972,10 @@ public:
 
         if (PreEntry == EntryPointer[0])
             return PreEntry;
-        
+
         FOR_EACH(Entry, &EntryPointer[1], countof(EntryPointer))
         {
-            //if (Entry[0]->MSData == NULL) //有不连续的情况
+            //if (Entry[0]->MSData == nullptr) //有不连续的情况
                 //break;
             if (Entry[0]->MSData == EntryPointer[0]->MSData)
             {
@@ -980,8 +983,8 @@ public:
                 return Entry[0];
             }
         }
-        
-        return NULL;
+
+        return nullptr;
     }
 */
     PAT_BAR_ENTRY THISCALL LookupReplaceAtBarEntry(PMONSTER_STATUS MSData, BOOL IsFirst);
@@ -1117,7 +1120,7 @@ public:
     VOID NakedOverWriteBattleStatusWithChrStatus();
 
     VOID NakedIsChrStatusNeedRefresh();
-    BOOL FASTCALL IsChrStatusNeedRefresh(ULONG_PTR ChrPosition, PCHAR_STATUS CurrentStatus, ULONG_PTR PrevLevel);
+    BOOL FASTCALL IsChrStatusNeedRefresh(ULONG_PTR ChrPosition, PCHAR_STATUS CurrentStatus, LONG_PTR PrevLevel);
 
     ULONG NakedGetChrIdForSCraft();
 
@@ -1213,14 +1216,14 @@ public:
 
     BOOL CheckCondition(PMONSTER_STATUS MSData, ULONG condition, ULONG par3=0)
     {
-        return FindEffectInfoByCondition(MSData, condition, par3) != NULL;
+        return FindEffectInfoByCondition(MSData, condition, par3) != nullptr;
     }
 
     VOID THISCALL SubHPWhenAttack(PMONSTER_STATUS dst, INT HP)
     {
         DETOUR_METHOD(CBattle, SubHPWhenAttack, 0x679869, dst, HP);
     }
-    
+
     VOID THISCALL SubHPEveryAct(PMONSTER_STATUS dst, INT HP)
     {
         DETOUR_METHOD(CBattle, SubHPEveryAct, 0x674157, dst, HP);
@@ -1230,7 +1233,7 @@ public:
     {
         DETOUR_METHOD(CBattle, AnalyzeMonsInf, 0x6747D3, MSData, IsSkipBattleEvaluation);
     }
-    
+
     DECL_STATIC_METHOD_POINTER(CBattle, LoadMSFile);
 
     /************************************************************************
@@ -1242,11 +1245,11 @@ public:
     {
         return (PAS_FILE)PtrAdd(this, 0x3A800);
     }
-    
+
     PAS_FILE GetASFile(PMONSTER_STATUS MSData)
     {
         if (MSData->CharPosition >= MAXIMUM_CHR_NUMBER_IN_BATTLE || MSData->IsChrEmpty())
-            return NULL;
+            return nullptr;
         else
             return &(GetASFile()[MSData->CharPosition]);
     }
@@ -1262,7 +1265,7 @@ public:
     VOID THISCALL SetBattleStatusFinalByDifficulty(PMONSTER_STATUS MSData);
     DECL_STATIC_METHOD_POINTER(CBattle, SetBattleStatusFinalByDifficulty);
 
-    BOOL THISCALL CheckQuartz(ULONG ChrPosition, ULONG ItemId, PULONG EquippedIndex = NULL);
+    BOOL THISCALL CheckQuartz(ULONG ChrPosition, ULONG ItemId, PULONG EquippedIndex = nullptr);
     DECL_STATIC_METHOD_POINTER(CBattle, CheckQuartz);
 
     PMS_EFFECT_INFO THISCALL CheckConditionGreenPepperWhenThinkCraft(PMONSTER_STATUS MSData, ULONG_PTR Condition, INT ConditionRateType);
@@ -1512,7 +1515,7 @@ public:
 
         LONG (FASTCALL *AoMessageBoxWorker)(EDAO*, PVOID, BOOL CanUseCancelButton, PCSTR Text, MSGBOX_CALLBACK, ULONG, ULONG, ULONG);
 
-        MSGBOX_CALLBACK cb = { (PVOID)0x676056, NULL, NULL, NULL };
+        MSGBOX_CALLBACK cb = { (PVOID)0x676056, nullptr, nullptr, nullptr };
 
         *(PULONG_PTR)&AoMessageBoxWorker = 0x67A4D5;
         return AoMessageBoxWorker(this, 0, CanUseCancelButton, Text, cb, 0, 0, -1);
@@ -1527,6 +1530,11 @@ public:
         *(PVOID *)&StubDrawNumber = (PVOID)0x734A00;
 
         return (this->*StubDrawNumber)(X, Y, Text, OneU1, Color, ZeroU1);
+    }
+
+    VOID DrawText(PCSTR Text, LONG X, LONG Y, LONG FontSize, BYTE Red, BYTE Green, BYTE Blue)
+    {
+        DETOUR_METHOD(EDAO, DrawText, 0x87D710, Text, X, Y, FontSize, Red, Green, Blue);
     }
 
     VOID THISCALL StubDrawRectangle(USHORT Layer, LONG Left, LONG Top, LONG Right, LONG Bottom, FLOAT ZeroF1, FLOAT ZeroF2, FLOAT ZeroF3, FLOAT ZeroF4, ULONG UpperLeftColor, ULONG UpperRightColor, ULONG ZeroU1,ULONG ZeroU2,ULONG ZeroU3,ULONG ZeroU4,ULONG ZeroU5,ULONG ZeroU6,FLOAT ZeroF5);
@@ -1686,7 +1694,7 @@ DECL_SELECTANY TYPE_OF(EDAO::ChrT_Status) EDAO::ChrT_Status;
 class CCoordConverter
 {
 public:
-    VOID MapPSPCoordToPC(Gdiplus::PointF Source[2], Gdiplus::PointF Target[2], PFLOAT Transform = NULL)
+    VOID MapPSPCoordToPC(Gdiplus::PointF Source[2], Gdiplus::PointF Target[2], PFLOAT Transform = nullptr)
     {
         DETOUR_METHOD(CCoordConverter, MapPSPCoordToPC, 0x6A7030, Source, Target, Transform);
     }
@@ -1749,6 +1757,9 @@ public:
         DETOUR_METHOD(CGlobal, DoEffect, 0x006772A8, ActionType, SrcChrId, DstChrId, Effect, pEffectPar, par6, IsPlaySound);
     }
 
+    PBYTE THISCALL FixWeaponShapeAndRange(USHORT ItemId);
+
+    DECL_STATIC_METHOD_POINTER(CGlobal, FixWeaponShapeAndRange);
 
     //mark
     BOOL THISCALL AddCraft(ULONG ChrId, ULONG Craft);
@@ -1762,9 +1773,13 @@ public:
     static TYPE_OF(&CGlobal::GetMagicQueryTable)    StubGetMagicQueryTable;
 };
 
-DECL_SELECTANY TYPE_OF(CGlobal::StubGetMagicData)           CGlobal::StubGetMagicData = NULL;
-DECL_SELECTANY TYPE_OF(CGlobal::StubGetMagicDescription)    CGlobal::StubGetMagicDescription = NULL;
-DECL_SELECTANY TYPE_OF(CGlobal::StubGetMagicQueryTable)     CGlobal::StubGetMagicQueryTable = NULL;
+DECL_SELECTANY TYPE_OF(CGlobal::StubGetMagicData)           CGlobal::StubGetMagicData = nullptr;
+DECL_SELECTANY TYPE_OF(CGlobal::StubGetMagicDescription)    CGlobal::StubGetMagicDescription = nullptr;
+DECL_SELECTANY TYPE_OF(CGlobal::StubGetMagicQueryTable)     CGlobal::StubGetMagicQueryTable = nullptr;
+
+
+INIT_STATIC_MEMBER(CGlobal::StubFixWeaponShapeAndRange);
+
 INIT_STATIC_MEMBER(CGlobal::StubAddCraft);
 
 BOOL AoIsFileExist(PCSTR FileName);

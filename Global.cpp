@@ -13,7 +13,7 @@ BOOL EDAO::CheckItemEquipped(ULONG ItemId, PULONG EquippedIndex)
         case 0xB7:  // ú—Ä¿
         case 0xB8:  // ÌìÑÛ
         case 0xBB:  // Ì½Öª
-            if (EquippedIndex != NULL)
+            if (EquippedIndex != nullptr)
                 *EquippedIndex = 0;
 
             return TRUE;
@@ -24,11 +24,14 @@ BOOL EDAO::CheckItemEquipped(ULONG ItemId, PULONG EquippedIndex)
 
 enum
 {
-    CHR_ID_LAZY         = 4,
-    CHR_ID_YIN          = 5,
+    CHR_ID_LAZY             = 4,
+    CHR_ID_YIN              = 5,
 
-    CHR_ID_LAZY_KNIGHT  = 0x1F,
-    CHR_ID_RIXIA        = 0x20,
+    CHR_ID_LAZY_KNIGHT      = 0x1F,
+    CHR_ID_RIXIA            = 0x20,
+
+    CHR_ID_LAZY_KNIGHT_NULL = 0x35B,
+    CHR_ID_RIXIA_NULL       = 0x35C,
 };
 
 LONG CDECL EDAO::GetCampImage(PSTR Buffer, PCSTR Format, LONG ChrId)
@@ -81,9 +84,11 @@ LONG FASTCALL EDAO::GetCFace(ULONG ChrId)
     switch (ChrId)
     {
         case CHR_ID_LAZY:
+        case CHR_ID_LAZY_KNIGHT_NULL:
             return GetSaveData()->IsLazyKnight() ? CHR_ID_LAZY_KNIGHT : ChrId;
 
         case CHR_ID_YIN:
+        case CHR_ID_RIXIA_NULL:
             return GetSaveData()->IsYinRixia() ? CHR_ID_RIXIA : ChrId;
     }
 
@@ -154,9 +159,11 @@ ULONG FASTCALL CSSaveData::GetTeamAttackMemberId(ULONG ChrId)
     switch (ChrId)
     {
         case CHR_ID_LAZY:
+        case CHR_ID_LAZY_KNIGHT_NULL:
             return IsLazyKnight() ? CHR_ID_LAZY_KNIGHT : ChrId;
 
         case CHR_ID_YIN:
+        case CHR_ID_RIXIA_NULL:
             return IsYinRixia() ? CHR_ID_RIXIA : ChrId;
     }
 
@@ -375,8 +382,6 @@ VOID HandleSingleKey(ULONG_PTR KeyCode, BOOL KeyPress)
     FLOAT   Delta;
     ULONG   Index;
 
-    extern BOOL Turbo;
-
     enum { X = 0, Y = 1, Z = 2, Z2 = 42 };
     enum
     {
@@ -429,6 +434,37 @@ CHANGE_CAMERA_DEGREE:
 
                     *(PFLOAT)PtrAdd(EDAO::GlobalGetEDAO()->GetScript()->GetCamera()->GetCameraInfo(), Index) += Delta;
                     break;
+
+                case DIK_LCONTROL:
+                case DIK_RCONTROL:
+                {
+                    CHAR            Buffer[0x200];
+                    PFLOAT          Coord;
+                    LONG            Integer, Decimal;
+                    EDAO           *edao;
+
+                    edao = EDAO::GlobalGetEDAO();
+                    Coord = PtrAdd(edao->GetChrCoord(), 0x80);
+                    if (Coord == (PFLOAT)0x80)
+                        break;
+
+                    Integer = Coord[X];
+                    Decimal = (fabs(Coord[X]) - abs(Integer)) * 1000;
+                    sprintf(Buffer, "X: %d.%d", Integer, Decimal);
+                    edao->DrawText(Buffer, 0, 0, 8, -1, -1, -1);
+
+                    Integer = Coord[Y];
+                    Decimal = (fabs(Coord[Y]) - abs(Integer)) * 1000;
+                    sprintf(Buffer, "Y: %d.%d", Integer, Decimal);
+                    edao->DrawText(Buffer, 0, 15, 8, -1, -1, -1);
+
+                    Integer = Coord[Z];
+                    Decimal = (fabs(Coord[Z]) - abs(Integer)) * 1000;
+                    sprintf(Buffer, "Z: %d.%d", Integer, Decimal);
+                    edao->DrawText(Buffer, 0, 30, 8, -1, -1, -1);
+
+                    break;
+                }
             }
     }
 }
@@ -445,14 +481,39 @@ VOID THISCALL CInput::HandleMainInterfaceInputState(PVOID Parameter1, CInput *In
         return;
 
     InputDevice = Input->GetDInputDevice();
-    if (InputDevice == NULL)
+    if (InputDevice == nullptr)
         return;
 
     Result = InputDevice->GetDeviceState(sizeof(KeyState), KeyState);
     if (FAILED(Result))
         return;
 
-    FOR_EACH(Key, KeyState, countof(KeyState))
+#if D3D9_VER
+
+    BYTE ShiftKeys[] =
+    {
+        DIK_LCONTROL,
+        DIK_RCONTROL,
+        DIK_LSHIFT,
+        DIK_RSHIFT,
+        DIK_LMENU,
+        DIK_RMENU,
+    };
+
+    PBYTE ShiftKey;
+
+    FOR_EACH_ARRAY(ShiftKey, ShiftKeys)
+    {
+        if (KeyState[*ShiftKey] < 0)
+            break;
+    }
+
+    if (ShiftKey == &ShiftKeys[countof(ShiftKeys)])
+        return;
+
+#endif // d3d9v
+
+    FOR_EACH_ARRAY(Key, KeyState)
     {
         if (*Key < 0)
             HandleSingleKey(Key - KeyState, TRUE);

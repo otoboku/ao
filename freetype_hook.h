@@ -44,7 +44,7 @@ namespace NFreeType
             args.flags    = FT_OPEN_PATHNAME;
             args.pathname = (char*)filepathname;
             args.stream   = NULL;
-            
+
             return Stub_FT_Open_face( library, &args, face_index, aface );
         }
 

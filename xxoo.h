@@ -6,7 +6,7 @@
 #define L1(x)               L ## x
 #define L(x)                L1(x)
 #define TO_STRING1(x)       #x
-#define TO_STRING(x)        TO_STRING1(x)  
+#define TO_STRING(x)        TO_STRING1(x)
 /*
 #define EX_DIR              "Arianrhod"
 #define STATUS_CONFIG_PATH  EX_DIR"\\status.config.txt"
@@ -160,10 +160,10 @@ INIT_STATIC_MEMBER(CClass::StubHorrorCoasterEvaluationPositionRestore);
 // trailing .0
 int sprintfDoubleNoZero(char * str, double num)
 {
-    if (str == NULL) return 0;
+    if (str == nullptr) return 0;
     char* p;
     int nWriten = sprintf(str, "%g", num);
-    if (strchr(str, '.') == NULL)
+    if (strchr(str, '.') == nullptr)
     {
         p = str + nWriten;
         *p++ = '.';
@@ -176,10 +176,10 @@ int sprintfDoubleNoZero(char * str, double num)
 
 // data : num 0 mum
 // char : len 1 len
-// wchar: len 2 len 
+// wchar: len 2 len
 inline size_t nmemcpy( void * dst, const void * src, size_t count ,size_t typesize = 0)
 {
-    if (src == NULL || dst == NULL)
+    if (src == nullptr || dst == nullptr)
         return 0;
 
     if (typesize == 0)
@@ -188,7 +188,7 @@ inline size_t nmemcpy( void * dst, const void * src, size_t count ,size_t typesi
         return count;
     }
     else
-    {    
+    {
         NCRTGlobal::memcpy(dst, src, count*typesize + typesize);
         return count;
     }
@@ -294,7 +294,7 @@ VOID ConfigInit()
         LPCWSTR     lpFileName;
     } CONFIG_ENTRY;
 
-    static CONFIG_ENTRY Config[] = 
+    static CONFIG_ENTRY Config[] =
     {
         { (BOOL*)&bArianrhodLimitKaijo, 'b', L"Arianrhod", L"ArianrhodLimitKaijo", TRUE, },
         { (BOOL*)&bEnemySBreak, 'b', L"Arianrhod", L"EnemySBreak", TRUE, },
@@ -331,9 +331,9 @@ VOID ConfigInit()
         { (BOOL*)&bAutoAnalyzeMonsInf, 'b', L"Battle", L"AutoAnalyzeMonsInf", FALSE, },
 
         { (BOOL*)&bSelectTeamMemberFreely, 'b', L"DT", L"SelectTeamMemberFreely", FALSE, },
-        { (BOOL*)&bSpecialTeamMemberEquipmentLimitKaijo, 'b', L"DT", L"SpecialTeamMemberEquipmentLimitKaijo", FALSE, }, 
-        { (BOOL*)&bEnableSelectTeamMember, 'b', L"DT", L"EnableSelectTeamMember", FALSE, }, 
-        
+        { (BOOL*)&bSpecialTeamMemberEquipmentLimitKaijo, 'b', L"DT", L"SpecialTeamMemberEquipmentLimitKaijo", FALSE, },
+        { (BOOL*)&bEnableSelectTeamMember, 'b', L"DT", L"EnableSelectTeamMember", FALSE, },
+
         { (INT*)&nAutoFish, 'i', L"DT", L"AutoFish", 0, },
         { (INT*)&nFastFish, 'i', L"DT", L"FastFish", 0, },
         { (BOOL*)&bRoyalFlush, 'b', L"DT", L"RoyalFlush", FALSE, },
@@ -346,7 +346,7 @@ VOID ConfigInit()
 
         { (BOOL*)&bDisableMouse, 'b', L"DT", L"DisableMouse", FALSE, },
     };
- 
+
     CONFIG_ENTRY *Entry;
     FOR_EACH(Entry, Config, countof(Config))
     {
@@ -362,7 +362,7 @@ VOID ConfigInit()
             ;
         }
     }
-    
+
 
     if (nSupportCraftInterval < 0 || nSupportCraftInterval == 350)
         nSupportCraftInterval = 0;
@@ -405,8 +405,8 @@ VOID THISCALL CBattle::LoadMSFile(PMONSTER_STATUS MSData, ULONG MSFileIndex)
     char it3Path[MAX_PATH];
     TYPE_OF(&CBattle::LoadMonsterIt3) StubLoadMonsterIt3;
     *(PVOID*)&StubLoadMonsterIt3 = (PVOID)0x00673FB3;
-    
-    
+
+
     for (i = 0; i < 20; ++i)
     {
         v15 = (i << 8) | 0x88000;
@@ -418,7 +418,7 @@ VOID THISCALL CBattle::LoadMSFile(PMONSTER_STATUS MSData, ULONG MSFileIndex)
             //sub_673FB3(i + 8, 0, &Dest);
         }
     }
-    (this->*StubLoadMSFile)(MSData, MSFileIndex);	
+    (this->*StubLoadMSFile)(MSData, MSFileIndex);
 }
 
 
@@ -438,7 +438,7 @@ VOID THISCALL CBattle::AS_8D_5F(PMONSTER_STATUS ChrMSData)
 {
     int i, start, end;
     PMONSTER_STATUS MSData;
-    
+
     if (ChrMSData->CharPosition >= 8 && ChrMSData->CharPosition < 0x10)
     {
         start = 0;
@@ -449,7 +449,7 @@ VOID THISCALL CBattle::AS_8D_5F(PMONSTER_STATUS ChrMSData)
         start = 8;
         end = 0x10;
     }
-    
+
     for (i=start; i<end; i++)
     {
         MSData = this->GetMonsterStatus()+i;
@@ -480,7 +480,7 @@ NAKED VOID MedalReturn()
         add edx,ecx;
         cmp edx,0xF423F;
         jle MedalReturn01;
-        mov edx,0xF423F;	
+        mov edx,0xF423F;
 MedalReturn01:
         MOV DWORD PTR DS:[EAX+0x45D0],EDX;
         xor ecx,ecx;
@@ -506,7 +506,7 @@ BOOL THISCALL CScript::ScpLeaveParty(PSCENA_ENV_BLOCK Block)
     PUSHORT pPartyList = GetSaveData()->GetPartyList();
 
     Result = (this->*StubScpLeaveParty)(Block);
-    
+
     for (i=0; i<8; i++)
     {
         if (*(pPartyList + i) != 0xFF)
@@ -522,7 +522,7 @@ BOOL THISCALL CScript::ScpLeaveParty(PSCENA_ENV_BLOCK Block)
             GetSaveData()->SetChrPositionAuto(*(pPartyList + i), pPartyList, ChrCount);
         }
     }
- 
+
     return Result;
 }
 
@@ -549,7 +549,7 @@ NAKED VOID DecBurstEnergyWhenStandby()
     }
 }
 
-// 
+//
 NAKED VOID CBattle::NakedCheckAliveBeforeHeal()
 {
     INLINE_ASM
@@ -607,7 +607,7 @@ VOID FASTCALL CBattle::HandleConditionBeforeMasterQuartzKipaTakeEffect(PMONSTER_
         pEffectInfo = FindEffectInfoByConditionEx(MSData, CraftConditions::Landification);
         if (pEffectInfo)
             pEffectInfo->ATLeft = 9999;
-        //SetCondition(MSData, NULL, CraftConditions::Landification, 0, 0);
+        //SetCondition(MSData, nullptr, CraftConditions::Landification, 0, 0);
 
         return;
     }
@@ -620,7 +620,7 @@ PMS_EFFECT_INFO THISCALL CBattle::FindEffectInfoByConditionEx(PMONSTER_STATUS MS
     if (IsCheckSum)
     {
         if (!FLAG_ON(MSData->ChrStatus[BattleStatusFinal].ConditionFlags, Condition))
-            return NULL;
+            return nullptr;
     }
 
     PMS_EFFECT_INFO pEffectInfo;
@@ -635,14 +635,14 @@ PMS_EFFECT_INFO THISCALL CBattle::FindEffectInfoByConditionEx(PMONSTER_STATUS MS
             return pEffectInfo;
         }
     }
-    return NULL;
+    return nullptr;
 }
 
 PMS_EFFECT_INFO THISCALL CBattle::CheckConditionGreenPepperWhenThinkCraft(PMONSTER_STATUS MSData, ULONG_PTR Condition, INT ConditionRateType)
 {
     PMS_EFFECT_INFO pEffectInfo;
     pEffectInfo = FindEffectInfoByConditionEx(MSData, CraftConditions::BodyAbnormal);
-    if (pEffectInfo != NULL && pEffectInfo->ConditionRate == CraftConditions::BodyAbnormal_GreenPepper)
+    if (pEffectInfo != nullptr && pEffectInfo->ConditionRate == CraftConditions::BodyAbnormal_GreenPepper)
         return pEffectInfo;
     else
         return FindEffectInfoByConditionEx(MSData, Condition, ConditionRateType);
@@ -683,7 +683,7 @@ SHORT THISCALL CClass::HorrorCoasterFastExit(int vKey)
     //PULONG  pVar2 = (PULONG)PtrAdd(this, 0x54);
     if (*pVar1 == 0)
     {
-        //*(PVOID *)_AddressOfReturnAddress() = (PVOID)0x00AA42AC; 
+        //*(PVOID *)_AddressOfReturnAddress() = (PVOID)0x00AA42AC;
         return 0;
     }
 
@@ -774,7 +774,7 @@ VOID THISCALL EDAO::SetBattleStatusFinalWhenRecover(ULONG ChrPosition, PCHAR_STA
     PMONSTER_STATUS MSData = container_of(pStatusBasic, MONSTER_STATUS, ChrStatus);
 
     SetBattleStatusFinalByEquipment(ChrPosition, pStatusFinal, pStatusBasic);
-    if (IsCustomChar(MSData->CharID) && Battle->pChrStatusBackup != NULL)
+    if (IsCustomChar(MSData->CharID) && Battle->pChrStatusBackup != nullptr)
     {
         PCHAR_STATUS Raw = Battle->pChrStatusBackup + ChrPosition;
         PCHAR_STATUS Final = &MSData->ChrStatus[BattleStatusFinal];
@@ -791,6 +791,7 @@ VOID THISCALL EDAO::SetBattleStatusFinalWhenRecover(ULONG ChrPosition, PCHAR_STA
         Final->AGL          += Raw->AGL         * 2 / 3;
         Final->MOV          += Raw->MOV         * 2 / 3;
         Final->SPD          += Raw->SPD         * 2 / 3;
+        Final->RNG           = Raw->RNG + 1;
     }
     Battle->SetBattleStatusFinalByDifficulty(MSData);
 }
@@ -804,7 +805,7 @@ PCHAR_T_STATUS EDAO::CalcChrT_StatusNew(PCHAR_T_STATUS pStatus, INT ChrNo, INT L
     CHAR_T_STATUS_RatioX Status;
 
     if (ChrNo >= MAXIMUM_CHR_NUMBER_WITH_STATUS)
-        return NULL;
+        return nullptr;
 
     if (Level > STATUS_LEVEL_MAX)
     {
@@ -986,10 +987,10 @@ BOOL DumpChrRawStatusUnicode(LPCWSTR FileName)
             EDAO::CalcChrT_StatusNew(&Status, i, Level);
             p+= swprintf(p, L"%u\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\r\n",
                 Level, (UINT)Status.HP, (USHORT)Status.EP,
-                (SHORT)Status.STR, (SHORT)Status.DEF, 
-                (SHORT)Status.ATS, (SHORT)Status.ADF, 
-                (SHORT)Status.DEX, (SHORT)Status.AGL, 
-                (SHORT)Status.MOV, (SHORT)Status.SPD, 
+                (SHORT)Status.STR, (SHORT)Status.DEF,
+                (SHORT)Status.ATS, (SHORT)Status.ADF,
+                (SHORT)Status.DEX, (SHORT)Status.AGL,
+                (SHORT)Status.MOV, (SHORT)Status.SPD,
                 (SHORT)Status.DEXRate, (SHORT)Status.AGLRate,
                 (USHORT)Status.RNG);
         }
@@ -1012,15 +1013,15 @@ BOOL DumpChrRawStatusAnsi(LPCWSTR FileName)
     NtFileDisk file;
     CHAR Buffer[16<<10];
     CHAR* p;
-    
+
     if (!FileName)
         return FALSE;
-    
+
     if (!NT_SUCCESS(file.Create(FileName)))
         return FALSE;
-    
+
     using namespace T_NAME;
-    
+
     for (int i=0; i<CHR_COUNT; i++)
     {
         p = Buffer;
@@ -1032,22 +1033,22 @@ BOOL DumpChrRawStatusAnsi(LPCWSTR FileName)
             EDAO::CalcChrT_StatusNew(&Status, i, Level);
             p+= sprintf(p, "%u\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\r\n",
                 Level, (UINT)Status.HP, (USHORT)Status.EP,
-                (SHORT)Status.STR, (SHORT)Status.DEF, 
-                (SHORT)Status.ATS, (SHORT)Status.ADF, 
-                (SHORT)Status.DEX, (SHORT)Status.AGL, 
-                (SHORT)Status.MOV, (SHORT)Status.SPD, 
+                (SHORT)Status.STR, (SHORT)Status.DEF,
+                (SHORT)Status.ATS, (SHORT)Status.ADF,
+                (SHORT)Status.DEX, (SHORT)Status.AGL,
+                (SHORT)Status.MOV, (SHORT)Status.SPD,
                 (SHORT)Status.DEXRate, (SHORT)Status.AGLRate,
                 (USHORT)Status.RNG);
         }
         p+= NCSTRCPY(p, "\r\n");
-        
+
         file.Seek(0, SEEK_END);
         file.Write(Buffer, (char*)p - (char*)Buffer);
     }
     file.Seek(-2, SEEK_CUR);
     file.SetEndOfFile();
     file.Close();
-    
+
     return TRUE;
 }
 
@@ -1057,25 +1058,25 @@ BOOL CHAR_T_STATUS_Ratio_To_Formula_Ansi(LPCWSTR FileName)
     NtFileDisk file;
     CHAR Buffer[16<<10];
     CHAR* p;
-    
+
     if (!FileName)
         return FALSE;
-    
+
     if (!NT_SUCCESS(file.Create(FileName)))
         return FALSE;
-    
+
     using namespace T_NAME;
 
     p = Buffer;
     p += NCSTRCPY(p, "碧之轨迹 角色能力值 计算公式\r\n\r\nLv = 角色等级\r\na = (Lv+15)(Lv+16)/2\r\n\r\n");
     p += NCSTRCPY(p, "Name\t");
     p += NCSTRCPY(p, "HP\tEP\tSTR\tDEF\tATS\tADF\tDEX\tAGL\tMOV\tSPD\tDEXRate\tAGLRate\tRNG\r\n");
-    
+
     for (int i=0; i<CHR_COUNT; i++)
     {
         /*
         p += sprintf(p, "%s\t%ga+%d\t%ga+%d\t%ga+%d\t%ga+%d\t%ga+%d\t%ga+%d\t%ga+%d\t%ga+%d\t%ga+%d\t%ga+%d\t%ga+%d\t%ga+%d\t%ga+%d\r\n",
-            lpChrNameChs[i], 
+            lpChrNameChs[i],
             RatioX[i].HP, RatioY[i].HP,
             RatioX[i].EP, RatioY[i].EP,
             RatioX[i].STR, RatioY[i].STR,
@@ -1101,7 +1102,7 @@ BOOL CHAR_T_STATUS_Ratio_To_Formula_Ansi(LPCWSTR FileName)
     }
     file.Write(Buffer, (char*)p - (char*)Buffer);
     file.Close();
-    
+
     return TRUE;
 }
 
@@ -1112,13 +1113,13 @@ BOOL CHAR_T_STATUS_Ratio_To_Formula_HTML(LPCWSTR FileName)
     NtFileDisk file;
     CHAR Buffer[16<<10];
     CHAR* p;
-    
+
     if (!FileName)
         return FALSE;
-    
+
     if (!NT_SUCCESS(file.Create(FileName)))
         return FALSE;
-    
+
     using namespace T_NAME;
 
     static
@@ -1128,7 +1129,7 @@ BOOL CHAR_T_STATUS_Ratio_To_Formula_HTML(LPCWSTR FileName)
         ".table1 td, .table1 th {background:#FFFFFF;}\r\n"
         "</style>\r\n</head>\r\n\r\n"
         "<body>\r\nLv = 角色等级<br>a = (Lv+15)(Lv+16)/2<br>\r\n";
-    
+
     file.Write(HtmlHead, CONST_STRLEN(HtmlHead));
 
     p = Buffer;
@@ -1182,7 +1183,7 @@ BOOL CHAR_T_STATUS_Ratio_To_Formula_HTML(LPCWSTR FileName)
         p += NCSTRCPY(p, "<th>x</th><th>y</th>");
     }
     p += NCSTRCPY(p, "</tr>\r\n");
-    
+
     for (int i=0; i<CHR_COUNT; i++)
     {
         p += NCSTRCPY(p, "<tr>");
@@ -1207,7 +1208,7 @@ BOOL CHAR_T_STATUS_Ratio_To_Formula_HTML(LPCWSTR FileName)
 
     file.Write(Buffer, (char*)p - (char*)Buffer);
     file.Close();
-    
+
     return TRUE;
 }
 
@@ -1227,7 +1228,7 @@ BOOL CHAR_T_STATUS_Ratio_To_Json(const char *filename)
             return FALSE;
     }
     //AllocConsole();
-    
+
     for (int i=0; i<CHR_COUNT; i++)
     {
         json_object_object_add(root_object, lpChrNameChs[i], chr_object = json_object_new_object());
@@ -1343,7 +1344,7 @@ BOOL THISCALL CBattle::IsChrCanTeamRush(PMONSTER_STATUS MSData, PCRAFT_INFO pCra
     return Result;
 }
 
-BOOL THISCALL CBattle::CheckQuartz(ULONG ChrPosition, ULONG ItemId, PULONG EquippedIndex /* = NULL */)
+BOOL THISCALL CBattle::CheckQuartz(ULONG ChrPosition, ULONG ItemId, PULONG EquippedIndex /* = nullptr */)
 {
     switch (ItemId)
     {
@@ -1400,11 +1401,11 @@ SepithUpLimitDisplay01:
 NAKED VOID SepithUpLimitDisplay1()
 {
     INLINE_ASM
-    {       
+    {
         MOVZX EAX,WORD PTR DS:[ECX+EAX*2];
         CMP EAX,0x3E7;
         jle SHORT L00000001;
-        MOV EAX,0x3E7;        
+        MOV EAX,0x3E7;
 L00000001:
         SHL EAX,1;
         RETN;
@@ -1414,11 +1415,11 @@ L00000001:
 NAKED VOID SepithUpLimitDisplay2()
 {
     INLINE_ASM
-    {       
+    {
         MOVZX EDX,WORD PTR DS:[ECX+EAX*2]
         CMP EDX,0x3E7;
         jle SHORT L00000002;
-        MOV EDX,0x3E7;  
+        MOV EDX,0x3E7;
 L00000002:
         SHL EDX,1;
         RETN;
@@ -1530,7 +1531,7 @@ VOID CClass::PokerRoyalFlush()
     Entry[11].digit = 1;
 
     Entry[12].digit = 5;
-    
+
     //Swap(Entry[6].digit, Entry[12].digit);  // 7-13
     //Swap(Entry[7].digit, Entry[0].digit);   // 8-1
 }
@@ -1538,7 +1539,7 @@ VOID CClass::PokerRoyalFlush()
 // log
 VOID THISCALL CClass::ShowHorrorCoasterText(INT x, INT y, float par3, LPCSTR text, ULONG par5, ULONG color)
 {
-    if (text != NULL && toupper(*text) == 'E')
+    if (text != nullptr && toupper(*text) == 'E')
         PrintConsoleA("%d %d %f %s\r\n", x, y, par3, text);
     (this->*StubShowHorrorCoasterText)(x, y, par3, text, par5, color);
     //960*544
@@ -1552,7 +1553,7 @@ VOID THISCALL CClass::PositionPC2PSP(PFLOAT par1, Gdiplus::PointF *Target, PFLOA
     *(PULONG_PTR)&StubPositionPC2PSP = 0x6724CE;
 
     EDAO *edao = EDAO::GlobalGetEDAO();
-    
+
     (this->*StubPositionPC2PSP)(par1, Target, par3);
     Target->X *= PSP_WIDTH_F / edao->GetWindowSize()->cx;
     Target->Y *= PSP_HEIGHT_F / edao->GetWindowSize()->cy;
@@ -1590,13 +1591,13 @@ BOOL THISCALL CGlobal::UseItemDouguOld(ULONG ItemId, ULONG ChrId)
     COORD EffectPar;
 
     BOOL Result;
-    
+
     GetItemEntry(&ItemEntry, ItemId);
 
     pChrStatus = &GetEDAO()->GetSaveData()->ChrStatus[ChrId];
 
     LOOP_ONCE
-    {  
+    {
         if (FLAG_ON(pChrStatus->ConditionFlags, CraftConditions::Dead))
         {
             if ( !(ItemEntry.DOUGU.Misc & 0x20) )
@@ -1608,7 +1609,7 @@ BOOL THISCALL CGlobal::UseItemDouguOld(ULONG ItemId, ULONG ChrId)
             }
             break;
         }
-        
+
         if ( (ItemEntry.DOUGU.Effect1 == 27
             || ItemEntry.DOUGU.Effect2 == 27
             || ItemEntry.DOUGU.Effect1 == 66
@@ -1622,13 +1623,13 @@ BOOL THISCALL CGlobal::UseItemDouguOld(ULONG ItemId, ULONG ChrId)
         {
             break;
         }
-        
+
         if ( (ItemEntry.DOUGU.Effect1 == 28 || ItemEntry.DOUGU.Effect2 == 28 || ItemEntry.DOUGU.Effect1 == 67 || ItemEntry.DOUGU.Effect2 == 67)
             && pChrStatus->InitialEP != pChrStatus->MaximumEP )
         {
             break;
         }
-        
+
         if ( (ItemEntry.DOUGU.Effect1 == 29
             || ItemEntry.DOUGU.Effect2 == 29
             || ItemEntry.DOUGU.Effect1 == 68
@@ -1652,7 +1653,7 @@ BOOL THISCALL CGlobal::UseItemDouguOld(ULONG ItemId, ULONG ChrId)
         EffectPar.Y = ItemEntry.DOUGU.Effect1ST;
         Effect = ItemEntry.DOUGU.Effect1;
         Result = DoEffect(ACTION_ITEM, 255, ChrId, Effect, &EffectPar, 0, TRUE);
-        
+
         EffectPar.X = ItemEntry.DOUGU.Effect2Parameter;
         EffectPar.Y = ItemEntry.DOUGU.Effect2ST;
         Effect = ItemEntry.DOUGU.Effect2;
@@ -1670,20 +1671,20 @@ BOOL THISCALL CGlobal::UseItemDouguFix(ULONG ItemId, ULONG ChrId)
 {
     BOOL IsCanUse = TRUE;
     CHAR_STATUS *pChrStatus;
-    
+
     ITEM_ENTRY ItemEntry;
-    
+
     BYTE Effect;
     COORD EffectPar;
-    
+
     BOOL Result;
-    
+
     GetItemEntry(&ItemEntry, ItemId);
-    
+
     pChrStatus = &GetEDAO()->GetSaveData()->ChrStatus[ChrId];
-    
+
     LOOP_ONCE
-    {  
+    {
         if (FLAG_ON(pChrStatus->ConditionFlags, CraftConditions::Dead))
         {
             if ( !(ItemEntry.DOUGU.Misc & 0x20) )
@@ -1693,7 +1694,7 @@ BOOL THISCALL CGlobal::UseItemDouguFix(ULONG ItemId, ULONG ChrId)
             }
             break;
         }
-        
+
         if ( ( ItemEntry.DOUGU.Effect1 == 27 || ItemEntry.DOUGU.Effect2 == 27 || ItemEntry.DOUGU.Effect3 == 27
             || ItemEntry.DOUGU.Effect1 == 66 || ItemEntry.DOUGU.Effect2 == 66 || ItemEntry.DOUGU.Effect3 == 66
             || ItemEntry.DOUGU.Effect1 == 51 || ItemEntry.DOUGU.Effect2 == 51 || ItemEntry.DOUGU.Effect3 == 51
@@ -1703,14 +1704,14 @@ BOOL THISCALL CGlobal::UseItemDouguFix(ULONG ItemId, ULONG ChrId)
         {
             break;
         }
-        
+
         if ( ( ItemEntry.DOUGU.Effect1 == 28 || ItemEntry.DOUGU.Effect2 == 28 || ItemEntry.DOUGU.Effect3 == 28
             || ItemEntry.DOUGU.Effect1 == 67 || ItemEntry.DOUGU.Effect2 == 67 || ItemEntry.DOUGU.Effect3 == 67 )
             && pChrStatus->InitialEP != pChrStatus->MaximumEP )
         {
             break;
         }
-        
+
         if ( ( ItemEntry.DOUGU.Effect1 == 29 || ItemEntry.DOUGU.Effect2 == 29 || ItemEntry.DOUGU.Effect3 == 29
             || ItemEntry.DOUGU.Effect1 == 68 || ItemEntry.DOUGU.Effect2 == 68 || ItemEntry.DOUGU.Effect3 == 68
             || ItemEntry.DOUGU.Effect1 == 70 || ItemEntry.DOUGU.Effect2 == 70 || ItemEntry.DOUGU.Effect3 == 70
@@ -1719,10 +1720,10 @@ BOOL THISCALL CGlobal::UseItemDouguFix(ULONG ItemId, ULONG ChrId)
         {
             break;
         }
-        
+
         IsCanUse = FALSE;
     }
-    
+
     if (IsCanUse)
     {
         SubItem(ItemId, 1);
@@ -1730,7 +1731,7 @@ BOOL THISCALL CGlobal::UseItemDouguFix(ULONG ItemId, ULONG ChrId)
         EffectPar.Y = ItemEntry.DOUGU.Effect1ST;
         Effect = ItemEntry.DOUGU.Effect1;
         Result = DoEffect(ACTION_ITEM, 255, ChrId, Effect, &EffectPar, 0, TRUE);
-        
+
         EffectPar.X = ItemEntry.DOUGU.Effect2Parameter;
         EffectPar.Y = ItemEntry.DOUGU.Effect2ST;
         Effect = ItemEntry.DOUGU.Effect2;
