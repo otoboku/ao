@@ -1577,3 +1577,174 @@ LReturn2ExtraFix01:
 	    ret;
     }
 }
+
+
+BOOL THISCALL CGlobal::UseItemDouguOld(ULONG ItemId, ULONG ChrId)
+{
+    BOOL IsCanUse = TRUE;
+    CHAR_STATUS *pChrStatus;
+
+    ITEM_ENTRY ItemEntry;
+
+    BYTE Effect;
+    COORD EffectPar;
+
+    BOOL Result;
+    
+    GetItemEntry(&ItemEntry, ItemId);
+
+    pChrStatus = &GetEDAO()->GetSaveData()->ChrStatus[ChrId];
+
+    LOOP_ONCE
+    {  
+        if (FLAG_ON(pChrStatus->ConditionFlags, CraftConditions::Dead))
+        {
+            if ( !(ItemEntry.DOUGU.Misc & 0x20) )
+            {
+                IsCanUse = FALSE;
+                break;
+                //GetEDAO()->GetSound()->PlaySound(3);
+                //return FALSE;
+            }
+            break;
+        }
+        
+        if ( (ItemEntry.DOUGU.Effect1 == 27
+            || ItemEntry.DOUGU.Effect2 == 27
+            || ItemEntry.DOUGU.Effect1 == 66
+            || ItemEntry.DOUGU.Effect2 == 66
+            || ItemEntry.DOUGU.Effect1 == 51
+            || ItemEntry.DOUGU.Effect2 == 51
+            || ItemEntry.DOUGU.Effect1 == 50
+            || ItemEntry.DOUGU.Effect2 == 50
+            || ItemEntry.DOUGU.Effect1 == 73)
+            && pChrStatus->InitialHP != pChrStatus->MaximumHP )
+        {
+            break;
+        }
+        
+        if ( (ItemEntry.DOUGU.Effect1 == 28 || ItemEntry.DOUGU.Effect2 == 28 || ItemEntry.DOUGU.Effect1 == 67 || ItemEntry.DOUGU.Effect2 == 67)
+            && pChrStatus->InitialEP != pChrStatus->MaximumEP )
+        {
+            break;
+        }
+        
+        if ( (ItemEntry.DOUGU.Effect1 == 29
+            || ItemEntry.DOUGU.Effect2 == 29
+            || ItemEntry.DOUGU.Effect1 == 68
+            || ItemEntry.DOUGU.Effect2 == 68
+            || ItemEntry.DOUGU.Effect1 == 70
+            || ItemEntry.DOUGU.Effect2 == 70
+            || ItemEntry.DOUGU.Effect1 == 71
+            || ItemEntry.DOUGU.Effect2 == 71)
+            && pChrStatus->InitialCP != pChrStatus->MaximumCP )
+        {
+            break;
+        }
+
+        IsCanUse = FALSE;
+    }
+
+    if (IsCanUse)
+    {
+        SubItem(ItemId, 1);
+        EffectPar.X = ItemEntry.DOUGU.Effect1Parameter;
+        EffectPar.Y = ItemEntry.DOUGU.Effect1ST;
+        Effect = ItemEntry.DOUGU.Effect1;
+        Result = DoEffect(ACTION_ITEM, 255, ChrId, Effect, &EffectPar, 0, TRUE);
+        
+        EffectPar.X = ItemEntry.DOUGU.Effect2Parameter;
+        EffectPar.Y = ItemEntry.DOUGU.Effect2ST;
+        Effect = ItemEntry.DOUGU.Effect2;
+        DoEffect(ACTION_ITEM, 255, ChrId, Effect, &EffectPar, 0, Result == FALSE);
+        return TRUE;
+    }
+    else
+    {
+        GetEDAO()->GetSound()->PlaySound(3);
+        return FALSE;
+    }
+}
+
+BOOL THISCALL CGlobal::UseItemDouguFix(ULONG ItemId, ULONG ChrId)
+{
+    BOOL IsCanUse = TRUE;
+    CHAR_STATUS *pChrStatus;
+    
+    ITEM_ENTRY ItemEntry;
+    
+    BYTE Effect;
+    COORD EffectPar;
+    
+    BOOL Result;
+    
+    GetItemEntry(&ItemEntry, ItemId);
+    
+    pChrStatus = &GetEDAO()->GetSaveData()->ChrStatus[ChrId];
+    
+    LOOP_ONCE
+    {  
+        if (FLAG_ON(pChrStatus->ConditionFlags, CraftConditions::Dead))
+        {
+            if ( !(ItemEntry.DOUGU.Misc & 0x20) )
+            {
+                IsCanUse = FALSE;
+                break;
+            }
+            break;
+        }
+        
+        if ( ( ItemEntry.DOUGU.Effect1 == 27 || ItemEntry.DOUGU.Effect2 == 27 || ItemEntry.DOUGU.Effect3 == 27
+            || ItemEntry.DOUGU.Effect1 == 66 || ItemEntry.DOUGU.Effect2 == 66 || ItemEntry.DOUGU.Effect3 == 66
+            || ItemEntry.DOUGU.Effect1 == 51 || ItemEntry.DOUGU.Effect2 == 51 || ItemEntry.DOUGU.Effect3 == 51
+            || ItemEntry.DOUGU.Effect1 == 50 || ItemEntry.DOUGU.Effect2 == 50 || ItemEntry.DOUGU.Effect3 == 50
+            || ItemEntry.DOUGU.Effect1 == 73 || ItemEntry.DOUGU.Effect2 == 73 || ItemEntry.DOUGU.Effect3 == 73 )
+            && pChrStatus->InitialHP != pChrStatus->MaximumHP )
+        {
+            break;
+        }
+        
+        if ( ( ItemEntry.DOUGU.Effect1 == 28 || ItemEntry.DOUGU.Effect2 == 28 || ItemEntry.DOUGU.Effect3 == 28
+            || ItemEntry.DOUGU.Effect1 == 67 || ItemEntry.DOUGU.Effect2 == 67 || ItemEntry.DOUGU.Effect3 == 67 )
+            && pChrStatus->InitialEP != pChrStatus->MaximumEP )
+        {
+            break;
+        }
+        
+        if ( ( ItemEntry.DOUGU.Effect1 == 29 || ItemEntry.DOUGU.Effect2 == 29 || ItemEntry.DOUGU.Effect3 == 29
+            || ItemEntry.DOUGU.Effect1 == 68 || ItemEntry.DOUGU.Effect2 == 68 || ItemEntry.DOUGU.Effect3 == 68
+            || ItemEntry.DOUGU.Effect1 == 70 || ItemEntry.DOUGU.Effect2 == 70 || ItemEntry.DOUGU.Effect3 == 70
+            || ItemEntry.DOUGU.Effect1 == 71 || ItemEntry.DOUGU.Effect2 == 71 || ItemEntry.DOUGU.Effect3 == 71 )
+            && pChrStatus->InitialCP != pChrStatus->MaximumCP )
+        {
+            break;
+        }
+        
+        IsCanUse = FALSE;
+    }
+    
+    if (IsCanUse)
+    {
+        SubItem(ItemId, 1);
+        EffectPar.X = ItemEntry.DOUGU.Effect1Parameter;
+        EffectPar.Y = ItemEntry.DOUGU.Effect1ST;
+        Effect = ItemEntry.DOUGU.Effect1;
+        Result = DoEffect(ACTION_ITEM, 255, ChrId, Effect, &EffectPar, 0, TRUE);
+        
+        EffectPar.X = ItemEntry.DOUGU.Effect2Parameter;
+        EffectPar.Y = ItemEntry.DOUGU.Effect2ST;
+        Effect = ItemEntry.DOUGU.Effect2;
+        Result |= DoEffect(ACTION_ITEM, 255, ChrId, Effect, &EffectPar, 0, Result == FALSE);
+
+        EffectPar.X = ItemEntry.DOUGU.Effect3Parameter;
+        EffectPar.Y = ItemEntry.DOUGU.Effect3ST;
+        Effect = ItemEntry.DOUGU.Effect3;
+        DoEffect(ACTION_ITEM, 255, ChrId, Effect, &EffectPar, 0, Result == FALSE);
+        return TRUE;
+    }
+    else
+    {
+        GetEDAO()->GetSound()->PlaySound(3);
+        return FALSE;
+    }
+}

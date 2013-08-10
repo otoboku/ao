@@ -547,7 +547,45 @@ typedef union _AS_FILE
     };
 } AS_FILE, *PAS_FILE;
 
+typedef union _ITEM_ENTRY
+{
+    BYTE    Bytes[0x1C];
 
+    struct
+    {
+        USHORT  ItemId;
+        BYTE    Misc;
+        BYTE    Limit;
+        BYTE    MaxAmount;
+        BYTE    Type;           // 0x5
+        DUMMY_STRUCT(0x1C - 0x6 - 0x4);
+        ULONG   Price;
+    };
+
+    struct _DOUGU
+    {
+        USHORT  ItemId;                 // 0x0
+        BYTE    Misc;                   // 0x2
+        BYTE    Effect3;                // 0x3
+        BYTE    MaxAmount;              // 0x4
+        BYTE    Type;                   // 0x5
+        BYTE    Effect1;                // 0x6
+        BYTE    Effect2;                // 0x7
+        BYTE    dummy1;                 // 0x8
+        BYTE    ShapeScope;             // 0x9
+        CHAR    RNG;                    // 0xA
+        BYTE    ScopeRadius;            // 0xB
+        SHORT   Effect1Parameter;       // 0xC
+        USHORT  Effect1ST;              // 0xE
+        SHORT   Effect2Parameter;       // 0x10
+        USHORT  Effect2ST;              // 0x12
+        CHAR    Effect3Parameter;       // 0x14
+        BYTE    Effect3ST;              // 0x15
+        BYTE    dummy2;                 // 0x16
+        BYTE    DisplayIndex;           // 0x17
+        ULONG   Price;                  // 0x18
+    } DOUGU;
+} ITEM_ENTRY, *PITEM_ENTRY;
 
 EDAO* GlobalGetEDAO();
 
@@ -853,6 +891,8 @@ public:
 
 INIT_STATIC_MEMBER(CBattleInfoBox::StubDrawMonsterStatus);
 
+#pragma pack(push, 1)
+
 typedef union
 {
     DUMMY_STRUCT(0x78);
@@ -946,6 +986,8 @@ public:
 */
     PAT_BAR_ENTRY THISCALL LookupReplaceAtBarEntry(PMONSTER_STATUS MSData, BOOL IsFirst);
 };
+
+#pragma pack(pop)
 
 class CBattle
 {
@@ -1672,10 +1714,6 @@ public:
     PCSTR       THISCALL GetMagicDescription(USHORT MagicId);
     PBYTE       THISCALL GetMagicQueryTable(USHORT MagicId);
 
-    //mark
-    BOOL THISCALL AddCraft(ULONG ChrId, ULONG Craft);
-    DECL_STATIC_METHOD_POINTER(CGlobal, AddCraft);
-
     EDAO* GetEDAO()
     {
         return (EDAO *)PtrSub(this, 0x4D3E8);
@@ -1693,12 +1731,31 @@ public:
 
     VOID CalcChrFinalStatus(ULONG ChrId, PCHAR_STATUS FinalStatus, PCHAR_STATUS RawStatus)
     {
-        TYPE_OF(&CGlobal::CalcChrFinalStatus) f;
-
-        *(PVOID *)&f = (PVOID)0x677B36;
-
-        return (this->*f)(ChrId, FinalStatus, RawStatus);
+        DETOUR_METHOD(CGlobal, CalcChrFinalStatus, 0x677B36, ChrId, FinalStatus, RawStatus);
     }
+
+    PITEM_ENTRY THISCALL GetItemEntry(PITEM_ENTRY pItemEntry, ULONG ItemId)
+    {
+        DETOUR_METHOD(CGlobal, GetItemEntry, 0x00673991, pItemEntry, ItemId);
+    }
+
+    BOOL THISCALL SubItem(ULONG ItemId, ULONG Count)
+    {
+        DETOUR_METHOD(CGlobal, SubItem, 0x00675EEE, ItemId, Count);
+    }
+
+    BOOL THISCALL DoEffect(ULONG ActionType, ULONG SrcChrId, ULONG DstChrId, ULONG Effect, PCOORD pEffectPar, ULONG par6, BOOL IsPlaySound)
+    {
+        DETOUR_METHOD(CGlobal, DoEffect, 0x006772A8, ActionType, SrcChrId, DstChrId, Effect, pEffectPar, par6, IsPlaySound);
+    }
+
+
+    //mark
+    BOOL THISCALL AddCraft(ULONG ChrId, ULONG Craft);
+    DECL_STATIC_METHOD_POINTER(CGlobal, AddCraft);
+
+    BOOL THISCALL UseItemDouguOld(ULONG ItemId, ULONG ChrId);
+    BOOL THISCALL UseItemDouguFix(ULONG ItemId, ULONG ChrId);
 
     static TYPE_OF(&CGlobal::GetMagicData)          StubGetMagicData;
     static TYPE_OF(&CGlobal::GetMagicDescription)   StubGetMagicDescription;

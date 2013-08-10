@@ -197,6 +197,7 @@ BOOL Initialize(PVOID BaseAddress)
         INLINE_HOOK_JUMP_RVA     (0x278F68, CalcSpecificStatusByDifficulty, StubCalcSpecificStatusByDifficulty),
 
         INLINE_HOOK_JUMP_RVA     (0x275471, METHOD_PTR(&CGlobal::AddCraft), CGlobal::StubAddCraft), // 银 不能习得 月舞
+        INLINE_HOOK_JUMP_RVA_NULL(0x277A55, METHOD_PTR(&CGlobal::UseItemDouguFix)),
 
         // fish
         INLINE_HOOK_CALL_RVA_NULL(0x675BC2, METHOD_PTR(&CFish::IsRodPulled)),
@@ -227,6 +228,7 @@ BOOL Initialize(PVOID BaseAddress)
 #if CONSOLE_DEBUG
     AllocConsole();
     PrintConsoleW(L"%x\r\n", sizeof(MONSTER_STATUS));
+    PrintConsoleW(L"%x\r\n", sizeof(ITEM_ENTRY));
     PrintConsoleW(L"%x\r\n", FIELD_OFFSET(MONSTER_STATUS, AT));
     PrintConsoleW(L"%x\r\n", FIELD_OFFSET(MONSTER_STATUS, Resistance));
     //PrintConsoleW(L"%x\r\n", FIELD_OFFSET(MONSTER_STATUS, SummonCount));
