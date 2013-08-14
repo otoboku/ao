@@ -1669,7 +1669,6 @@ BOOL THISCALL CGlobal::UseItemDouguOld(ULONG ItemId, ULONG ChrId)
 
 BOOL THISCALL CGlobal::UseItemDouguFix(ULONG ItemId, ULONG ChrId)
 {
-    BOOL IsCanUse = TRUE;
     CHAR_STATUS *pChrStatus;
 
     ITEM_ENTRY ItemEntry;
@@ -1677,7 +1676,9 @@ BOOL THISCALL CGlobal::UseItemDouguFix(ULONG ItemId, ULONG ChrId)
     BYTE Effect;
     COORD EffectPar;
 
-    BOOL Result;
+    BOOL IsCanUse = TRUE;
+    BOOL IsSoundPlayed;
+    BOOL Result = TRUE;
 
     GetItemEntry(&ItemEntry, ItemId);
 
@@ -1690,7 +1691,8 @@ BOOL THISCALL CGlobal::UseItemDouguFix(ULONG ItemId, ULONG ChrId)
             if ( !(ItemEntry.DOUGU.Misc & 0x20) )
             {
                 IsCanUse = FALSE;
-                break;
+                Result = FALSE;
+                //break;
             }
             break;
         }
@@ -1730,22 +1732,22 @@ BOOL THISCALL CGlobal::UseItemDouguFix(ULONG ItemId, ULONG ChrId)
         EffectPar.X = ItemEntry.DOUGU.Effect1Parameter;
         EffectPar.Y = ItemEntry.DOUGU.Effect1ST;
         Effect = ItemEntry.DOUGU.Effect1;
-        Result = DoEffect(ACTION_ITEM, 255, ChrId, Effect, &EffectPar, 0, TRUE);
+        IsSoundPlayed = DoEffect(ACTION_ITEM, 255, ChrId, Effect, &EffectPar, 0, TRUE);
 
         EffectPar.X = ItemEntry.DOUGU.Effect2Parameter;
         EffectPar.Y = ItemEntry.DOUGU.Effect2ST;
         Effect = ItemEntry.DOUGU.Effect2;
-        Result |= DoEffect(ACTION_ITEM, 255, ChrId, Effect, &EffectPar, 0, Result == FALSE);
+        IsSoundPlayed |= DoEffect(ACTION_ITEM, 255, ChrId, Effect, &EffectPar, 0, !IsSoundPlayed);
 
         EffectPar.X = ItemEntry.DOUGU.Effect3Parameter;
         EffectPar.Y = ItemEntry.DOUGU.Effect3ST;
         Effect = ItemEntry.DOUGU.Effect3;
-        DoEffect(ACTION_ITEM, 255, ChrId, Effect, &EffectPar, 0, Result == FALSE);
-        return TRUE;
+        DoEffect(ACTION_ITEM, 255, ChrId, Effect, &EffectPar, 0, !IsSoundPlayed);
     }
     else
     {
         GetEDAO()->GetSound()->PlaySound(3);
-        return FALSE;
     }
+
+    return Result;
 }

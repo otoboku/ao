@@ -94,7 +94,7 @@ BOOL Initialize(PVOID BaseAddress)
 #if CONSOLE_DEBUG
     QueryPerformanceFrequency(&lFrequency);
 
-    *(PBOOL)((PBYTE)Nt_GetModuleHandle(L"DINPUT8.dll") + 0x70E8) = FALSE;
+    //*(PBOOL)((PBYTE)Nt_GetModuleHandle(L"DINPUT8.dll") + 0x70E8) = FALSE;
 #endif
 
 /*
