@@ -214,68 +214,6 @@ size_t nwcscpy(wchar_t* dst, const wchar_t* src)
     C End
 ************************************************************************/
 
-#if 0
-VOID ConfigInit()
-{
-    static WCHAR szConfigExPath[] = L".\\config_ex.ini";
-
-    bArianrhodLimitKaijo = NINI::GetPrivateProfileBoolW(L"Ex", L"ArianrhodLimitKaijo", TRUE, szConfigExPath);
-    bEnemySBreak = NINI::GetPrivateProfileBoolW(L"Ex", L"EnemySBreak", TRUE, szConfigExPath);
-    bShowAT = NINI::GetPrivateProfileBoolW(L"Ex", L"ShowAT", TRUE, szConfigExPath);
-    bForceKillEnemyAtScene = NINI::GetPrivateProfileBoolW(L"Ex", L"ForceKillEnemyAtScene", TRUE, szConfigExPath);
-    bForceShowBurstMode = NINI::GetPrivateProfileBoolW(L"Ex", L"ForceShowBurstMode", TRUE, szConfigExPath);
-    bForceShowInfOnMiniMap = NINI::GetPrivateProfileBoolW(L"Ex", L"ForceShowInfOnMiniMap", TRUE, szConfigExPath);
-    bEnableSkipCraftAnime = NINI::GetPrivateProfileBoolW(L"Ex", L"EnableSkipCraftAnime", TRUE, szConfigExPath);
-
-    nDifficulty = NINI::GetPrivateProfileIntW(L"Battle", L"Difficulty", 0, szConfigExPath);
-    if (nDifficulty)
-    {
-        statusRateUserDefined.HP = NINI::GetPrivateProfileIntW(L"Battle", L"HP", 100, szConfigExPath);
-        statusRateUserDefined.STR = NINI::GetPrivateProfileIntW(L"Battle", L"STR", 100, szConfigExPath);
-        statusRateUserDefined.DEF = NINI::GetPrivateProfileIntW(L"Battle", L"DEF", 100, szConfigExPath);
-        statusRateUserDefined.ATS = NINI::GetPrivateProfileIntW(L"Battle", L"ATS", 100, szConfigExPath);
-        statusRateUserDefined.ADF = NINI::GetPrivateProfileIntW(L"Battle", L"ADF", 100, szConfigExPath);
-        statusRateUserDefined.SPD = NINI::GetPrivateProfileIntW(L"Battle", L"SPD", 100, szConfigExPath);
-        statusRateUserDefined.DEX = NINI::GetPrivateProfileIntW(L"Battle", L"DEX", 100, szConfigExPath);
-        statusRateUserDefined.AGL = NINI::GetPrivateProfileIntW(L"Battle", L"AGL", 100, szConfigExPath);
-        statusRateUserDefined.MOV = NINI::GetPrivateProfileIntW(L"Battle", L"MOV", 100, szConfigExPath);
-        statusRateUserDefined.DEXRate = NINI::GetPrivateProfileIntW(L"Battle", L"DEXRate", 0, szConfigExPath);
-        statusRateUserDefined.AGLRate = NINI::GetPrivateProfileIntW(L"Battle", L"AGLRate", 0, szConfigExPath);
-        statusRateUserDefined.ResistAbnormalCondition = NINI::GetPrivateProfileBoolW(L"Battle", L"ResistAbnormalCondition", FALSE, szConfigExPath);
-        statusRateUserDefined.ResistAbilityDown = NINI::GetPrivateProfileBoolW(L"Battle", L"ResistAbilityDown", FALSE, szConfigExPath);
-        statusRateUserDefined.ResistATDelay = NINI::GetPrivateProfileBoolW(L"Battle", L"ResistATDelay", FALSE, szConfigExPath);
-    }
-
-
-
-#if CONSOLE_DEBUG
-PrintConsoleW(L"bArianrhodLimitKaijo:%d\r\n", bArianrhodLimitKaijo);
-PrintConsoleW(L"bEnemySBreak:%d\r\n", bEnemySBreak);
-PrintConsoleW(L"bShowAT:%d\r\n", bShowAT);
-PrintConsoleW(L"bForceKillEnemyAtScene:%d\r\n", bForceKillEnemyAtScene);
-PrintConsoleW(L"bForceShowBurstMode:%d\r\n", bForceShowBurstMode);
-PrintConsoleW(L"bForceShowInfOnMiniMap:%d\r\n", bForceShowInfOnMiniMap);
-PrintConsoleW(L"bEnableSkipCraftAnime:%d\r\n", bEnableSkipCraftAnime);
-
-PrintConsoleW(L"nDifficulty:%d\r\n", nDifficulty);
-PrintConsoleW(L"HP:%d\r\n", statusRateUserDefined.HP);
-PrintConsoleW(L"STR:%d\r\n", statusRateUserDefined.STR);
-PrintConsoleW(L"DEF:%d\r\n", statusRateUserDefined.DEF);
-PrintConsoleW(L"ATS:%d\r\n", statusRateUserDefined.ATS);
-PrintConsoleW(L"ADF:%d\r\n", statusRateUserDefined.ADF);
-PrintConsoleW(L"SPD:%d\r\n", statusRateUserDefined.SPD);
-PrintConsoleW(L"DEX:%d\r\n", statusRateUserDefined.DEX);
-PrintConsoleW(L"AGL:%d\r\n", statusRateUserDefined.AGL);
-PrintConsoleW(L"MOV:%d\r\n", statusRateUserDefined.MOV);
-PrintConsoleW(L"DEXRate:%d\r\n", statusRateUserDefined.DEXRate);
-PrintConsoleW(L"AGLRate:%d\r\n", statusRateUserDefined.AGLRate);
-PrintConsoleW(L"ResistAbnormalCondition:%d\r\n", statusRateUserDefined.ResistAbnormalCondition);
-PrintConsoleW(L"ResistAbilityDown:%d\r\n", statusRateUserDefined.ResistAbilityDown);
-PrintConsoleW(L"ResistATDelay:%d\r\n", statusRateUserDefined.ResistATDelay);
-#endif
-}
-#endif
-
 VOID ConfigInit()
 {
     static WCHAR szConfigExPath[] = L".\\config_ex.ini";
@@ -664,7 +602,7 @@ BOOL THISCALL CBattle::IsNeedBattleEvaluationSuperKill(ULONG ChrPosition)
 
 BOOL THISCALL CBattle::GetHitResult(PMONSTER_STATUS src, PMONSTER_STATUS dst)
 {
-    DETOUR_METHOD_NO_RET(CBattle, GetHitResult, 0x6799F4);
+    DECL_METHOD_POINTER_AND_INIT(CBattle, GetHitResult, 0x6799F4);
     if (src == dst && src != nullptr)
     {
         src->IsHitJudged[src->CharPosition] = FALSE;
@@ -1481,7 +1419,7 @@ public:
 
 BOOL THISCALL CFish::IsRodPulled()
 {
-    DETOUR_METHOD_NO_RET(CFish, IsRodPulled, 0x6739C8);
+    DECL_METHOD_POINTER_AND_INIT(CFish, IsRodPulled, 0x6739C8);
 
     if (nAutoFish == 1)
         return TRUE;
@@ -1490,7 +1428,7 @@ BOOL THISCALL CFish::IsRodPulled()
 
 ULONG_PTR THISCALL CFish::GetRodEntry(ULONG RodNo)
 {
-    DETOUR_METHOD_NO_RET(CFish, GetRodEntry, 0x67A697);
+    DECL_METHOD_POINTER_AND_INIT(CFish, GetRodEntry, 0x67A697);
 
     ULONG_PTR pEntry = (this->*StubGetRodEntry)(RodNo);
     if (nAutoFish > 1 && RodNo < 5)
@@ -1549,8 +1487,7 @@ VOID THISCALL CClass::ShowHorrorCoasterText(INT x, INT y, float par3, LPCSTR tex
 // 文本显示位置错误
 VOID THISCALL CClass::PositionPC2PSP(PFLOAT par1, Gdiplus::PointF *Target, PFLOAT par3)
 {
-    TYPE_OF(&CClass::PositionPC2PSP) StubPositionPC2PSP;
-    *(PULONG_PTR)&StubPositionPC2PSP = 0x6724CE;
+    DECL_METHOD_POINTER_AND_INIT(CClass, PositionPC2PSP, 0x6724CE);
 
     EDAO *edao = EDAO::GlobalGetEDAO();
 
