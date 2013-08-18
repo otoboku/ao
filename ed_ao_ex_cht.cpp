@@ -18,7 +18,7 @@ BOOL UnInitialize(PVOID BaseAddress)
 
 #define METHOD_PTR(_method) PtrAdd((PVOID)NULL, _method)
 
-#include "xxoo.h"
+#include "Aki.h"
 
 BOOL Initialize(PVOID BaseAddress)
 {

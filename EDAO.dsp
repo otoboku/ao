@@ -124,6 +124,10 @@ LINK32=link.exe
 # Name "EDAO - Win32 cht"
 # Begin Source File
 
+SOURCE=.\Aki.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\Battle.cpp
 # End Source File
 # Begin Source File
@@ -217,10 +221,6 @@ SOURCE=.\SoundArc.cpp
 # Begin Source File
 
 SOURCE=.\SoundArc.h
-# End Source File
-# Begin Source File
-
-SOURCE=.\xxoo.h
 # End Source File
 # End Target
 # End Project
