@@ -40,7 +40,7 @@ class CDebug;
 #define DECL_STATIC_METHOD_POINTER(cls, method) static TYPE_OF(&cls::method) Stub##method
 #define DETOUR_METHOD(cls, method, addr, ...) TYPE_OF(&cls::method) (method); *(PULONG_PTR)&(method) = addr; return (this->*method)(__VA_ARGS__)
 #define DECL_METHOD_POINTER_AND_INIT(cls, method, addr) TYPE_OF(&cls::method) Stub##method; *(PULONG_PTR)&(Stub##method) = addr
-
+#define READONLY_PROPERTY(type, var) __declspec(property(get = Get##var)) type var; type Get##var()
 
 #define MINIMUM_CUSTOM_CHAR_ID          0xB0
 #define MINIMUM_CUSTOM_CRAFT_INDEX      0x3E8
@@ -98,10 +98,13 @@ ML_NAMESPACE_BEGIN(CraftConditions)
 
     static const ULONG_PTR Stealth             = 0x04000000;
     static const ULONG_PTR ArtsReflect         = 0x08000000;
-    static const ULONG_PTR BurningHeart        = 0x10000000;
     static const ULONG_PTR Reserve_1           = 0x10000000;
+    static const ULONG_PTR Boost               = 0x10000000;
+    static const ULONG_PTR BurningHeart        = 0x10000000;
     static const ULONG_PTR Reserve_2           = 0x20000000;
+    static const ULONG_PTR CraftReflect        = 0x20000000;
     static const ULONG_PTR Reserve_3           = 0x40000000;
+    static const ULONG_PTR GreenPepper         = 0x40000000;
     static const ULONG_PTR BodyAbnormal        = 0x40000000;
 
     static const ULONG_PTR Dead                = 0x80000000;
@@ -183,6 +186,16 @@ typedef struct  // 0x18
     ULONG   Parameter[4];
 
 } CRAFT_AI_INFO, *PCRAFT_AI_INFO;
+
+ML_NAMESPACE_BEGIN(CraftInfoTargets)
+
+enum
+{
+    OtherSide   = 0x10,
+    SelfSide    = 0x80,
+};
+
+ML_NAMESPACE_END
 
 typedef struct
 {
@@ -348,12 +361,20 @@ typedef struct
 {
     ULONG               ConditionFlags;
     PVOID               Effect;
-    //BYTE                Unknown2[2];
-    BYTE                Type; // 1 回合; 2 次数; 3 AT条动多少次; 4 永久
-    BYTE                Flag;
+    //BYTE                Type; // 1 回合; 2 次数; 3 AT条动多少次; 4 永久
+    BYTE                CounterType;
+    BYTE                Flags;
     SHORT               ConditionRate;
-    ULONG               ATLeft;
-    ULONG               Unknown4;
+    LONG                ATLeft;
+    LONG                Unknown4;
+
+    enum CounterTypes
+    {
+        ByRounds    = 1,
+        ByTimes     = 2,
+        ByActions   = 3,
+        Infinite    = 4,
+    };
 
 } MS_EFFECT_INFO, *PMS_EFFECT_INFO;
 
@@ -361,7 +382,7 @@ enum
 {
     CHR_FLAG_ENEMY  = 0x1000,
     CHR_FLAG_NPC    = 0x2000,
-    CHR_FLAG_PLAYER = 0x4000,
+    CHR_FLAG_PARTY  = 0x4000,
     CHR_FLAG_EMPTY  = 0x8000,
 };
 
@@ -377,14 +398,17 @@ typedef struct _MONSTER_STATUS
 {
     //DUMMY_STRUCT(0x2424);
 
-    BOOL IsChrEnemy()
+    BOOL IsChrEnemy(BOOL CheckAIType = TRUE)
     {
-        return AiType != 0xFF && !FLAG_ON(State, CHR_FLAG_NPC | CHR_FLAG_PLAYER | CHR_FLAG_EMPTY);
+        if (CheckAIType && AiType == 0xFF)
+            return FALSE;
+
+        return FLAG_OFF(State, CHR_FLAG_NPC | CHR_FLAG_PARTY | CHR_FLAG_EMPTY);
     }
 
     BOOL IsChrEnemyOnly()
     {
-        return !FLAG_ON(State, CHR_FLAG_NPC | CHR_FLAG_PLAYER | CHR_FLAG_EMPTY);
+        return (State & (CHR_FLAG_ENEMY | CHR_FLAG_NPC | CHR_FLAG_PARTY | CHR_FLAG_EMPTY)) == CHR_FLAG_ENEMY;
     }
 
     BOOL IsChrEmpty()
@@ -482,7 +506,7 @@ typedef struct _MONSTER_STATUS
         USHORT                  Equipment[5];               // 0x54C
         USHORT                  Orbment[7];                 // 0x556
         CRAFT_AI_INFO           Attack;                     // 0x564
-        CRAFT_AI_INFO           MagicAiInfo[80];            // 0x57C
+        CRAFT_AI_INFO           ArtsAiInfo[80];             // 0x57C
         CRAFT_AI_INFO           CraftAiInfo[15];            // 0xCFC
         CRAFT_AI_INFO           SCraftAiInfo[5];            // 0xE64
         CRAFT_AI_INFO           SupportAiInfo[3];           // 0xEDC
@@ -992,6 +1016,34 @@ public:
 
 #pragma pack(pop)
 
+ML_NAMESPACE_BEGIN(ArtsPage)
+
+enum ArtsPageType
+{
+    Attack      = 0,
+    Recovery    = 1,
+    Debuff      = 2,
+    Auxiliary   = 3,
+    Master      = 4,
+};
+
+ML_NAMESPACE_END
+
+class CArtsNameWindow
+{
+public:
+
+    READONLY_PROPERTY(ULONG_PTR, SelectedArtsIndex)
+    {
+        return *(PULONG)PtrAdd(this, 0xBC);
+    }
+
+    READONLY_PROPERTY(ArtsPage::ArtsPageType, ArtsType)
+    {
+        return (ArtsPage::ArtsPageType)*(PULONG)PtrAdd(this, 0xDC);
+    }
+};
+
 class CBattle
 {
 public:
@@ -1005,15 +1057,14 @@ public:
         return *(CSSaveData **)PtrAdd(this, 0x38D28);
     }
 
+    READONLY_PROPERTY(CArtsNameWindow*, ArtsNameWindow)
+    {
+        return *(CArtsNameWindow **)PtrAdd(this, 0xFF59C);
+    }
 
     CBattleInfoBox* GetBattleInfoBox()
     {
         return (CBattleInfoBox *)PtrAdd(this, 0xF0D24);
-    }
-
-    BOOL IsCustomChar(ULONG_PTR ChrId)
-    {
-        return GetSaveData()->IsCustomChar(ChrId);
     }
 
     EDAO* GetEDAO()
@@ -1029,6 +1080,11 @@ public:
     CBattleATBar* GetBattleATBar()
     {
         return (CBattleATBar *)PtrAdd(this, 0x103148);
+    }
+
+    BOOL IsCustomChar(ULONG_PTR ChrId)
+    {
+        return GetSaveData()->IsCustomChar(ChrId);
     }
 
     BOOL IsForceInsertToFirst()
@@ -1088,6 +1144,11 @@ public:
         return (this->*UpdateHP)(MSData, Increment, Initial, What);
     }
 
+    VOID THISCALL UpdateEffectLeftTime(PMONSTER_STATUS MSData, LONG LeftTime, BYTE CounterType, ULONG ConditionFlag)
+    {
+        DETOUR_METHOD(CBattle, UpdateEffectLeftTime, 0x9E3570, MSData, LeftTime, CounterType, ConditionFlag);
+    }
+
     /************************************************************************
       bug fix
     ************************************************************************/
@@ -1137,6 +1198,15 @@ public:
     VOID NakedCopyMagicAndCraftData();
     VOID FASTCALL CopyMagicAndCraftData(PMONSTER_STATUS MSData);
 
+    VOID NakedFindReplaceChr();
+    VOID NakedCheckCraftTargetBits();
+
+    VOID THISCALL GetConditionIconPosByIndex(Gdiplus::PointF *Position, PMS_EFFECT_INFO EffectInfo, ULONG_PTR ConditionIndex);
+    BOOL THISCALL IsTargetCraftReflect(PMONSTER_STATUS Self, PMONSTER_STATUS Target, ULONG_PTR ActionType = 0xFFFF);
+    VOID THISCALL OnSetChrConditionFlag(PMONSTER_STATUS MSData, ULONG Param2, ULONG ConditionFlag, USHORT Param4, USHORT Param5);
+
+    BOOL FASTCALL UpdateCraftReflectLeftTime(BOOL CanNotReflect, PMONSTER_STATUS MSData);
+    VOID NakedUpdateCraftReflectLeftTime();
 
 
     typedef struct
@@ -1189,7 +1259,7 @@ public:
     VOID THISCALL LoadMSFile(PMONSTER_STATUS MSData, ULONG MSFileIndex);
     VOID THISCALL LoadMonsterIt3(ULONG CharPosition, ULONG par2, PSTR it3Path);
     VOID NakedAS_8D_5F();
-	VOID THISCALL AS_8D_5F(PMONSTER_STATUS);
+    VOID THISCALL AS_8D_5F(PMONSTER_STATUS);
 
     // mark
     // 不处理部分人物模型特效，取消vanish也不会回来
@@ -1279,6 +1349,8 @@ public:
     DECL_STATIC_METHOD_POINTER(CBattle, ThinkRunaway);
     DECL_STATIC_METHOD_POINTER(CBattle, ThinkSCraft);
     DECL_STATIC_METHOD_POINTER(CBattle, ExecuteActionScript);
+    DECL_STATIC_METHOD_POINTER(CBattle, IsTargetCraftReflect);
+    DECL_STATIC_METHOD_POINTER(CBattle, OnSetChrConditionFlag);
 
     static PCHAR_STATUS pChrStatusBackup;
 };
@@ -1288,6 +1360,9 @@ INIT_STATIC_MEMBER(CBattle::StubThinkRunaway);
 INIT_STATIC_MEMBER(CBattle::StubThinkSCraft);
 INIT_STATIC_MEMBER(CBattle::StubLoadMSFile);
 INIT_STATIC_MEMBER(CBattle::StubExecuteActionScript);
+INIT_STATIC_MEMBER(CBattle::StubIsTargetCraftReflect);
+INIT_STATIC_MEMBER(CBattle::StubOnSetChrConditionFlag);
+
 INIT_STATIC_MEMBER(CBattle::StubSetBattleStatusFinalByDifficulty);
 INIT_STATIC_MEMBER(CBattle::StubCheckQuartz);
 INIT_STATIC_MEMBER(CBattle::StubIsChrCanTeamRush);
@@ -1599,6 +1674,11 @@ public:
     VOID CalcChrRawStatusFromLevel(ULONG ChrId, ULONG Level, ULONG Unknown = 0)
     {
         DETOUR_METHOD(EDAO, CalcChrRawStatusFromLevel, 0x675FF7, ChrId, Level, Unknown);
+    }
+
+    ArtsPage::ArtsPageType THISCALL GetCraftType(PCRAFT_INFO StateCraftInfo, PCRAFT_INFO EPCPCraftInfo = nullptr)
+    {
+        DETOUR_METHOD(EDAO, GetCraftType, 0x97F100, StateCraftInfo, EPCPCraftInfo);
     }
 
 

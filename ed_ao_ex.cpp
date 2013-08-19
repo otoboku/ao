@@ -138,6 +138,12 @@ BOOL Initialize(PVOID BaseAddress)
 
     MEMORY_FUNCTION_PATCH f[] =
     {
+#if 1
+        INLINE_HOOK_JUMP_RVA_NULL(0x27969D, METHOD_PTR(&CBattle::SetSelectedAttack)),
+        INLINE_HOOK_JUMP_RVA_NULL(0x275DF4, METHOD_PTR(&CBattle::SetSelectedCraft)),
+        INLINE_HOOK_JUMP_RVA_NULL(0x272AB9, METHOD_PTR(&CBattle::SetSelectedSCraft)),
+        //INLINE_HOOK_JUMP_RVA_NULL(0x279553, METHOD_PTR(&CBattle::SetSelectedMagic)),
+#endif
 /*
         INLINE_HOOK_CALL_RVA_NULL(0x5DE1D9, METHOD_PTR(&CBattle::NakedNoResistConditionUp)),
         // bug fix
@@ -232,6 +238,7 @@ BOOL Initialize(PVOID BaseAddress)
     AllocConsole();
     PrintConsoleW(L"%x\r\n", sizeof(MONSTER_STATUS));
     PrintConsoleW(L"%x\r\n", sizeof(ITEM_ENTRY));
+    PrintConsoleW(L"%x\r\n", sizeof(CArtsNameWindow));
     PrintConsoleW(L"%x\r\n", FIELD_OFFSET(MONSTER_STATUS, AT));
     PrintConsoleW(L"%x\r\n", FIELD_OFFSET(MONSTER_STATUS, Resistance));
     //PrintConsoleW(L"%x\r\n", FIELD_OFFSET(MONSTER_STATUS, SummonCount));

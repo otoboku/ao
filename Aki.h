@@ -539,7 +539,7 @@ VOID FASTCALL CBattle::HandleConditionBeforeMasterQuartzKipaTakeEffect(PMONSTER_
             continue;
 
         pEffectInfo = FindEffectInfoByConditionEx(MSData, CraftConditions::Vanish, 0, FALSE);
-        if (pEffectInfo && pEffectInfo->Type == 0x4 && pEffectInfo->ATLeft == 0)
+        if (pEffectInfo && pEffectInfo->CounterType == pEffectInfo->CounterTypes::Infinite && pEffectInfo->ATLeft == 0)
             continue;
 
         pEffectInfo = FindEffectInfoByConditionEx(MSData, CraftConditions::Landification);

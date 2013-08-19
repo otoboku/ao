@@ -20,11 +20,11 @@ VOID FASTCALL CBattle::CopyMagicAndCraftData(PMONSTER_STATUS MSData)
     if (!IsCustomChar(MSData->CharID))
         return;
 
-    MaxMagicNumber  = countof(MSData->MagicAiInfo);
-    Magic           = MSData->MagicAiInfo;
+    MaxMagicNumber  = countof(MSData->ArtsAiInfo);
+    Magic           = MSData->ArtsAiInfo;
     MagicList       = GetSaveData()->GetChrMagicList() + MSData->CharID * MaxMagicNumber;
 
-    for (ULONG_PTR Count = countof(MSData->MagicAiInfo); Count; --Count)
+    for (ULONG_PTR Count = countof(MSData->ArtsAiInfo); Count; --Count)
     {
         if (Magic->CraftIndex == 0)
             break;
@@ -402,7 +402,7 @@ BOOL CBattle::ThinkSBreak(PMONSTER_STATUS MSData, PAT_BAR_ENTRY Entry)
                             CraftConditions::Confusion      |
                             CraftConditions::OnehitKill     |
                             CraftConditions::Vanish         |
-                            CraftConditions::Reserve_3      |
+                            CraftConditions::GreenPepper    |
                             CraftConditions::Dead;
 
     if (FindEffectInfoByCondition(MSData, Conditions) != nullptr)
@@ -567,6 +567,178 @@ _RET2:
     }
 }
 
+VOID FASTCALL FindReplaceChr(PMONSTER_STATUS MSData, PULONG RandomChrIndex)
+{
+    if (!MSData->IsChrEnemy(FALSE))
+        return;
+
+    FOR_EACH(RandomChrIndex, RandomChrIndex, 8)
+    {
+        *RandomChrIndex += 8;
+    }
+}
+
+NAKED VOID CBattle::NakedFindReplaceChr()
+{
+    INLINE_ASM
+    {
+        mov     dword ptr [ebp - 24h], 0;
+        mov     ecx, [ebp + 8h];
+        lea     edx, [ebp - 70h];
+        call    FindReplaceChr
+        ret;
+    }
+}
+
+ULONG_PTR FASTCALL CheckPartyCraftTargetBits(PMONSTER_STATUS MSData, PCRAFT_INFO CraftInfo)
+{
+    return (-FLAG_ON(CraftInfo->Target, CraftInfoTargets::OtherSide) & CHR_FLAG_ENEMY) | (-FLAG_ON(CraftInfo->Target, CraftInfoTargets::SelfSide) & CHR_FLAG_PARTY);
+}
+
+NAKED VOID CBattle::NakedCheckCraftTargetBits()
+{
+    INLINE_ASM
+    {
+        mov     ecx, [ebp - 044h];
+        mov     edx, [ebp - 12Ch];
+        call    CheckPartyCraftTargetBits
+        mov     [ebp - 0CCh], eax;
+        ret;
+    }
+}
+
+VOID THISCALL CBattle::GetConditionIconPosByIndex(Gdiplus::PointF *Position, PMS_EFFECT_INFO EffectInfo, ULONG_PTR ConditionIndex)
+{
+    static BYTE PositionMap[] =
+    {
+        0x00,       // 0x00
+        0xD0,       // 0x01
+        0xD1,       // 0x02
+        0xD2,       // 0x03
+        0xD3,       // 0x04
+        0xE6,       // 0x05
+        0xE7,       // 0x06
+        0xE8,       // 0x07
+        0xE9,       // 0x08
+        0xEA,       // 0x09
+        0xEB,       // 0x0A
+        0xB8,       // 0x0B
+        0x00,       // 0x0C
+        0xFB,       // 0x0D
+        0xFC,       // 0x0E
+        0xFA,       // 0x0F
+        0xEE,       // 0x10
+        0xF1,       // 0x11
+        0xF3,       // 0x12
+        0xE3,       // 0x13
+        0xF7,       // 0x14
+        0xE5,       // 0x15
+        0xF9,       // 0x16
+        0xE1,       // 0x17
+        0xF5,       // 0x18
+        0xB7,       // 0x19
+        0xB6,       // 0x1A
+        0xED,       // 0x1B
+        0xB9,       // 0x1C
+        0x00,       // 0x1D
+        0xBA,       // 0x1E
+        0xFD,       // 0x1F
+        0x00,       // 0x20
+    };
+
+    if (ConditionIndex == countof(PositionMap))
+    {
+        Position->X = 64;
+        Position->Y = 208;
+
+        return;
+    }
+    else if (ConditionIndex > countof(PositionMap))
+    {
+        Position->X = 0;
+        Position->Y = 0;
+
+        return;
+    }
+
+    Position->X = (PositionMap[ConditionIndex] & 0x0F) * 16;
+    Position->Y = ((PositionMap[ConditionIndex] & 0xF0) >> 4) * 16;
+
+    if (EffectInfo != nullptr && EffectInfo->ConditionRate > 0 && FLAG_ON(EffectInfo->ConditionFlags, 0xFF0000))
+    {
+        Position->X -= 16;
+    }
+}
+
+BOOL THISCALL CBattle::IsTargetCraftReflect(PMONSTER_STATUS Self, PMONSTER_STATUS Target, ULONG_PTR ActionType)
+{
+    BOOL    Success, CanRefect;
+    USHORT  Orbment;
+
+    CanRefect = FindEffectInfoByCondition(Target, CraftConditions::CraftReflect) != nullptr;
+
+    if (CanRefect)
+    {
+        Orbment = 0xCD;
+        Swap(Target->Orbment[0], Orbment);
+    }
+
+    Success = (this->*StubIsTargetCraftReflect)(Self, Target, ActionType);
+
+    if (CanRefect)
+        Swap(Target->Orbment[0], Orbment);
+
+    return Success;
+}
+
+VOID THISCALL CBattle::OnSetChrConditionFlag(PMONSTER_STATUS MSData, ULONG Param2, ULONG ConditionFlag, USHORT Param4, USHORT Param5)
+{
+    PMS_EFFECT_INFO EffectInfo;
+
+    (this->*StubOnSetChrConditionFlag)(MSData, Param2, ConditionFlag, Param4, Param5);
+
+    if (ConditionFlag != CraftConditions::CraftReflect)
+        return;
+
+    ShowConditionText(MSData, "CRAFT REFLECT");
+
+    FOR_EACH_ARRAY(EffectInfo, MSData->EffectInfo)
+    {
+        if (EffectInfo->ConditionFlags == 0)
+            break;
+    }
+
+    --EffectInfo;
+    if (FLAG_OFF(EffectInfo->ConditionFlags, ConditionFlag))
+        return;
+
+    if (EffectInfo->ATLeft == 9999)
+        return;
+
+    EffectInfo->CounterType = EffectInfo->CounterTypes::ByTimes;
+}
+
+BOOL FASTCALL CBattle::UpdateCraftReflectLeftTime(BOOL CanNotReflect, PMONSTER_STATUS MSData)
+{
+    if (!CanNotReflect)
+        UpdateEffectLeftTime(MSData, 0, MS_EFFECT_INFO::CounterTypes::ByTimes, CraftConditions::CraftReflect);
+
+    return CanNotReflect;
+}
+
+NAKED VOID CBattle::NakedUpdateCraftReflectLeftTime()
+{
+    INLINE_ASM
+    {
+        push    [ebp - 020h];
+        mov     ecx, [ebp - 08h];
+        movzx   edx, al;
+        call    UpdateCraftReflectLeftTime
+        test    eax, eax;
+        ret;
+    }
+}
+
 /************************************************************************
   EDAO
 ************************************************************************/
@@ -724,8 +896,8 @@ VOID THISCALL CBattleInfoBox::DrawMonsterStatus()
 
     typedef struct
     {
-        PCSTR Text;
-        LONG Value;
+        PCSTR   Text;
+        LONG    Value;
 
         ULONG_PTR (*Format)(PMONSTER_STATUS MSData, PSTR Buffer);
 
