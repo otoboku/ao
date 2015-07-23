@@ -44,7 +44,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "EDAO_EXPORTS" /YX /FD /c
-# ADD CPP /nologo /Gr /MD /W4 /O2 /I "..\freetype-2.4.11\include" /I "..\..\json\json-c-0.11" /D "WIN32" /D "NDEBUG" /D USE_NT_VER=1 /FD /GS- /MP /arch:SSE2 /GL /c
+# ADD CPP /nologo /Gr /MD /W4 /O2 /I "..\freetype-2.4.11\include" /I "..\..\json\json-c-0.11" /D "_USING_V110_SDK71_" /D "WIN32" /D "NDEBUG" /D USE_NT_VER=1 /FD /GS- /MP /arch:SSE /GL /Zc:sizedDealloc- /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
@@ -54,7 +54,7 @@ BSC32=bscmake.exe
 # ADD BSC32 /nologo
 LINK32=link.exe
 # ADD BASE LINK32 kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386
-# ADD LINK32 ntdll.lib mylib_nt.lib undoc_ntdll.lib ntdllpC.lib msvcrt60.lib ntdll_xp.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib json-c.lib /nologo /dll /machine:I386 /out:"J:\Falcom\ED_AO\ed_ao_ex.dll" /libpath:"..\..\json\json-c-0.11\Release" /ltcg
+# ADD LINK32 msvcrt.lib mylib_nt.lib undoc_ntdll.lib ntdll.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib json-c.lib /nologo /dll /machine:I386 /out:"J:\Falcom\ED_AO\ed_ao_ex.dll" /libpath:"..\..\json\json-c-0.11\Release" /ltcg /SUBSYSTEM:WINDOWS,5.01
 # SUBTRACT LINK32 /pdb:none
 
 !ELSEIF  "$(CFG)" == "EDAO - Win32 d3d9"
@@ -72,7 +72,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /Gr /MD /W4 /O2 /D "WIN32" /D "NDEBUG" /D USE_NT_VER=1 /FD /GS- /MP /arch:SSE /GL /c
-# ADD CPP /nologo /Gr /MD /W4 /O2 /D "WIN32" /D "NDEBUG" /D USE_NT_VER=1 /D D3D9_VER=1 /FD /GS- /MP /arch:SSE /GL /c
+# ADD CPP /nologo /Gr /MD /W4 /O2 /D "WIN32" /D "NDEBUG" /D USE_NT_VER=1 /D D3D9_VER=1 /D "_USING_V110_SDK71_" /FD /GS- /MP /arch:SSE /GL /Zc:sizedDealloc- /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
@@ -83,7 +83,7 @@ BSC32=bscmake.exe
 LINK32=link.exe
 # ADD BASE LINK32 mylib_nt.lib ntdll.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386 /out:"J:\Falcom\ED_AO\EDAO.dll" /ltcg
 # SUBTRACT BASE LINK32 /pdb:none
-# ADD LINK32 mylib_nt.lib undoc_ntdll.lib ntdll.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386 /out:"J:\Falcom\ED_AO\DINPUT8.dll" /ltcg /NOENTRY
+# ADD LINK32 msvcrt.lib mylib_nt.lib undoc_ntdll.lib ntdll.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386 /out:"J:\Falcom\ED_AO\DINPUT8.dll" /ltcg /NOENTRY /SUBSYSTEM:WINDOWS,5.01
 # SUBTRACT LINK32 /pdb:none
 
 !ELSEIF  "$(CFG)" == "EDAO - Win32 cht"
@@ -101,7 +101,7 @@ LINK32=link.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /Gr /MD /W4 /O2 /D "WIN32" /D "NDEBUG" /D USE_NT_VER=1 /FD /GS- /MP /arch:SSE /GL /c
-# ADD CPP /nologo /Gr /MD /W4 /O2 /D "WIN32" /D "NDEBUG" /D USE_NT_VER=1 /D CHT_VER=1 /FD /GS- /MP /arch:SSE /GL /c
+# ADD CPP /nologo /Gr /MD /W4 /O2 /D "WIN32" /D "NDEBUG" /D USE_NT_VER=1 /D CHT_VER=1 /D "_USING_V110_SDK71_" /FD /GS- /MP /arch:SSE /GL /Zc:sizedDealloc- /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
@@ -112,7 +112,7 @@ BSC32=bscmake.exe
 LINK32=link.exe
 # ADD BASE LINK32 ntdll.lib mylib_nt.lib undoc_ntdll.lib ntdll_xp.lib ntdllpC_all.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386 /out:"ed_ao_ex.dll" /ltcg
 # SUBTRACT BASE LINK32 /pdb:none
-# ADD LINK32 ntdll.lib mylib_nt.lib undoc_ntdll.lib ntdll_xp.lib ntdllpC_all.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386 /out:"cht\ed_ao_cht_ex.dll" /ltcg
+# ADD LINK32 msvcrt.lib mylib_nt.lib undoc_ntdll.lib ntdll.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /dll /machine:I386 /out:"cht\ed_ao_cht_ex.dll" /ltcg /SUBSYSTEM:WINDOWS,5.01
 # SUBTRACT LINK32 /pdb:none
 
 !ENDIF 
