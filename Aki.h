@@ -49,6 +49,7 @@ namespace T_NAME
         {   0,  0,  19, 10, 18, 10, 18, 8,  4,  28, 0,  0,  0   },
         {   0,  0,  21, 9,  16, 10, 19, 7,  3,  29, 0,  0,  0   },
         {   0,  0,  22, 11, 17, 10, 19, 7,  5,  29, 0,  0,  0   },
+        {   0,  0,  0,  204,204,0,  0,  0,  204,204,0,  0,  0   },
     };
 
     CHAR_T_STATUS_RatioX RatioX[T_NAME::CHR_COUNT] =
@@ -69,7 +70,6 @@ namespace T_NAME
 
     DECL_SELECTANY
     const char* StatusName[] = {"HP", "EP", "STR", "DEF", "ATS", "ADF", "DEX", "AGL", "MOV", "SPD", "DEXRate", "AGLRate", "RNG"};
-    const char* StatusNameTest[] = {"HP", "HP", "STR", "DEF", "ATS", "ADF", "DEX", "AGL", "MOV", "SPD", "DEXRate", "AGLRate", "RNG"};
 }
 
 ULONG_PTR StubCheckStackBalance = 0x006790C6;
@@ -734,7 +734,7 @@ VOID THISCALL EDAO::SetBattleStatusFinalWhenRecover(ULONG ChrPosition, PCHAR_STA
     Battle->SetBattleStatusFinalByDifficulty(MSData);
 }
 
-PCHAR_T_STATUS EDAO::CalcChrT_StatusNew(PCHAR_T_STATUS pStatus, INT ChrNo, INT Level)
+PCHAR_T_STATUS EDAO::CalcChrT_StatusNew(PCHAR_T_STATUS pStatus, ULONG ChrNo, ULONG Level)
 {
     //PCHAR_T_STATUS pStatus;
     if (!pStatus)
@@ -757,7 +757,7 @@ PCHAR_T_STATUS EDAO::CalcChrT_StatusNew(PCHAR_T_STATUS pStatus, INT ChrNo, INT L
     using namespace T_NAME;
 
 #if 0 //slow
-    for (int j=0; j<countof(StatusName); j++)
+    for (ULONG j=0; j<countof(StatusName); ++j)
     {
         ((PFLOAT)&Status.HP)[j] = (float)((PINT)&RatioY[ChrNo].HP)[j];
     }
@@ -777,14 +777,15 @@ PCHAR_T_STATUS EDAO::CalcChrT_StatusNew(PCHAR_T_STATUS pStatus, INT ChrNo, INT L
     Status.RNG      = (float)RatioY[ChrNo].RNG;
 #endif
 
-    for (int i = 1; i < Level + 16; ++i )
+    for (ULONG i = 1; i < Level + 16; ++i)
     //int i = (Level + 15) * (Level + 16) / 2;
     {
         Status.HP   += (float)i * RatioX[ChrNo].HP;
-        Status.STR  += (float)i * RatioX[ChrNo].STR;
+        // fild fmul fstp fld fadd fstp ...
+        Status.STR  += (float)((float)i * RatioX[ChrNo].STR);
     }
     {
-        int i = (Level + 15) * (Level + 16) / 2;
+        ULONG i = (Level + 15) * (Level + 16) / 2;
         Status.EP   += (float)i * RatioX[ChrNo].EP;
         Status.DEF  += (float)i * RatioX[ChrNo].DEF;
         Status.ATS  += (float)i * RatioX[ChrNo].ATS;
@@ -836,7 +837,7 @@ PCHAR_STATUS THISCALL EDAO::CalcChrRawStatusByFinalStatus(PCHAR_STATUS RawStatus
     return Result;
 }
 
-PCHAR_T_STATUS THISCALL EDAO::CalcChrT_Status(INT ChrNo, INT Level)
+PCHAR_T_STATUS THISCALL EDAO::CalcChrT_Status(ULONG ChrNo, ULONG Level)
 {
     //PCHAR_T_STATUS pStatus = *(PCHAR_T_STATUS*)PtrAdd(this, 0xA2FA4);
     PCHAR_T_STATUS pStatus = &EDAO::ChrT_Status;
@@ -846,16 +847,16 @@ PCHAR_T_STATUS THISCALL EDAO::CalcChrT_Status(INT ChrNo, INT Level)
     if (TestCount)
     {
         QueryPerformanceCounter(&lStartCounter);
-        for (int i=0; i<11; i++)
+        for (int i=0; i<MAXIMUM_CHR_NUMBER_WITH_STATUS; ++i)
         {
             for (int j=STATUS_LEVEL_MIN; j<=STATUS_LEVEL_MAX; j++)
                 (this->*StubCalcChrT_Status)(i%(MAXIMUM_CHR_NUMBER_WITH_STATUS-1), j);
         }
         QueryPerformanceCounter(&lStopCounter);
-        //PrintConsoleW(L"Elapsed time pre: %lf ms\n", (lStopCounter.QuadPart - lStartCounter.QuadPart) * 1000.0 / lFrequency.QuadPart);
+        PrintConsoleW(L"Elapsed time pre: %lf ms\n", (lStopCounter.QuadPart - lStartCounter.QuadPart) * 1000.0 / lFrequency.QuadPart);
 
         QueryPerformanceCounter(&lStartCounter);
-        for (int i=0; i<11; i++)
+        for (int i=0; i<MAXIMUM_CHR_NUMBER_WITH_STATUS; ++i)
         {
             for (int j=STATUS_LEVEL_MIN; j<=STATUS_LEVEL_MAX; j++)
                 CalcChrT_StatusNew(pStatus, i%(MAXIMUM_CHR_NUMBER_WITH_STATUS-1), j);
@@ -865,7 +866,7 @@ PCHAR_T_STATUS THISCALL EDAO::CalcChrT_Status(INT ChrNo, INT Level)
         TestCount--;
     }
 
-#if 0
+#if 1
     //CHAR_T_STATUS       Status;
     CHAR_T_STATUS_ORG   StatusOld;
     PCHAR_T_STATUS      pStatusOld;
@@ -873,7 +874,7 @@ PCHAR_T_STATUS THISCALL EDAO::CalcChrT_Status(INT ChrNo, INT Level)
     if (!IsCompared)
     {
         IsCompared = TRUE;
-        for (int i=0; i<11; i++)
+        for (int i=0; i<MAXIMUM_CHR_NUMBER_WITH_STATUS; ++i)
         {
             for (int j=STATUS_LEVEL_MIN; j<=STATUS_LEVEL_MAX; j++)
             {
@@ -882,11 +883,16 @@ PCHAR_T_STATUS THISCALL EDAO::CalcChrT_Status(INT ChrNo, INT Level)
                 ((CHAR_T_STATUS&)StatusOld).HP = StatusOld.HP;
                 pStatus = CalcChrT_StatusNew(pStatus, i, j);
 
-                // arch:SSE2下完全相同
+                // arch:IA32 arch:SSE arch:SSE2下完全相同
                 if(RtlCompareMemory(&StatusOld, pStatus, sizeof(CHAR_T_STATUS_ORG)) != sizeof(CHAR_T_STATUS_ORG))
                 {
                     AllocConsole();
                     PrintConsoleW(L"Not Same: Chr:%d Level:%d\n", i, j);
+                    pStatusOld = (PCHAR_T_STATUS)&StatusOld;
+                    PrintConsoleW(L"%d %d %d %d %d %d %d %d %d %d %d\n", pStatusOld->HP, pStatusOld->EP, pStatusOld->STR, pStatusOld->DEF, pStatusOld->ATS, pStatusOld->ADF, pStatusOld->DEX, pStatusOld->AGL, pStatusOld->AGLRate, pStatusOld->MOV, pStatusOld->SPD);
+                    pStatusOld = pStatus;
+                    PrintConsoleW(L"%d %d %d %d %d %d %d %d %d %d %d\n", pStatusOld->HP, pStatusOld->EP, pStatusOld->STR, pStatusOld->DEF, pStatusOld->ATS, pStatusOld->ADF, pStatusOld->DEX, pStatusOld->AGL, pStatusOld->AGLRate, pStatusOld->MOV, pStatusOld->SPD);
+ 
                 }
             }
         }
@@ -1061,7 +1067,9 @@ BOOL CHAR_T_STATUS_Ratio_To_Formula_HTML(LPCWSTR FileName)
     using namespace T_NAME;
 
     static
-    CHAR HtmlHead[] = "<html>\r\n<head>\r\n<title>碧之轨迹 角色能力值 计算公式</title>\r\n\r\n"
+    CHAR HtmlHead[] = "<html>\r\n<head>\r\n"
+        "<meta http-equiv=\"content-type\" content=\"text/html; charset=gbk\">\r\n"
+        "<title>碧之轨迹 角色能力值 计算公式</title>\r\n\r\n"
         "<style type=\"text/css\">\r\n"
         ".table1 {background:#585858;}\r\n"
         ".table1 td, .table1 th {background:#FFFFFF;}\r\n"

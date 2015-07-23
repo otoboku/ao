@@ -1723,8 +1723,8 @@ public:
     DECL_STATIC_METHOD_POINTER(EDAO, GetDifficulty);
 
     static CHAR_T_STATUS ChrT_Status;
-    static PCHAR_T_STATUS CalcChrT_StatusNew(PCHAR_T_STATUS pStatus, INT ChrNo, INT Level);
-    PCHAR_T_STATUS THISCALL CalcChrT_Status(INT ChrNo, INT Level);
+    static PCHAR_T_STATUS CalcChrT_StatusNew(PCHAR_T_STATUS pStatus, ULONG ChrNo, ULONG Level);
+    PCHAR_T_STATUS THISCALL CalcChrT_Status(ULONG ChrNo, ULONG Level);
     DECL_STATIC_METHOD_POINTER(EDAO, CalcChrT_Status);
 
     VOID THISCALL CalcChrRawStatusFromLevelNew(ULONG ChrId, ULONG Level, ULONG Unknown = 0);
