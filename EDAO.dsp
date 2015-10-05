@@ -44,7 +44,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /MT /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "_MBCS" /D "_USRDLL" /D "EDAO_EXPORTS" /YX /FD /c
-# ADD CPP /nologo /Gr /MD /W4 /O2 /I "..\freetype-2.4.11\include" /I "..\..\json\json-c-0.11" /D "_USING_V110_SDK71_" /D "WIN32" /D "NDEBUG" /D USE_NT_VER=1 /FD /GS- /MP /arch:SSE /GL /Zc:sizedDealloc- /c
+# ADD CPP /nologo /Gr /MD /W4 /O2 /I "..\freetype-2.4.11\include" /I "..\..\json\json-c-0.11" /D "_USING_V110_SDK71_" /D "WIN32" /D "NDEBUG" /D USE_NT_VER=1 /FD /GS- /MP /arch:SSE /GL /Zc:sizedDealloc- /d2QIftol /c
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD BASE RSC /l 0x409 /d "NDEBUG"
@@ -125,6 +125,10 @@ LINK32=link.exe
 # Begin Source File
 
 SOURCE=.\Aki.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\Akj.h
 # End Source File
 # Begin Source File
 

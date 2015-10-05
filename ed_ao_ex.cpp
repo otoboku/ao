@@ -134,6 +134,11 @@ BOOL Initialize(PVOID BaseAddress)
 
         PATCH_MEMORY(0x9BF4,        2,  0x00A27874-0x400000),   // EXP %4d-%5d
         PATCH_MEMORY(0x70,          1,  0x00A278E3-0x400000),   // EXP pos 76-70
+
+        PATCH_MEMORY(9000,          4,  0x0090EC1E-0x400000),   // se max 0x1068 -> 0x2328
+        PATCH_MEMORY(9000,          4,  0x0090E6B6-0x400000),   // se max 0x1068 -> 0x2328
+        PATCH_MEMORY(9000,          4,  0x0090EE83-0x400000),   // se max 0x1068 -> 0x2328
+        PATCH_MEMORY(9000,          4,  0x0090F5F6-0x400000),   // se max 0x1068 -> 0x2328
     };
 
     MEMORY_FUNCTION_PATCH f[] =

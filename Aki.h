@@ -108,17 +108,17 @@ BOOL bDisableMouse;
 
 typedef struct _SStatusRate
 {
-    INT HP;
-    INT STR;
-    INT DEF;
-    INT ATS;
-    INT ADF;
-    INT SPD;
-    INT DEX;
-    INT AGL;
-    INT MOV;
-    INT DEXRate;
-    INT AGLRate;
+    INT     HP;
+    INT     STR;
+    INT     DEF;
+    INT     ATS;
+    INT     ADF;
+    INT     SPD;
+    INT     DEX;
+    INT     AGL;
+    INT     MOV;
+    INT     DEXRate;
+    INT     AGLRate;
     BOOL    ResistNone;
     BOOL    ResistAbnormalCondition;
     BOOL    ResistAbilityDown;
