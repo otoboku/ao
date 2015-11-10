@@ -232,6 +232,8 @@ BOOL Initialize(PVOID BaseAddress)
         INLINE_HOOK_CALL_RVA_NULL(0x58E4DB, METHOD_PTR(&CBattle::CheckConditionGreenPepperWhenThinkCraft)),     // ThinkCraft
         INLINE_HOOK_CALL_RVA_NULL(0x58E24B, METHOD_PTR(&CBattle::CheckConditionGreenPepperWhenThinkCraft)),     // ThinkMagic
 
+        INLINE_HOOK_CALL_RVA_NULL(0x5E2A8A, NakedConfuseSelfBugFix),    // »ìÂÒ×Ô¼º¿¨×¡
+
 #if CONSOLE_DEBUG
         // log
         //INLINE_HOOK_JUMP_RVA     (0x51EB50, METHOD_PTR(&CScript::ScpGetFunctionAddress), CScript::StubScpGetFunctionAddress),

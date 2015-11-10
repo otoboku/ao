@@ -1279,9 +1279,9 @@ public:
         DETOUR_METHOD(CBattle, SetCondition, 0x676EA2, dst, src, condition, at, conditionRate);
 	}
 
-    VOID THISCALL AddCondition(PMONSTER_STATUS dst, PMONSTER_STATUS src, ULONG condition, ULONG at, ULONG conditionRate)
+    VOID THISCALL AddCondition(PMONSTER_STATUS src, PMONSTER_STATUS dst, ULONG condition, ULONG at, ULONG conditionRate)
     {
-        DETOUR_METHOD(CBattle, AddCondition, 0x677D11, dst, src, condition, at, conditionRate);
+        DETOUR_METHOD(CBattle, AddCondition, 0x677D11, src, dst, condition, at, conditionRate);
     }
 
     BOOL CheckCondition(PMONSTER_STATUS MSData, ULONG condition, ULONG par3=0)

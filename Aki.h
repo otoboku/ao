@@ -645,7 +645,8 @@ VOID THISCALL CBattle::SetBattleStatusFinalByDifficulty(PMONSTER_STATUS MSData)
     if (nDifficulty == 5)
     {
     SaturateConvert(&MSData->ChrStatus[1].MaximumHP, (INT64)MSData->ChrStatus[1].MaximumHP * statusRateUserDefined.HP / 100);
-    SaturateConvert(&MSData->ChrStatus[1].InitialHP, (INT64)MSData->ChrStatus[1].InitialHP * statusRateUserDefined.HP / 100);
+    //SaturateConvert(&MSData->ChrStatus[1].InitialHP, (INT64)MSData->ChrStatus[1].InitialHP * statusRateUserDefined.HP / 100);
+    MSData->ChrStatus[1].InitialHP = MSData->ChrStatus[1].MaximumHP;
     SaturateConvert(&MSData->ChrStatus[1].STR, (INT64)MSData->ChrStatus[1].STR * statusRateUserDefined.STR / 100);
     SaturateConvert(&MSData->ChrStatus[1].DEF, (INT64)MSData->ChrStatus[1].DEF * statusRateUserDefined.DEF / 100);
     SaturateConvert(&MSData->ChrStatus[1].ATS, (INT64)MSData->ChrStatus[1].ATS * statusRateUserDefined.ATS / 100);
@@ -657,6 +658,10 @@ VOID THISCALL CBattle::SetBattleStatusFinalByDifficulty(PMONSTER_STATUS MSData)
     }
     else
     {
+        if (MSData->ChrStatus[1].InitialHP != MSData->ChrStatus[1].MaximumHP)
+        {
+            MSData->ChrStatus[1].InitialHP = MSData->ChrStatus[1].MaximumHP;
+        }
         (this->*StubSetBattleStatusFinalByDifficulty)(MSData);
     }
 
@@ -1695,4 +1700,21 @@ BOOL THISCALL CGlobal::UseItemDouguFix(ULONG ItemId, ULONG ChrId)
     }
 
     return Result;
+}
+
+NAKED VOID NakedConfuseSelfBugFix()
+{
+    INLINE_ASM
+    {
+        pop     edx;
+        xor     ecx, ecx;
+	    mov     eax, [ebp + 0x8];
+        cmp     eax, [ebp + 0xC];
+        je      self;
+        inc     ecx;
+    self:
+        push    ecx;
+        push    edx;
+        retn;
+    }
 }
