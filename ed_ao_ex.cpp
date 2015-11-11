@@ -233,6 +233,8 @@ BOOL Initialize(PVOID BaseAddress)
         INLINE_HOOK_CALL_RVA_NULL(0x58E24B, METHOD_PTR(&CBattle::CheckConditionGreenPepperWhenThinkCraft)),     // ThinkMagic
 
         INLINE_HOOK_CALL_RVA_NULL(0x5E2A8A, NakedConfuseSelfBugFix),    // »ìÂÒ×Ô¼º¿¨×¡
+        INLINE_HOOK_CALL_RVA_NULL(0x5DE3AA, NakedMovUpMaxFix),          // MOV UP/DOWN MAX 5
+        INLINE_HOOK_CALL_RVA_NULL(0x5DE3C0, NakedMovDownMaxFix),
 
 #if CONSOLE_DEBUG
         // log

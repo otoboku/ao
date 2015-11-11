@@ -285,6 +285,12 @@ typedef union
         ULONG                   ConditionFlags;             // 0x30    0x264    0x298
     };
 
+    struct  
+    {
+        ULONG                   HPMax;                      // 0x0     0x234    0x268
+        ULONG                   HP;                         // 0x4     0x238    0x26C
+    };
+
 } CHAR_STATUS, *PCHAR_STATUS;
 
 typedef struct _CHAR_T_STATUS_ORG   // 0x18
@@ -370,6 +376,7 @@ typedef struct
 
     enum CounterTypes
     {
+        ByAT        = 0,
         ByRounds    = 1,
         ByTimes     = 2,
         ByActions   = 3,

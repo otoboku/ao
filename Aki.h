@@ -108,15 +108,26 @@ BOOL bDisableMouse;
 
 typedef struct _SStatusRate
 {
-    INT     HP;
-    INT     STR;
-    INT     DEF;
-    INT     ATS;
-    INT     ADF;
-    INT     SPD;
-    INT     DEX;
-    INT     AGL;
-    INT     MOV;
+    INT     HP_a;
+    INT     STR_a;
+    INT     DEF_a;
+    INT     ATS_a;
+    INT     ADF_a;
+    INT     SPD_a;
+    INT     DEX_a;
+    INT     AGL_a;
+    INT     MOV_a;
+
+    INT     HP_b;
+    INT     STR_b;
+    INT     DEF_b;
+    INT     ATS_b;
+    INT     ADF_b;
+    INT     SPD_b;
+    INT     DEX_b;
+    INT     AGL_b;
+    INT     MOV_b;
+
     INT     DEXRate;
     INT     AGLRate;
     BOOL    ResistNone;
@@ -125,7 +136,9 @@ typedef struct _SStatusRate
     BOOL    ResistATDelay;
 } SStatusRate;
 
-SStatusRate statusRateUserDefined;
+//SStatusRate statusRateUserDefined;
+SStatusRate sRate;
+#define     statusRateUserDefined sRate
 
 class CClass
 {
@@ -229,60 +242,71 @@ VOID ConfigInit()
             INT     nDefault;
             LPCWSTR lpDefault;
         };
-        LPCWSTR     lpFileName;
+        //LPCWSTR     lpFileName;
     } CONFIG_ENTRY;
 
     static CONFIG_ENTRY Config[] =
     {
-        { (BOOL*)&bArianrhodLimitKaijo, 'b', L"Arianrhod", L"ArianrhodLimitKaijo", TRUE, },
-        { (BOOL*)&bEnemySBreak, 'b', L"Arianrhod", L"EnemySBreak", TRUE, },
-        { (BOOL*)&bShowAT, 'b', L"Arianrhod", L"ShowAT", TRUE, },
-        { (BOOL*)&bForceKillEnemyAtScene, 'b', L"Arianrhod", L"ForceKillEnemyAtScene", TRUE, },
-        { (BOOL*)&bForceShowBurstMode, 'b', L"Arianrhod", L"ForceShowBurstMode", TRUE, },
-        { (BOOL*)&bForceShowInfOnMiniMap, 'b', L"Arianrhod", L"ForceShowInfOnMiniMap", TRUE, },
-        { (BOOL*)&bEnableSkipCraftAnime, 'b', L"Arianrhod", L"EnableSkipCraftAnime", TRUE, },
-        { (BOOL*)&bEnableSpecialEffect, 'b', L"Arianrhod", L"EnableSpecialEffect", FALSE, },
+        { (BOOL*)&bArianrhodLimitKaijo,                     'b',    L"Arianrhod",   L"ArianrhodLimitKaijo",         TRUE,   },
+        { (BOOL*)&bEnemySBreak,                             'b',    L"Arianrhod",   L"EnemySBreak",                 TRUE,   },
+        { (BOOL*)&bShowAT,                                  'b',    L"Arianrhod",   L"ShowAT",                      TRUE,   },
+        { (BOOL*)&bForceKillEnemyAtScene,                   'b',    L"Arianrhod",   L"ForceKillEnemyAtScene",       TRUE,   },
+        { (BOOL*)&bForceShowBurstMode,                      'b',    L"Arianrhod",   L"ForceShowBurstMode",          TRUE,   },
+        { (BOOL*)&bForceShowInfOnMiniMap,                   'b',    L"Arianrhod",   L"ForceShowInfOnMiniMap",       TRUE,   },
+        { (BOOL*)&bEnableSkipCraftAnime,                    'b',    L"Arianrhod",   L"EnableSkipCraftAnime",        TRUE,   },
+        { (BOOL*)&bEnableSpecialEffect,                     'b',    L"Arianrhod",   L"EnableSpecialEffect",         FALSE,  },
 
-        { (INT*)&nDifficulty, 'i', L"Battle", L"Difficulty", 0, },
-        { (INT*)&statusRateUserDefined.HP, 'i', L"Battle", L"HP", 100, },
-        { (INT*)&statusRateUserDefined.STR, 'i', L"Battle", L"STR", 100, },
-        { (INT*)&statusRateUserDefined.DEF, 'i', L"Battle", L"DEF", 100, },
-        { (INT*)&statusRateUserDefined.ATS, 'i', L"Battle", L"ATS", 100, },
-        { (INT*)&statusRateUserDefined.ADF, 'i', L"Battle", L"ADF", 100, },
-        { (INT*)&statusRateUserDefined.SPD, 'i', L"Battle", L"SPD", 100, },
-        { (INT*)&statusRateUserDefined.DEX, 'i', L"Battle", L"DEX", 100, },
-        { (INT*)&statusRateUserDefined.AGL, 'i', L"Battle", L"AGL", 100, },
-        { (INT*)&statusRateUserDefined.MOV, 'i', L"Battle", L"MOV", 100, },
-        { (INT*)&statusRateUserDefined.DEXRate, 'i', L"Battle", L"DEXRate", 0, },
-        { (INT*)&statusRateUserDefined.AGLRate, 'i', L"Battle", L"AGLRate", 0, },
-        { (BOOL*)&statusRateUserDefined.ResistNone, 'b', L"Battle", L"ResistNone", FALSE, },
-        { (BOOL*)&statusRateUserDefined.ResistAbnormalCondition, 'b', L"Battle", L"ResistAbnormalCondition", FALSE, },
-        { (BOOL*)&statusRateUserDefined.ResistAbilityDown, 'b', L"Battle", L"ResistAbilityDown", FALSE, },
-        { (BOOL*)&statusRateUserDefined.ResistATDelay, 'b', L"Battle", L"ResistATDelay", FALSE, },
+        { (LONG*)&nDifficulty,                              'i',    L"Battle",      L"Difficulty",                  0,      },
+        { (LONG*)&sRate.HP_a,                               'i',    L"Battle",      L"HP_a",                        1000,   },
+        { (LONG*)&sRate.STR_a,                              'i',    L"Battle",      L"STR_a",                       1000,   },
+        { (LONG*)&sRate.DEF_a,                              'i',    L"Battle",      L"DEF_a",                       1000,   },
+        { (LONG*)&sRate.ATS_a,                              'i',    L"Battle",      L"ATS_a",                       1000,   },
+        { (LONG*)&sRate.ADF_a,                              'i',    L"Battle",      L"ADF_a",                       1000,   },
+        { (LONG*)&sRate.SPD_a,                              'i',    L"Battle",      L"SPD_a",                       1000,   },
+        { (LONG*)&sRate.DEX_a,                              'i',    L"Battle",      L"DEX_a",                       1000,   },
+        { (LONG*)&sRate.AGL_a,                              'i',    L"Battle",      L"AGL_a",                       1000,   },
+        { (LONG*)&sRate.MOV_a,                              'i',    L"Battle",      L"MOV_a",                       1000,   },
 
-        { (INT*)&nBattleEncount, 'i', L"Battle", L"BattleEncount", 3, },
-        { (INT*)&nSupportCraftInterval, 'i', L"Battle", L"SupportCraftInterval", 0, },
-        { (BOOL*)&bDisableDamageRandom, 'b', L"Battle", L"DisableDamageRandom", FALSE, },
-        { (BOOL*)&bDisableDamageUpLimit, 'b', L"Battle", L"DisableDamageUpLimit", FALSE, },
-        { (INT*)&nATBonus, 'i', L"Battle", L"ATBonus", 0, },
-        { (INT*)&nSepithUpLimit, 'i', L"Battle", L"SepithUpLimit", 0, },
-        { (BOOL*)&bAutoAnalyzeMonsInf, 'b', L"Battle", L"AutoAnalyzeMonsInf", FALSE, },
+        { (LONG*)&sRate.HP_b,                               'i',    L"Battle",      L"HP_b",                        0,      },
+        { (LONG*)&sRate.STR_b,                              'i',    L"Battle",      L"STR_b",                       0,      },
+        { (LONG*)&sRate.DEF_b,                              'i',    L"Battle",      L"DEF_b",                       0,      },
+        { (LONG*)&sRate.ATS_b,                              'i',    L"Battle",      L"ATS_b",                       0,      },
+        { (LONG*)&sRate.ADF_b,                              'i',    L"Battle",      L"ADF_b",                       0,      },
+        { (LONG*)&sRate.SPD_b,                              'i',    L"Battle",      L"SPD_b",                       0,      },
+        { (LONG*)&sRate.DEX_b,                              'i',    L"Battle",      L"DEX_b",                       0,      },
+        { (LONG*)&sRate.AGL_b,                              'i',    L"Battle",      L"AGL_b",                       0,      },
+        { (LONG*)&sRate.MOV_b,                              'i',    L"Battle",      L"MOV_b",                       0,      },
 
-        { (BOOL*)&bSelectTeamMemberFreely, 'b', L"DT", L"SelectTeamMemberFreely", FALSE, },
-        { (BOOL*)&bSpecialTeamMemberEquipmentLimitKaijo, 'b', L"DT", L"SpecialTeamMemberEquipmentLimitKaijo", FALSE, },
-        { (BOOL*)&bEnableSelectTeamMember, 'b', L"DT", L"EnableSelectTeamMember", FALSE, },
+        { (LONG*)&sRate.DEXRate,                            'i',    L"Battle",      L"DEXRate",                     0,      },
+        { (LONG*)&sRate.AGLRate,                            'i',    L"Battle",      L"AGLRate",                     0,      },
+        { (BOOL*)&sRate.ResistNone,                         'b',    L"Battle",      L"ResistNone",                  FALSE,  },
+        { (BOOL*)&sRate.ResistAbnormalCondition,            'b',    L"Battle",      L"ResistAbnormalCondition",     FALSE,  },
+        { (BOOL*)&sRate.ResistAbilityDown,                  'b',    L"Battle",      L"ResistAbilityDown",           FALSE,  },
+        { (BOOL*)&sRate.ResistATDelay,                      'b',    L"Battle",      L"ResistATDelay",               FALSE,  },
 
-        { (INT*)&nAutoFish, 'i', L"DT", L"AutoFish", 0, },
-        { (INT*)&nFastFish, 'i', L"DT", L"FastFish", 0, },
-        { (BOOL*)&bRoyalFlush, 'b', L"DT", L"RoyalFlush", FALSE, },
-        { (BOOL*)&bAutoHorrorCoaster, 'b', L"DT", L"AutoHorrorCoaster", FALSE, },
+        { (LONG*)&nBattleEncount,                           'i',    L"Battle",      L"BattleEncount",               3,      },
+        { (LONG*)&nSupportCraftInterval,                    'i',    L"Battle",      L"SupportCraftInterval",        0,      },
+        { (BOOL*)&bDisableDamageRandom,                     'b',    L"Battle",      L"DisableDamageRandom",         FALSE,  },
+        { (BOOL*)&bDisableDamageUpLimit,                    'b',    L"Battle",      L"DisableDamageUpLimit",        FALSE,  },
+        { (LONG*)&nATBonus,                                 'i',    L"Battle",      L"ATBonus",                     0,      },
+        { (LONG*)&nSepithUpLimit,                           'i',    L"Battle",      L"SepithUpLimit",               0,      },
+        { (BOOL*)&bAutoAnalyzeMonsInf,                      'b',    L"Battle",      L"AutoAnalyzeMonsInf",          FALSE,  },
 
-        { (BOOL*)&bConfigStatus, 'b', L"Status", L"ConfigStatus", FALSE, },
-        { (BOOL*)&bOutputStatusConfigResult, 'b', L"Status", L"OutputStatusConfigResult", TRUE, },
-        { (BOOL*)&bDumpStatus, 'b', L"Status", L"DumpStatus", FALSE, },
-        { (INT*)&nYin_no_AGLRate, 'i', L"Status", L"Yin_no_AGLRate", 0, },
+        { (BOOL*)&bSelectTeamMemberFreely,                  'b',    L"DT",          L"SelectTeamMemberFreely",      FALSE,  },
+        { (BOOL*)&bSpecialTeamMemberEquipmentLimitKaijo,    'b',    L"DT",          L"SpecialTeamMemberEquipmentLimitKaijo",    FALSE,  },
+        { (BOOL*)&bEnableSelectTeamMember,                  'b',    L"DT",          L"EnableSelectTeamMember",      FALSE,  },
 
-        { (BOOL*)&bDisableMouse, 'b', L"DT", L"DisableMouse", FALSE, },
+        { (LONG*)&nAutoFish,                                'i',    L"DT",          L"AutoFish",                    0,      },
+        { (LONG*)&nFastFish,                                'i',    L"DT",          L"FastFish",                    0,      },
+        { (BOOL*)&bRoyalFlush,                              'b',    L"DT",          L"RoyalFlush",                  FALSE,  },
+        { (BOOL*)&bAutoHorrorCoaster,                       'b',    L"DT",          L"AutoHorrorCoaster",           FALSE,  },
+
+        { (BOOL*)&bConfigStatus,                            'b',    L"Status",      L"ConfigStatus",                FALSE,  },
+        { (BOOL*)&bOutputStatusConfigResult,                'b',    L"Status",      L"OutputStatusConfigResult",    TRUE,   },
+        { (BOOL*)&bDumpStatus,                              'b',    L"Status",      L"DumpStatus",                  FALSE,  },
+        { (LONG*)&nYin_no_AGLRate,                          'i',    L"Status",      L"Yin_no_AGLRate",              0,      },
+
+        { (BOOL*)&bDisableMouse,                            'b',    L"DT",          L"DisableMouse",                FALSE,  },
     };
 
     CONFIG_ENTRY *Entry;
@@ -642,25 +666,27 @@ VOID THISCALL CBattle::SetBattleStatusFinalByDifficulty(PMONSTER_STATUS MSData)
         return;
     }
 
+    PCHAR_STATUS pStatusSum = &MSData->ChrStatus[1];
+
     if (nDifficulty == 5)
     {
-    SaturateConvert(&MSData->ChrStatus[1].MaximumHP, (INT64)MSData->ChrStatus[1].MaximumHP * statusRateUserDefined.HP / 100);
-    //SaturateConvert(&MSData->ChrStatus[1].InitialHP, (INT64)MSData->ChrStatus[1].InitialHP * statusRateUserDefined.HP / 100);
-    MSData->ChrStatus[1].InitialHP = MSData->ChrStatus[1].MaximumHP;
-    SaturateConvert(&MSData->ChrStatus[1].STR, (INT64)MSData->ChrStatus[1].STR * statusRateUserDefined.STR / 100);
-    SaturateConvert(&MSData->ChrStatus[1].DEF, (INT64)MSData->ChrStatus[1].DEF * statusRateUserDefined.DEF / 100);
-    SaturateConvert(&MSData->ChrStatus[1].ATS, (INT64)MSData->ChrStatus[1].ATS * statusRateUserDefined.ATS / 100);
-    SaturateConvert(&MSData->ChrStatus[1].ADF, (INT64)MSData->ChrStatus[1].ADF * statusRateUserDefined.ADF / 100);
-    SaturateConvert(&MSData->ChrStatus[1].SPD, (INT64)MSData->ChrStatus[1].SPD * statusRateUserDefined.SPD / 100);
-    SaturateConvertEx(&MSData->ChrStatus[1].DEX, (INT64)MSData->ChrStatus[1].DEX * statusRateUserDefined.DEX / 100, (SHORT)0xCCC);
-    SaturateConvertEx(&MSData->ChrStatus[1].AGL, (INT64)MSData->ChrStatus[1].AGL * statusRateUserDefined.AGL / 100, (SHORT)0xCCC);
-    SaturateConvert(&MSData->ChrStatus[1].MOV, (INT64)MSData->ChrStatus[1].MOV * statusRateUserDefined.MOV / 100);
+        SaturateConvert(&pStatusSum->HPMax, (INT64)pStatusSum->HPMax * sRate.HP_a / 1000 + sRate.HP_b);
+        pStatusSum->HP = pStatusSum->HPMax;
+
+        SaturateConvert(&pStatusSum->STR,   (INT64)pStatusSum->STR * sRate.STR_a / 1000 + sRate.STR_b);
+        SaturateConvert(&pStatusSum->DEF,   (INT64)pStatusSum->DEF * sRate.DEF_a / 1000 + sRate.DEF_b);
+        SaturateConvert(&pStatusSum->ATS,   (INT64)pStatusSum->ATS * sRate.ATS_a / 1000 + sRate.ATS_b);
+        SaturateConvert(&pStatusSum->ADF,   (INT64)pStatusSum->ADF * sRate.ADF_a / 1000 + sRate.ADF_b);
+        SaturateConvert(&pStatusSum->SPD,   (INT64)pStatusSum->SPD * sRate.SPD_a / 1000 + sRate.SPD_b);
+        SaturateConvertEx(&pStatusSum->DEX, (INT64)pStatusSum->DEX * sRate.DEX_a / 1000 + sRate.DEX_b, (SHORT)0xCCC);
+        SaturateConvertEx(&pStatusSum->AGL, (INT64)pStatusSum->AGL * sRate.AGL_a / 1000 + sRate.AGL_b, (SHORT)0xCCC);
+        SaturateConvert(&pStatusSum->MOV,   (INT64)pStatusSum->MOV * sRate.MOV_a / 1000 + sRate.MOV_b);
     }
     else
     {
-        if (MSData->ChrStatus[1].InitialHP != MSData->ChrStatus[1].MaximumHP)
+        if (pStatusSum->HP != pStatusSum->HPMax)
         {
-            MSData->ChrStatus[1].InitialHP = MSData->ChrStatus[1].MaximumHP;
+            pStatusSum->HP = pStatusSum->HPMax;
         }
         (this->*StubSetBattleStatusFinalByDifficulty)(MSData);
     }
@@ -1716,5 +1742,26 @@ NAKED VOID NakedConfuseSelfBugFix()
         push    ecx;
         push    edx;
         retn;
+    }
+}
+
+NAKED VOID NakedMovUpMaxFix()
+{
+    INLINE_ASM
+    {
+        movzx   eax, word ptr [ebp-0x180];
+        cmp     word ptr [ebp+0x18], ax;
+        retn;
+    }
+}
+
+NAKED VOID NakedMovDownMaxFix()
+{
+    INLINE_ASM
+    {
+        movzx   eax, word ptr [ebp-0x180];
+        neg     eax;
+        cmp     word ptr [ebp+0x18], ax;
+        retn
     }
 }
